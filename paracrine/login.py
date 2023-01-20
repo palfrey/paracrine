@@ -9,6 +9,8 @@ if __name__ == "__main__":
     server = int(sys.argv[2])
 
     server = get_config()["servers"][server]
-    command = f"ssh {server['ssh_user']}@{server['ssh_hostname']} -i {path_to_config_file(server['ssh_key'])} -p {server['ssh_port']}"
+    command = f"ssh {server['ssh_user']}@{server['ssh_hostname']} \
+        -i {path_to_config_file(server['ssh_key'])} \
+        -p {server['ssh_port']}"
     print(command)
     system(command)

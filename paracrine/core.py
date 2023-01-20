@@ -8,8 +8,10 @@ from .users import users
 
 from .config import config, create_data, get_config, host, path_to_config_file
 
+
 def in_vagrant():
     return "vagrant" in users()
+
 
 def is_wireguard():
     return os.path.exists("/etc/wireguard")
@@ -25,6 +27,7 @@ def decode(info):
 def run(func: Callable, *args: Any, **kwargs: Any) -> Any:
     mitogen.utils.log_to_file()
     return mitogen.utils.run_with_router(func)
+
 
 def main(router: Router, func: Callable[..., None], *args: Any, **kwargs: Any) -> None:
     config = get_config()
@@ -48,14 +51,7 @@ def main(router: Router, func: Callable[..., None], *args: Any, **kwargs: Any) -
             raise
 
         sudo = router.sudo(via=connect, python_path="python3")
-        calls.append(
-            sudo.call_async(
-                func,
-                create_data(server=server),
-                *args,
-                **kwargs
-            )
-        )
+        calls.append(sudo.call_async(func, create_data(server=server), *args, **kwargs))
 
     infos = []
     errors = []
@@ -73,6 +69,7 @@ def main(router: Router, func: Callable[..., None], *args: Any, **kwargs: Any) -
         raise Exception(errors)
 
     return infos
+
 
 def hash_fn(key: str, count: int) -> int:
     return sum(bytearray(key.encode("utf-8"))) % count

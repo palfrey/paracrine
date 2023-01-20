@@ -13,4 +13,3 @@ def setup_venv(venv: pathlib.Path) -> None:
 
     if not venv_bin.joinpath("wheel").exists():
         run_command(f"{venv_pip} install wheel")
-

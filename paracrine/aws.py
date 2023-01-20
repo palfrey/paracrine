@@ -22,6 +22,7 @@ def setup_aws():
             indent=2,
         )
 
+
 def set_aws_creds():
     aws_conf = json.loads(configs("configs/other-aws"))
     os.environ["AWS_ACCESS_KEY_ID"] = aws_conf["access_key"]

@@ -2,3 +2,4 @@ mitogen
 pip-tools
 jinja2
 pyyaml
+pre-commit

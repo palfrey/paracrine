@@ -18,7 +18,8 @@ def adduser(name, home_dir=None):
     else:
         return False
 
-def groups():    
+
+def groups():
     raw_groups = other_config(host()["name"])["groups"]
 
     ret = {}
@@ -31,8 +32,6 @@ def groups():
         ret[bits[0]] = bits[3].split(",")
 
     return ret
-
-
 
 
 def add_user_to_group(user, group):

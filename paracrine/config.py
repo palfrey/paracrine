@@ -1,4 +1,3 @@
-import json
 import os
 import pathlib
 from typing import Any, Dict
@@ -25,6 +24,7 @@ def configs(fname):
         print(sorted(data["configs"].keys()))
         raise
 
+
 def set_data(new_data: Dict[str, Any]) -> None:
     loader = jinja2.DictLoader(new_data["templates"])
     global jinja_env, data
@@ -32,6 +32,7 @@ def set_data(new_data: Dict[str, Any]) -> None:
         loader=loader, undefined=jinja2.StrictUndefined, keep_trailing_newline=True
     )
     data = new_data
+
 
 def add_folder_to_config(configs, folder, shortname=None, filter=None):
     if not os.path.exists(folder):
@@ -47,6 +48,7 @@ def add_folder_to_config(configs, folder, shortname=None, filter=None):
         else:
             full = key = os.path.join(folder, f)
         configs[key] = open(full).read()
+
 
 inventory = None
 inventory_directory = None
@@ -91,6 +93,7 @@ def environment():
         return data["environment"]
     return inventory["environment"]
 
+
 def create_data(server=None):
     config = get_config()
     templates = {}
@@ -99,7 +102,7 @@ def create_data(server=None):
             templates[f] = open(os.path.join(root, f)).read()
     configs = {
         "config.yaml": open("config.yaml").read(),
-    }   
+    }
     add_folder_to_config(
         configs,
         config_path(),

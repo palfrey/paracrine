@@ -53,7 +53,6 @@ def cd(path: os.PathLike):
         os.chdir(CWD)
 
 
-
 def set_mode(path, mode):
     raw_mode = int(mode, 8)
     existing = stat.S_IMODE(os.stat(path).st_mode)
@@ -65,8 +64,8 @@ def set_mode(path, mode):
         return False
 
 
-def set_owner(path, owner: Optional[str]=None, group: Optional[str]=None):
-    st = os.stat(path)    
+def set_owner(path, owner: Optional[str] = None, group: Optional[str] = None):
+    st = os.stat(path)
     if owner is not None:
         owner_id = pwd.getpwnam(owner).pw_uid
     else:
@@ -94,22 +93,6 @@ def make_directory(path, mode=None, owner=None, group=None):
     if owner is not None or group is not None:
         set_owner(path, owner, group)
     return ret
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 def replace_line(fname, search, replace):
@@ -224,9 +207,6 @@ def last_modified(fname):
         return float(0)
 
 
-
-
-
 def delete(fname):
     if os.path.exists(fname):
         logging.info("Deleting %s", fname)
@@ -263,6 +243,7 @@ def build_with_command(fname, command, deps=[]):
     else:
         return False
 
+
 def run_with_marker(fname, command, deps=[], max_age=None):
     changed = not os.path.exists(fname)
     target_modified = last_modified(fname)
@@ -274,12 +255,13 @@ def run_with_marker(fname, command, deps=[], max_age=None):
         dep_modified = last_modified(dep)
         if dep_modified < target_modified:
             changed = True
-    
+
     if changed:
         run_command(command)
         open(fname, "w").write(command)
-    
+
     return changed
+
 
 def run_command(
     cmd: str, directory: Optional[str] = None, input: Optional[str] = None
@@ -316,4 +298,3 @@ def run_command(
     except subprocess.CalledProcessError as e:
         print(e.output)
         raise
-

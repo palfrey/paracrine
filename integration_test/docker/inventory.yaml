@@ -1,5 +1,6 @@
-environment: prod
-data_path: "."
+---
+environment: docker
+data_path: .
 servers:
     - name: default
       count: 0
