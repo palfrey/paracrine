@@ -1,0 +1,9 @@
+environment: prod
+data_path: "."
+servers:
+    - name: default
+      count: 0
+      ssh_hostname: localhost
+      ssh_port: 22
+      ssh_key: TBD
+      ssh_user: root

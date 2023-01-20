@@ -1,0 +1,53 @@
+# Pleroma instance configuration
+
+# NOTE: This file should not be committed to a repo or otherwise made public
+# without removing sensitive information.
+
+import Config
+
+config :pleroma, Pleroma.Web.Endpoint,
+   url: [host: "{{ PLEROMA_HOST }}", scheme: "https", port: 443],
+   http: [ip: {127, 0, 0, 1}, port: 4000],
+   secret_key_base: " {{ SECRET_KEY_BASE }}",
+   signing_salt: "{{ SIGNING_SALT }}"
+
+config :pleroma, :instance,
+  name: "{{ PLEROMA_HOST }}",
+  email: "{{ PLEROMA_EMAIL }}",
+  notify_email: "{{ PLEROMA_EMAIL }}",
+  limit: 5000,
+  registrations_open: false
+
+config :pleroma, :media_proxy,
+  enabled: false,
+  redirect_on_failure: true
+  #base_url: "https://cache.pleroma.social"
+
+config :pleroma, Pleroma.Repo,
+  adapter: Ecto.Adapters.Postgres,
+  username: "pleroma",
+  password: "{{ DB_PASSWORD }}",
+  database: "pleroma",
+  hostname: "localhost"
+
+config :pleroma, :database, rum_enabled: false
+config :pleroma, :instance, static_dir: "/opt/pleroma/static"
+config :pleroma, Pleroma.Uploaders.Local, uploads: "/opt/pleroma/uploads"
+
+# Enable Strict-Transport-Security once SSL is working:
+# config :pleroma, :http_security,
+#   sts: true
+
+config :joken, default_signer: "/{{ JOKEN_SIGNER }}"
+
+config :pleroma, configurable_from_database: true
+
+config :pleroma, Pleroma.Upload, filters: [Pleroma.Upload.Filter.AnonymizeFilename, Pleroma.Upload.Filter.Dedupe]
+
+config :logger,
+  backends: [ :console ],
+  level: :info
+
+config :pleroma, :frontends,
+  primary: %{"name" => "pleroma-fe", "ref" => "develop"},
+  admin: %{"name" => "admin-fe", "ref" => "stable"}

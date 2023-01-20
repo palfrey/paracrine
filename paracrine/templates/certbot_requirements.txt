@@ -1,0 +1,4 @@
+certbot==1.32.0
+certbot-dns-route53==1.32.0
+certbot-nginx==1.32.0
+acme==1.32.0

@@ -1,0 +1,3 @@
+environments:
+  docker:
+    PLEROMA_HOST: pleroma-docker.tevps.net
