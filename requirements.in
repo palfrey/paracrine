@@ -1,5 +1,4 @@
-mitogen
+-e .
+
 pip-tools
-jinja2
-pyyaml
 pre-commit

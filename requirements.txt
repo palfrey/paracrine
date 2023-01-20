@@ -4,6 +4,8 @@
 #
 #    pip-compile
 #
+-e .
+    # via -r requirements.in
 build==0.10.0
     # via pip-tools
 cfgv==3.3.1
@@ -23,11 +25,11 @@ importlib-metadata==6.0.0
     #   pre-commit
     #   virtualenv
 jinja2==3.1.2
-    # via -r requirements.in
+    # via paracrine
 markupsafe==2.1.2
     # via jinja2
 mitogen==0.3.3
-    # via -r requirements.in
+    # via paracrine
 nodeenv==1.7.0
     # via pre-commit
 packaging==23.0
@@ -42,7 +44,7 @@ pyproject-hooks==1.0.0
     # via build
 pyyaml==6.0
     # via
-    #   -r requirements.in
+    #   paracrine
     #   pre-commit
 tomli==2.0.1
     # via
