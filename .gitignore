@@ -2,3 +2,4 @@
 */configs/
 __pycache__/
 paracrine.egg-info/
+.coverage

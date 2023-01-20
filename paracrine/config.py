@@ -1,4 +1,5 @@
 import json
+import yaml
 import os
 import pathlib
 from typing import Any, Dict
@@ -56,8 +57,6 @@ inventory_directory = None
 
 
 def set_config(inventory_path):
-    import yaml
-
     global inventory, inventory_directory
     inventory_directory = os.path.dirname(inventory_path)
     inventory = yaml.safe_load(open(inventory_path))
@@ -77,10 +76,10 @@ def config_path(shortname=False):
         return os.path.join(data_path(), "configs")
 
 
-def path_to_config_file(name):
+def path_to_config_file(name: str) -> str:
     if name.startswith("/"):
         return name
-    return f"{config_path()}/{name}"
+    return os.path.normpath(f"{config_path()}/{name}")
 
 
 def data_path():

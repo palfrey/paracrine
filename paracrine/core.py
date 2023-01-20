@@ -26,7 +26,7 @@ def decode(info):
 
 def run(func: Callable, *args: Any, **kwargs: Any) -> Any:
     mitogen.utils.log_to_file()
-    return mitogen.utils.run_with_router(func)
+    return mitogen.utils.run_with_router(func, *args, **kwargs)
 
 
 def main(router: Router, func: Callable[..., None], *args: Any, **kwargs: Any) -> None:
@@ -34,19 +34,24 @@ def main(router: Router, func: Callable[..., None], *args: Any, **kwargs: Any) -
     calls = []
     wg = is_wireguard()
     for server in config["servers"]:
+        hostname = server["wireguard_ip"] if wg else server["ssh_hostname"]
+        port = 22 if wg else server.get("ssh_port", 22)
+        key_path = path_to_config_file(server["ssh_key"])
+        if not os.path.exists(key_path):
+            raise Exception(f"Can't find ssh key {key_path}")
         try:
             connect = router.ssh(
-                hostname=server["wireguard_ip"] if wg else server["ssh_hostname"],
-                port=22 if wg else server["ssh_port"],
+                hostname=hostname,
+                port=port,
                 username=server["ssh_user"],
-                identity_file=path_to_config_file(server["ssh_key"]),
+                identity_file=key_path,
                 check_host_keys="accept",
                 python_path="python3",
             )
         except StreamError:
             print(
                 "Exception while trying to login to %s@%s:%s"
-                % (server["ssh_user"], server["ssh_hostname"], server["ssh_port"])
+                % (server["ssh_user"], hostname, port)
             )
             raise
 
