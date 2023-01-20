@@ -1,7 +1,7 @@
 import os
 from typing import List
 
-from .fs import run_command
+from .fs import run_command, set_file_contents
 
 
 def apt_install(packages: List[str], always_install: bool = False) -> None:
@@ -22,3 +22,13 @@ def apt_install(packages: List[str], always_install: bool = False) -> None:
 
 def apt_update():
     run_command("apt-get update --allow-releaseinfo-change")
+
+
+def debian_repo(name, contents=None):
+    fname = "/etc/apt/sources.list.d/%s.list" % name
+    if contents is None:
+        contents = "deb http://deb.debian.org/debian %s main" % name
+
+    changed = set_file_contents(fname, contents)
+    if changed:
+        apt_update()

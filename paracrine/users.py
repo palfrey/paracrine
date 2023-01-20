@@ -1,6 +1,5 @@
 from .fs import run_command
-from .config import host
-from .bootstrap import other_config
+from .config import host, other_config
 
 
 def users():

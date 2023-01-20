@@ -2,7 +2,7 @@ import sys
 from paracrine.main import everything
 from mitogen.parent import Router
 from paracrine.certs import do as certs_do
-from . import pleroma
+import pleroma
 
 
 def bootstrap_func(router: Router):

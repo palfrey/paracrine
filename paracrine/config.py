@@ -1,3 +1,4 @@
+import json
 import os
 import pathlib
 from typing import Any, Dict
@@ -127,3 +128,19 @@ def create_data(server=None):
         "environment": environment(),
         "inventory": get_config(),
     }
+
+
+def network_config_file(name, shortname=False):
+    return config_path(shortname) + "/networks-{name}".format(name=name)
+
+
+def network_config(name):
+    return json.loads(configs(network_config_file(name, shortname=True)))
+
+
+def other_config_file(name, shortname=False):
+    return config_path(shortname) + "/other-{name}".format(name=name)
+
+
+def other_config(name):
+    return json.loads(configs(other_config_file(name, shortname=True)))

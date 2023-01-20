@@ -1,6 +1,8 @@
 import pathlib
 
-from .fs import run_command, apt_install
+from .debian import apt_install
+
+from .fs import run_command
 
 
 def setup_venv(venv: pathlib.Path) -> None:

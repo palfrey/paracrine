@@ -1,6 +1,6 @@
 from pathlib import Path
 import yaml
-from paracrine.apt import apt_install
+from paracrine.debian import apt_install, debian_repo
 from paracrine.config import configs, environment
 from paracrine.fs import (
     build_with_command,
@@ -12,7 +12,6 @@ from paracrine.fs import (
     set_file_contents,
     set_file_contents_from_template,
 )
-from paracrine.repos import debian_repo
 from paracrine.systemd import systemctl_daemon_reload, systemd_set
 from paracrine.users import adduser
 

@@ -4,25 +4,9 @@ from pathlib import Path
 
 from mitogen.parent import Router
 
-from .config import config_path, configs, set_data
+from .config import network_config_file, other_config_file, set_data
 from .core import in_vagrant, main
 from .fs import run_command
-
-
-def network_config_file(name, shortname=False):
-    return config_path(shortname) + "/networks-{name}".format(name=name)
-
-
-def network_config(name):
-    return json.loads(configs(network_config_file(name, shortname=True)))
-
-
-def other_config_file(name, shortname=False):
-    return config_path(shortname) + "/other-{name}".format(name=name)
-
-
-def other_config(name):
-    return json.loads(configs(other_config_file(name, shortname=True)))
 
 
 def do(data):

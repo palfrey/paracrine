@@ -1,8 +1,8 @@
 import os
 from typing import Any, Callable
-import mitogen
 from mitogen.core import StreamError
 from mitogen.parent import Router
+import mitogen.utils
 
 from .users import users
 
