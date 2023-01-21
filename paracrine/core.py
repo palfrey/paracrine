@@ -25,7 +25,7 @@ def decode(info):
 
 
 def run(func: Callable, *args: Any, **kwargs: Any) -> Any:
-    mitogen.utils.log_to_file()
+    mitogen.utils.log_to_file(level="INFO")
     return mitogen.utils.run_with_router(func, *args, **kwargs)
 
 

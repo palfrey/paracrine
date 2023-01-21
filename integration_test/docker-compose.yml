@@ -1,0 +1,10 @@
+---
+version: '3'
+services:
+    basic:
+        build:
+            dockerfile: Dockerfile.basic
+            context: .
+        ports:
+            - 2000:22
+        command: bash -c "/etc/init.d/ssh start && sleep infinity"

@@ -1,7 +1,6 @@
 from pathlib import Path
-import yaml
 from paracrine.debian import apt_install, debian_repo
-from paracrine.config import configs, environment
+from paracrine.config import core_config, environment, get_config_file
 from paracrine.fs import (
     build_with_command,
     download,
@@ -20,7 +19,7 @@ from paracrine.users import adduser
 
 
 def do():
-    config = yaml.safe_load(configs("config.yaml"))
+    config = core_config()
     env = environment()
     LOCAL = config["environments"][env]
 
@@ -89,20 +88,21 @@ def do():
     nginx_changes = make_directory(str(cert_dir))
     nginx_changes = (
         set_file_contents(
-            cert_dir.joinpath("fullchain.pem"), configs("configs/other-fullchain")
+            cert_dir.joinpath("fullchain.pem"),
+            get_config_file("configs/other-fullchain"),
         )
         or nginx_changes
     )
     nginx_changes = (
         set_file_contents(
-            cert_dir.joinpath("privkey.pem"), configs("configs/other-privkey")
+            cert_dir.joinpath("privkey.pem"), get_config_file("configs/other-privkey")
         )
         or nginx_changes
     )
     nginx_changes = (
         set_file_contents(
             cert_dir.joinpath("options-ssl-nginx.conf"),
-            configs("configs/other-ssl-options"),
+            get_config_file("configs/other-ssl-options"),
         )
         or nginx_changes
     )

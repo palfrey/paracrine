@@ -1,0 +1,3 @@
+networks-*
+other-*
+!other-aws

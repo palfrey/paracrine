@@ -4,6 +4,8 @@ from pathlib import Path
 
 from mitogen.parent import Router
 
+from .debian import apt_install
+
 from .config import network_config_file, other_config_file, set_data
 from .core import in_vagrant, main
 from .fs import run_command
@@ -11,6 +13,7 @@ from .fs import run_command
 
 def do(data):
     set_data(data)
+    apt_install(["iproute2"])
 
     data = {
         "hostname": socket.gethostname(),
@@ -32,6 +35,7 @@ def do(data):
             else:
                 data["external_ip"] = "<unknown>"
         else:
+            apt_install(["curl"])
             data["external_ip"] = run_command(
                 "curl --silent https://api.ipify.org?format=json"
             )

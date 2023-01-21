@@ -34,10 +34,9 @@ def set_file_contents(fname: str, contents: str, ignore_changes: bool = False) -
 
 
 def set_file_contents_from_template(fname, template, ignore_changes=False, **kwargs):
-    assert jinja_env is not None, "Need to run set_data first!"
     return set_file_contents(
         fname,
-        jinja_env.get_template(template).render(**kwargs),
+        jinja_env().get_template(template).render(**kwargs),
         ignore_changes=ignore_changes,
     )
 

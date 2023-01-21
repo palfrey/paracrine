@@ -28,5 +28,5 @@ def everything(
     set_config(inventory_path)
     run(bootstrap.core)
     if bootstrap_func is not None:
-        run(bootstrap_func())
+        run(bootstrap_func)
     run(core, core_func)

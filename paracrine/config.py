@@ -7,8 +7,15 @@ from typing import Any, Dict
 import jinja2
 
 
-jinja_env = None
+_jinja_env = None
 data = None
+
+CONFIG_NAME = "config.yaml"
+
+
+def jinja_env():
+    assert _jinja_env is not None, "Need to run set_data first!"
+    return _jinja_env
 
 
 def host():
@@ -19,7 +26,7 @@ def config():
     return data["config"]
 
 
-def configs(fname):
+def get_config_file(fname):
     try:
         return data["configs"][fname]
     except KeyError:
@@ -27,10 +34,14 @@ def configs(fname):
         raise
 
 
+def core_config():
+    return yaml.safe_load(get_config_file(CONFIG_NAME))
+
+
 def set_data(new_data: Dict[str, Any]) -> None:
     loader = jinja2.DictLoader(new_data["templates"])
-    global jinja_env, data
-    jinja_env = jinja2.Environment(
+    global _jinja_env, data
+    _jinja_env = jinja2.Environment(
         loader=loader, undefined=jinja2.StrictUndefined, keep_trailing_newline=True
     )
     data = new_data
@@ -97,9 +108,14 @@ def environment():
 def create_data(server=None):
     config = get_config()
     templates = {}
-    for root, dirs, files in os.walk("templates"):
-        for f in files:
-            templates[f] = open(os.path.join(root, f)).read()
+    template_paths = [
+        pathlib.Path("templates"),
+        pathlib.Path(__file__).parent.joinpath("templates"),
+    ]
+    for template_path in template_paths:
+        for path in template_path.iterdir():
+            templates[path.name] = path.open().read()
+
     configs = {
         "config.yaml": open("config.yaml").read(),
     }
@@ -134,7 +150,7 @@ def network_config_file(name, shortname=False):
 
 
 def network_config(name):
-    return json.loads(configs(network_config_file(name, shortname=True)))
+    return json.loads(get_config_file(network_config_file(name, shortname=True)))
 
 
 def other_config_file(name, shortname=False):
@@ -142,4 +158,4 @@ def other_config_file(name, shortname=False):
 
 
 def other_config(name):
-    return json.loads(configs(other_config_file(name, shortname=True)))
+    return json.loads(get_config_file(other_config_file(name, shortname=True)))

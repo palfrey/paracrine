@@ -3,7 +3,7 @@ import os
 import pathlib
 
 from .fs import run_command
-from .config import config_path, configs
+from .config import config_path, get_config_file
 
 
 def setup_aws():
@@ -24,6 +24,6 @@ def setup_aws():
 
 
 def set_aws_creds():
-    aws_conf = json.loads(configs("configs/other-aws"))
+    aws_conf = json.loads(get_config_file("configs/other-aws"))
     os.environ["AWS_ACCESS_KEY_ID"] = aws_conf["access_key"]
     os.environ["AWS_SECRET_ACCESS_KEY"] = aws_conf["secret_key"]

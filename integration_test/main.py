@@ -1,12 +1,14 @@
 import sys
-from paracrine.main import everything
+from paracrine.aws import setup_aws
 from mitogen.parent import Router
-from paracrine.certs import do as certs_do
+import paracrine.certs
+import paracrine.main
 import pleroma
 
 
 def bootstrap_func(router: Router):
-    certs_do(router, "foo", "bar@foo.com")
+    setup_aws()
+    paracrine.certs.core(router, "foo", "bar@foo.com")
 
 
 def core_func():
@@ -14,4 +16,4 @@ def core_func():
 
 
 if __name__ == "__main__":
-    everything(sys.argv[1], bootstrap_func, core_func)
+    paracrine.main.everything(sys.argv[1], bootstrap_func, core_func)

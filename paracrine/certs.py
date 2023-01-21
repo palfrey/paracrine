@@ -1,9 +1,10 @@
 from datetime import timedelta
 from pathlib import Path
-from typing import Dict
+from typing import Any, Dict
 
 from mitogen.parent import Router
-from paracrine.bootstrap import other_config_file
+from .config import core_config, other_config_file
+from .config import set_data
 from .core import main, use_this_host
 from .python import setup_venv
 from .fs import (
@@ -19,6 +20,11 @@ def certbot_for_host(hostname: str, email: str) -> None:
     certbot = Path("/opt/certbot")
     live_path = certbot.joinpath("config", "live", hostname)
 
+    config = core_config()
+
+    # Are we in a test config where we should just not get the cert
+    dummy_certs = config.get("dummy_certs", False)
+
     if use_this_host("certbot"):
         set_aws_creds()
         venv = certbot.joinpath("venv")
@@ -26,8 +32,10 @@ def certbot_for_host(hostname: str, email: str) -> None:
         pip = venv_bin.joinpath("pip")
         certbot_bin = venv_bin.joinpath("certbot")
 
-        if not live_path.exists():
-            make_directory(str(certbot))
+        fullchain_path = live_path.joinpath("fullchain.pem")
+        if not fullchain_path.exists():
+            make_directory(live_path)
+            make_directory(certbot)
             setup_venv(venv)
             set_file_contents_from_template(
                 "/opt/certbot/requirements.txt", "certbot_requirements.txt"
@@ -37,27 +45,32 @@ def certbot_for_host(hostname: str, email: str) -> None:
                 f"{pip} install -r /opt/certbot/requirements.txt",
             )
 
-            run_command(
-                f"{certbot_bin} certonly \
-                    --config-dir={certbot.joinpath('config')} \
-                    --work-dir={certbot.joinpath('workdir')} \
-                    --logs-dir={certbot.joinpath('logs')} \
-                    -m {email} --agree-tos --non-interactive \
-                    --no-eff-email --domains {hostname} --dns-route53"
-            )
+            if dummy_certs:
+                fullchain_path.open("w").write("")
+                live_path.joinpath("privkey.pem").open("w").write("")
+            else:
+                run_command(
+                    f"{certbot_bin} certonly \
+                        --config-dir={certbot.joinpath('config')} \
+                        --work-dir={certbot.joinpath('workdir')} \
+                        --logs-dir={certbot.joinpath('logs')} \
+                        -m {email} --agree-tos --non-interactive \
+                        --no-eff-email --domains {hostname} --dns-route53"
+                )
         else:
-            run_with_marker(
-                "/opt/certbot/renew_marker",
-                f"{certbot_bin} renew \
-                    --config-dir={certbot.joinpath('config')} \
-                    --work-dir={certbot.joinpath('workdir')} \
-                    --logs-dir={certbot.joinpath('logs')} \
-                    --dns-route53",
-                max_age=timedelta(days=1),
-            )
+            if not dummy_certs:
+                run_with_marker(
+                    "/opt/certbot/renew_marker",
+                    f"{certbot_bin} renew \
+                        --config-dir={certbot.joinpath('config')} \
+                        --work-dir={certbot.joinpath('workdir')} \
+                        --logs-dir={certbot.joinpath('logs')} \
+                        --dns-route53",
+                    max_age=timedelta(days=1),
+                )
 
         return {
-            "fullchain": live_path.joinpath("fullchain.pem").open().read(),
+            "fullchain": fullchain_path.open().read(),
             "privkey": live_path.joinpath("privkey.pem").open().read(),
             "ssl-options": venv.joinpath(
                 "lib/python3.9/site-packages/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf"  # noqa: E501
@@ -69,7 +82,8 @@ def certbot_for_host(hostname: str, email: str) -> None:
         return {}
 
 
-def do(data: object, hostname: str, email: str) -> Dict:
+def do(data: Dict[str, Any], hostname: str, email: str) -> Dict:
+    set_data(data)
     return certbot_for_host(hostname, email)
 
 
