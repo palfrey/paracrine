@@ -1,5 +1,5 @@
-from .fs import run_command
 from .config import host, other_config
+from .fs import run_command
 
 
 def users():

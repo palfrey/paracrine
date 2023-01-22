@@ -1,7 +1,7 @@
+import sys
 from os import system
 
 from .config import get_config, path_to_config_file, set_config
-import sys
 
 
 def ssh_server(server, run=""):

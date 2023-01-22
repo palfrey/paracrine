@@ -1,12 +1,12 @@
 import os
 from typing import Any, Callable
+
+import mitogen.utils
 from mitogen.core import StreamError
 from mitogen.parent import Router
-import mitogen.utils
-
-from .users import users
 
 from .config import config, create_data, get_config, host, path_to_config_file
+from .users import users
 
 
 def in_vagrant():

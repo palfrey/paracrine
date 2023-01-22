@@ -1,13 +1,14 @@
 import sys
 from typing import Any, Dict
+
+import pleroma
+from mitogen.parent import Router
+
+import paracrine.certs
+from paracrine.aws import setup_aws
 from paracrine.config import set_data
 from paracrine.core import main
-from paracrine.aws import setup_aws
-from mitogen.parent import Router
-import paracrine.certs
 from paracrine.main import everything
-import pleroma
-
 
 # Can't get simpler because of https://github.com/mitogen-hq/mitogen/issues/894
 

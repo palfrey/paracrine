@@ -4,10 +4,9 @@ from pathlib import Path
 
 from mitogen.parent import Router
 
-from .debian import apt_install
-
 from .config import network_config_file, other_config_file, set_data
 from .core import in_vagrant, main
+from .debian import apt_install
 from .fs import run_command
 
 

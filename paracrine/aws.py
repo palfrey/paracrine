@@ -2,8 +2,8 @@ import json
 import os
 import pathlib
 
-from .fs import run_command
 from .config import config_path, get_config_file
+from .fs import run_command
 
 
 def setup_aws():

@@ -1,12 +1,11 @@
 import logging
 from typing import Any, Callable, Dict, Optional
 
-from .core import main, run
-
-from .config import set_config, set_data
-from . import bootstrap
-
 from mitogen.parent import Router
+
+from . import bootstrap
+from .config import set_config, set_data
+from .core import main, run
 
 
 def do(data: Dict[str, Any], core_func: Callable) -> None:

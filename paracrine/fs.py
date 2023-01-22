@@ -1,5 +1,4 @@
 import contextlib
-from datetime import datetime
 import grp
 import logging
 import os
@@ -7,9 +6,9 @@ import pwd
 import re
 import stat
 import subprocess
+from datetime import datetime
 from difflib import unified_diff
 from typing import Optional
-
 
 from .config import jinja_env
 

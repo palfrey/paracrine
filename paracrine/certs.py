@@ -3,17 +3,17 @@ from pathlib import Path
 from typing import Any, Dict
 
 from mitogen.parent import Router
-from .config import core_config, other_config_file
-from .config import set_data
+
+from .aws import set_aws_creds
+from .config import core_config, other_config_file, set_data
 from .core import main, use_this_host
-from .python import setup_venv
 from .fs import (
     make_directory,
     run_command,
     run_with_marker,
     set_file_contents_from_template,
 )
-from .aws import set_aws_creds
+from .python import setup_venv
 
 
 def certbot_for_host(hostname: str, email: str) -> None:

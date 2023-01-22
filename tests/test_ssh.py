@@ -1,9 +1,10 @@
+import tempfile
 from typing import BinaryIO
 
 import pytest
-from paracrine.main import everything
-import tempfile
 import yaml
+
+from paracrine.main import everything
 
 
 def set_config_data(config_file: BinaryIO, data: object) -> None:
