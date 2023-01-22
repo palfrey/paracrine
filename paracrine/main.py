@@ -1,21 +1,9 @@
 import logging
-from typing import Any, Callable, Dict, Optional
-
-from mitogen.parent import Router
+from typing import Callable, Optional
 
 from . import bootstrap
-from .config import set_config, set_data
-from .core import main, run
-
-
-def do(data: Dict[str, Any], core_func: Callable) -> None:
-    set_data(data)
-    core_func()
-
-
-def core(router: Router, core_func: Callable) -> None:
-    for _ in main(router, do, core_func):
-        pass
+from .config import set_config
+from .core import run
 
 
 def everything(
