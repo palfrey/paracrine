@@ -25,6 +25,7 @@ def do():
 
     adduser("pleroma", home_dir="/opt/pleroma")
     make_directory("/opt/pleroma", owner="pleroma")
+    apt_install(["unzip", "systemd"])
     # Taken from https://git.pleroma.social/pleroma/pleroma/-/pipelines?page=1&scope=branches&ref=stable
     res = download_and_unpack(
         "https://git.pleroma.social/pleroma/pleroma/-/jobs/220705/artifacts/download?file_type=archive",
@@ -43,10 +44,10 @@ def do():
     set_file_contents_from_template("/var/lib/pleroma/static/robots.txt", "robots.txt")
     make_directory("/etc/pleroma", owner="pleroma")
     config_changes = set_file_contents_from_template(
-        "/etc/pleroma/config.exs", "config.exs.j2", PLEROMA_HOST=LOCAL["PLEROMA_HOST"]
+        "/etc/pleroma/config.exs", "config.exs.j2", **LOCAL
     )
     db_changes = set_file_contents_from_template(
-        "/opt/pleroma/setup_db.psql", "setup_db.psql"
+        "/opt/pleroma/setup_db.psql", "setup_db.psql.j2", **LOCAL
     )
 
     download(
@@ -54,6 +55,7 @@ def do():
         "/etc/apt/trusted.gpg.d/postgresql.gpg.asc",
         "0144068502a1eddd2a0280ede10ef607d1ec592ce819940991203941564e8e76",
     )
+    apt_install(["gpg"])
     build_with_command(
         "/etc/apt/trusted.gpg.d/postgresql.gpg",
         "cat /etc/apt/trusted.gpg.d/postgresql.gpg.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/postgresql.gpg",

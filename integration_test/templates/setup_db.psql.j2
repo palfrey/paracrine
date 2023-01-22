@@ -1,4 +1,4 @@
-CREATE USER pleroma WITH ENCRYPTED PASSWORD '{{ PASSWORD }}';
+CREATE USER pleroma WITH ENCRYPTED PASSWORD '{{ DB_PASSWORD }}';
 CREATE DATABASE pleroma OWNER pleroma;
 \c pleroma;
 --Extensions made by ecto.migrate that need superuser access

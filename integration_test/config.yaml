@@ -2,5 +2,10 @@
 environments:
     docker:
         PLEROMA_HOST: pleroma-docker.tevps.net
+        PLEROMA_EMAIL: anon@penet.fi
+        SECRET_KEY_BASE: some-secret
+        SIGNING_SALT: some-salt
+        DB_PASSWORD: super-secret-value
+        JOKEN_SIGNER: joken-secret
 
 dummy_certs: true # so we don't actually try and get bad certs

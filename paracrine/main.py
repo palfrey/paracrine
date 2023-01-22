@@ -29,4 +29,4 @@ def everything(
     run(bootstrap.core)
     if bootstrap_func is not None:
         run(bootstrap_func)
-    run(core, core_func)
+    run(core_func)

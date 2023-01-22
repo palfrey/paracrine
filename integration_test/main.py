@@ -1,9 +1,15 @@
 import sys
+from typing import Any, Dict
+from paracrine.config import set_data
+from paracrine.core import main
 from paracrine.aws import setup_aws
 from mitogen.parent import Router
 import paracrine.certs
-import paracrine.main
+from paracrine.main import everything
 import pleroma
+
+
+# Can't get simpler because of https://github.com/mitogen-hq/mitogen/issues/894
 
 
 def bootstrap_func(router: Router):
@@ -11,9 +17,15 @@ def bootstrap_func(router: Router):
     paracrine.certs.core(router, "foo", "bar@foo.com")
 
 
-def core_func():
+def do(data: Dict[str, Any]) -> None:
+    set_data(data)
     pleroma.do()
 
 
+def core_func(router: Router) -> None:
+    for _ in main(router, do):
+        pass
+
+
 if __name__ == "__main__":
-    paracrine.main.everything(sys.argv[1], bootstrap_func, core_func)
+    everything(sys.argv[1], bootstrap_func, core_func)
