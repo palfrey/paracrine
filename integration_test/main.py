@@ -15,7 +15,7 @@ from paracrine.main import everything
 
 def bootstrap_func(router: Router):
     setup_aws()
-    paracrine.certs.core(router, "foo", "bar@foo.com")
+    paracrine.certs.core(router, "pleroma.example.com", "bar@foo.com")
 
 
 def do(data: Dict[str, Any]) -> None:
