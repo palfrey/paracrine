@@ -63,7 +63,7 @@ if __name__ == "__main__":
         args = args[1:]
 
     if args[0] == "show":
-        service = argv[2]
+        service = args[1]
         if service in get_enabled_services():
             print("UnitFileState=enabled")
         else:
@@ -73,7 +73,7 @@ if __name__ == "__main__":
         else:
             print("SubState=dead")
     elif args[0] == "start":
-        service = argv[2]
+        service = args[1]
         if service in get_running_services():
             exit(0)
         service_path = Path(f"/etc/init.d/{service}")
@@ -93,12 +93,12 @@ if __name__ == "__main__":
                     subprocess.Popen(["nohup"] + cmd.split(" "), start_new_session=True)
         add_running_service(service)
     elif args[0] == "enable":
-        service = argv[2]
+        service = args[1]
         subprocess.check_call(["update-rc.d", service, "enable", "2"])
     elif args[0] == "daemon-reload":
         pass  # FIXME, do stuff
     elif args[0] == "reload":
-        service = argv[2]
+        service = args[1]
         service_path = Path(f"/etc/init.d/{service}")
         if service_path.exists():
             subprocess.check_call([service_path, "reload"])
