@@ -33,6 +33,9 @@ ssl_session_cache shared:ssl_session_cache:10m;
 server {
     server_name {{ PLEROMA_HOST }};
 
+    {% if DUMMY_CERTS %}
+    listen 80;
+    {% else %}
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
 
@@ -40,6 +43,7 @@ server {
     ssl_certificate_key /opt/letsencrypt/privkey.pem;
 
     include /opt/letsencrypt/options-ssl-nginx.conf;
+    {% endif %}
 
     ssl_stapling on;
     ssl_stapling_verify on;

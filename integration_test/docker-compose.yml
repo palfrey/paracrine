@@ -6,5 +6,5 @@ services:
             dockerfile: Dockerfile.basic
             context: .
         ports:
-            - 2000:22
-        command: bash -c "/etc/init.d/ssh start && sleep infinity"
+            - "2000:22"
+        command: systemctl

@@ -14,6 +14,7 @@ def apt_install(packages: List[str], always_install: bool = False) -> None:
         if packages == []:
             return
     # Confdef is to fix https://unix.stackexchange.com/a/416816/73838
+    os.environ["DEBIAN_FRONTEND"] = "noninteractive"
     run_command(
         "apt-get install %s --no-install-recommends --yes -o DPkg::Options::=--force-confdef"
         % " ".join(packages)

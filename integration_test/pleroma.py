@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from paracrine.certs import get_dummy_certs
 from paracrine.config import core_config, environment, get_config_file
 from paracrine.debian import apt_install, debian_repo
 from paracrine.fs import (
@@ -9,6 +10,7 @@ from paracrine.fs import (
     link,
     make_directory,
     run_command,
+    run_with_marker,
     set_file_contents,
     set_file_contents_from_template,
 )
@@ -26,7 +28,7 @@ def do():
 
     adduser("pleroma", home_dir="/opt/pleroma")
     make_directory("/opt/pleroma", owner="pleroma")
-    apt_install(["unzip", "systemd"])
+    apt_install(["unzip"])
     # Taken from https://git.pleroma.social/pleroma/pleroma/-/pipelines?page=1&scope=branches&ref=stable
     res = download_and_unpack(
         "https://git.pleroma.social/pleroma/pleroma/-/jobs/220705/artifacts/download?file_type=archive",
@@ -67,15 +69,20 @@ def do():
         "deb http://apt.postgresql.org/pub/repos/apt bullseye-pgdg main",
     )
     apt_install(["postgresql-14"])
+    systemd_set("postgresql", enabled=True, running=True)
 
-    if release_changed and db_changes:
-        run_command('su postgres -s $SHELL -lc "psql -f /opt/pleroma/setup_db.psql"')
-
-    if release_changed:
-        run_command(
-            'su pleroma -s $SHELL -lc "./bin/pleroma_ctl migrate"',
-            directory="/opt/pleroma",
-        )
+    run_with_marker(
+        "/opt/pleroma/setup_db.marker",
+        'su postgres -s $SHELL -lc "psql -f /opt/pleroma/setup_db.psql"',
+        deps=["/opt/pleroma/setup_db.psql"],
+        force_build=release_changed and db_changes,
+    )
+    run_with_marker(
+        "/opt/pleroma/migrate.marker",
+        'su pleroma -s $SHELL -lc "./bin/pleroma_ctl migrate"',
+        directory="/opt/pleroma",
+        force_build=release_changed,
+    )
 
     link_change = link(
         "/etc/systemd/system/pleroma.service",
@@ -83,6 +90,7 @@ def do():
     )
     if link_change:
         systemctl_daemon_reload()
+
     systemd_set(
         "pleroma", enabled=True, running=True, restart=release_changed or config_changes
     )
@@ -116,6 +124,7 @@ def do():
         "/etc/nginx/sites-available/pleroma.conf",
         "pleroma.nginx.j2",
         PLEROMA_HOST=LOCAL["PLEROMA_HOST"],
+        DUMMY_CERTS=get_dummy_certs(),
     )
     nginx_changes = (
         link(

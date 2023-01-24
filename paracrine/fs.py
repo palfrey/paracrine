@@ -214,11 +214,11 @@ def delete(fname):
         return False
 
 
-def build_with_command(fname, command, deps=[]):
+def build_with_command(fname, command, deps=[], force_build=False, directory=None):
     display = command.strip()
     while display.find("  ") != -1:
         display = display.replace("  ", " ")
-    changed = set_file_contents("%s.command" % fname, display)
+    changed = set_file_contents("%s.command" % fname, display) or force_build
     target_modified = last_modified(fname)
     for dep in deps:
         if last_modified(dep) > target_modified:
@@ -231,19 +231,21 @@ def build_with_command(fname, command, deps=[]):
             commands = command.split("|")
             for command in commands:
                 try:
-                    out = run_command(command, input=out)
+                    out = run_command(command, input=out, directory=directory)
                 except subprocess.CalledProcessError:
                     print("Ran '%s' with input '%s'" % (command, out))
                     raise
         else:
-            run_command(command)
+            run_command(command, directory=directory)
         return True
     else:
         return False
 
 
-def run_with_marker(fname, command, deps=[], max_age=None):
-    changed = not os.path.exists(fname)
+def run_with_marker(
+    fname, command, deps=[], max_age=None, force_build=False, directory=None
+):
+    changed = not os.path.exists(fname) or force_build
     target_modified = last_modified(fname)
     if max_age is not None:
         age = datetime.now() - datetime.fromtimestamp(target_modified)
@@ -251,11 +253,12 @@ def run_with_marker(fname, command, deps=[], max_age=None):
             changed = True
     for dep in deps:
         dep_modified = last_modified(dep)
-        if dep_modified < target_modified:
+        if dep_modified > target_modified:
+            logging.info("%s is younger than %s" % (dep, fname))
             changed = True
 
     if changed:
-        run_command(command)
+        run_command(command, directory=directory)
         open(fname, "w").write(command)
 
     return changed
@@ -291,7 +294,7 @@ def run_command(
         if input is not None:
             input = input.encode("utf-8")
         (stdout, stderr) = process.communicate(input=input)
-        assert process.returncode == 0, (stdout, stderr)
+        assert process.returncode == 0, (process.returncode, stdout, stderr)
         return stdout.decode("utf-8")
     except subprocess.CalledProcessError as e:
         print(e.output)

@@ -34,10 +34,8 @@ def do(data):
             else:
                 data["external_ip"] = "<unknown>"
         else:
-            apt_install(["curl"])
-            data["external_ip"] = run_command(
-                "curl --silent https://api.ipify.org?format=json"
-            )
+            apt_install(["curl", "ca-certificates"])
+            data["external_ip"] = run_command("curl https://api.ipify.org?format=json")
         json.dump(data["external_ip"], ip_file.open("w"))
 
     return data

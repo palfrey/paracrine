@@ -16,14 +16,17 @@ from .fs import (
 from .python import setup_venv
 
 
+# Are we in a test config where we should just not get the cert
+def get_dummy_certs():
+    config = core_config()
+    return config.get("dummy_certs", False)
+
+
 def certbot_for_host(hostname: str, email: str) -> None:
     certbot = Path("/opt/certbot")
     live_path = certbot.joinpath("config", "live", hostname)
 
-    config = core_config()
-
-    # Are we in a test config where we should just not get the cert
-    dummy_certs = config.get("dummy_certs", False)
+    dummy_certs = get_dummy_certs()
 
     if use_this_host("certbot"):
         set_aws_creds()

@@ -1,6 +1,8 @@
 FROM debian:bullseye-20230109-slim
+WORKDIR /app
 RUN apt-get update
-RUN apt-get install -y --no-install-recommends openssh-server
-RUN update-rc.d ssh defaults
-RUN update-rc.d ssh enable
+RUN apt-get install -y --no-install-recommends openssh-server python3.9
+COPY systemctl.py /app
+RUN ln -s /app/systemctl.py /bin/systemctl
+RUN systemctl enable ssh
 COPY ./docker/configs/test_key.pub /root/.ssh/authorized_keys
