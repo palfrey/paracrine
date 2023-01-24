@@ -77,7 +77,11 @@ if __name__ == "__main__":
         if service in get_running_services():
             exit(0)
         service_path = Path(f"/etc/init.d/{service}")
-        if service_path.exists():
+        if service == "pleroma":
+            # FIXME: gigantic hack, because otherwise Github CI just locks every time and I have no idea why
+            # nohup + start_new_session should have fixed this, but doesn't
+            subprocess.check_call(["/opt/pleroma/bin/pleroma", "daemon"])
+        elif service_path.exists():
             args = ["nohup", service_path, "start"]
             print(args)
             subprocess.check_call(args)
