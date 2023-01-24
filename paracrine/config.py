@@ -26,11 +26,7 @@ def config():
 
 
 def get_config_file(fname):
-    try:
-        return data["configs"][fname]
-    except KeyError:
-        print(sorted(data["configs"].keys()))
-        raise
+    return data["configs"][fname]
 
 
 def core_config():
