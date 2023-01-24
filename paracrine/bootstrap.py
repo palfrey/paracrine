@@ -8,6 +8,7 @@ from .config import network_config_file, other_config_file, set_data
 from .core import in_vagrant, main
 from .debian import apt_install
 from .fs import run_command
+from .users import users
 
 
 def do(data):
@@ -17,7 +18,7 @@ def do(data):
     data = {
         "hostname": socket.gethostname(),
         "network_devices": run_command("ip -j address"),
-        "users": run_command("getent passwd | cut -d: -f1"),
+        "users": users(),
         "groups": run_command("getent group"),
         "server_name": data["host"]["name"],
     }
@@ -50,7 +51,7 @@ def core(router: Router) -> None:
 
         other = {
             "external_ip": json.loads(info["external_ip"])["ip"],
-            "users": sorted(info["users"].strip().split("\n")),
+            "users": info["users"],
             "groups": info["groups"],
             "hostname": info["hostname"],
         }

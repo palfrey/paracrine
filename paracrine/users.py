@@ -3,7 +3,11 @@ from .fs import run_command
 
 
 def users():
-    return other_self_config()["users"]
+    try:
+        return other_self_config()["users"]
+    except KeyError:
+        raw_users = run_command("getent passwd | cut -d: -f1")
+        return sorted(raw_users.strip().split("\n"))
 
 
 def adduser(name, home_dir=None):
