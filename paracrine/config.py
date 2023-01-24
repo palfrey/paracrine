@@ -127,12 +127,6 @@ def create_data(server: Optional[Dict] = None):
         or f.startswith("other-")
         or f.startswith("ssh-"),
     )
-    add_folder_to_config(
-        configs,
-        pathlib.Path(data_path()).joinpath("ssl").as_posix(),
-        shortname="ssl",
-        filter=lambda f: f.endswith(".pem"),
-    )
 
     return {
         "templates": templates,
