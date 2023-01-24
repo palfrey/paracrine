@@ -1,5 +1,5 @@
 import os
-from typing import Any, Callable
+from typing import Any, Callable, Dict
 
 import mitogen.utils
 from mitogen.core import StreamError
@@ -34,6 +34,7 @@ def main(router: Router, func: Callable[..., None], *args: Any, **kwargs: Any) -
     calls = []
     wg = is_wireguard()
     for server in config["servers"]:
+        assert isinstance(server, Dict)
         hostname = server["wireguard_ip"] if wg else server["ssh_hostname"]
         port = 22 if wg else server.get("ssh_port", 22)
         key_path = path_to_config_file(server["ssh_key"])

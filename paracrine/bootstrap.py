@@ -19,6 +19,7 @@ def do(data):
         "network_devices": run_command("ip -j address"),
         "users": run_command("getent passwd | cut -d: -f1"),
         "groups": run_command("getent group"),
+        "server_name": data["host"]["name"],
     }
     ip_file = Path("/opt/ip_address")
     if ip_file.exists():
@@ -44,11 +45,13 @@ def do(data):
 def core(router: Router) -> None:
     for info in main(router, do):
         networks = json.loads(info["network_devices"])
-        json.dump(networks, open(network_config_file(info["hostname"]), "w"), indent=2)
+        name = info["server_name"]
+        json.dump(networks, open(network_config_file(name), "w"), indent=2)
 
         other = {
             "external_ip": json.loads(info["external_ip"])["ip"],
             "users": sorted(info["users"].strip().split("\n")),
             "groups": info["groups"],
+            "hostname": info["hostname"],
         }
-        json.dump(other, open(other_config_file(info["hostname"]), "w"), indent=2)
+        json.dump(other, open(other_config_file(name), "w"), indent=2)

@@ -1,10 +1,9 @@
-from .config import host, other_config
+from .config import other_self_config
 from .fs import run_command
 
 
 def users():
-    raw_passwd = run_command("getent passwd | cut -d: -f1")
-    return sorted(raw_passwd.strip().split("\n"))
+    return other_self_config()["users"]
 
 
 def adduser(name, home_dir=None):
@@ -19,7 +18,7 @@ def adduser(name, home_dir=None):
 
 
 def groups():
-    raw_groups = other_config(host()["name"])["groups"]
+    raw_groups = other_self_config()["groups"]
 
     ret = {}
     for line in raw_groups.split("\n"):

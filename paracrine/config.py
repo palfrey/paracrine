@@ -1,7 +1,7 @@
 import json
 import os
 import pathlib
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import jinja2
 import yaml
@@ -104,7 +104,7 @@ def environment():
     return inventory["environment"]
 
 
-def create_data(server=None):
+def create_data(server: Optional[Dict] = None):
     config = get_config()
     templates = {}
     template_paths = [
@@ -158,3 +158,7 @@ def other_config_file(name, shortname=False):
 
 def other_config(name):
     return json.loads(get_config_file(other_config_file(name, shortname=True)))
+
+
+def other_self_config():
+    return other_config(host()["name"])
