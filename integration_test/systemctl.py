@@ -78,7 +78,9 @@ if __name__ == "__main__":
             exit(0)
         service_path = Path(f"/etc/init.d/{service}")
         if service_path.exists():
-            subprocess.check_call([service_path, "start"])
+            args = ["nohup", service_path, "start"]
+            print(args)
+            subprocess.check_call(args)
         else:
             for systemd_root in systemd_roots:
                 service_path = systemd_root.joinpath(f"{service}.service")
@@ -89,12 +91,15 @@ if __name__ == "__main__":
                     assert "Service" in config, config.keys()
                     assert "ExecStart" in config["Service"], config["Service"].keys()
                     cmd = config["Service"]["ExecStart"]
-                    print(cmd)
-                    subprocess.Popen(["nohup"] + cmd.split(" "), start_new_session=True)
+                    args = ["nohup"] + cmd.split(" ")
+                    print(args)
+                    subprocess.Popen(args, start_new_session=True)
         add_running_service(service)
     elif args[0] == "enable":
         service = args[1]
-        subprocess.check_call(["update-rc.d", service, "enable", "2"])
+        args = ["update-rc.d", service, "enable", "2"]
+        print(args)
+        subprocess.check_call(args)
     elif args[0] == "daemon-reload":
         pass  # FIXME, do stuff
     elif args[0] == "reload":
