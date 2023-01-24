@@ -15,7 +15,7 @@ def set_config_data(config_file: BinaryIO, data: object) -> None:
 def test_empty_servers():
     with tempfile.NamedTemporaryFile() as config_file:
         set_config_data(config_file, {"servers": []})
-        everything(config_file.name, None, lambda: None)
+        everything(config_file.name, None, lambda router: None)
 
 
 def test_bad_ssh_path():
