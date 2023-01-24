@@ -1,5 +1,5 @@
+import subprocess
 import sys
-from os import system
 
 from .config import get_config, path_to_config_file, set_config
 
@@ -11,7 +11,7 @@ def ssh_server(server, run=""):
     while command.find("  ") != -1:
         command = command.replace("  ", " ")
     print(command)
-    system(command)
+    subprocess.check_call(command.split(" "))
 
 
 def ssh(run="", index=None):
