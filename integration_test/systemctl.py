@@ -94,7 +94,7 @@ if __name__ == "__main__":
         add_running_service(service)
     elif args[0] == "enable":
         service = argv[2]
-        subprocess.check_call(["update-rc.d", "enable", service, "2"])
+        subprocess.check_call(["update-rc.d", service, "enable", "2"])
     elif args[0] == "daemon-reload":
         pass  # FIXME, do stuff
     elif args[0] == "reload":
