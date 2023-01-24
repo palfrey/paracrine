@@ -90,7 +90,7 @@ if __name__ == "__main__":
                     assert "ExecStart" in config["Service"], config["Service"].keys()
                     cmd = config["Service"]["ExecStart"]
                     print(cmd)
-                    subprocess.Popen(cmd.split(" "))
+                    subprocess.Popen(cmd.split(" "), start_new_session=True)
         add_running_service(service)
     elif args[0] == "enable":
         service = argv[2]
