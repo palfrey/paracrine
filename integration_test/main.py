@@ -10,7 +10,7 @@ from paracrine.config import set_data
 from paracrine.core import main
 from paracrine.main import everything
 
-# Can't get simpler because of https://github.com/mitogen-hq/mitogen/issues/894
+# FIXME: Can't get simpler because of https://github.com/mitogen-hq/mitogen/issues/894
 
 
 def bootstrap_func(router: Router):

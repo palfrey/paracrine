@@ -24,3 +24,4 @@ Limitations
 * All the servers are assumed to be Debian Linux boxes (although Debian-derivatives like Ubuntu _should_ work)
 * Direct SSH access is assumed possible (Mitogen supports jump boxes, but there's no setup for that yet here) with keys, not passwords
 * There's no "dry run" mode yet, which would be useful for GitOps
+* The main file should really be possible to be simplified e.g. replace your own `core_func` with handing around function pointers, but [there's an upstream mitogen bug](https://github.com/mitogen-hq/mitogen/issues/894) limiting us
