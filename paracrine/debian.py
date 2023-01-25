@@ -10,6 +10,7 @@ def apt_install(packages: List[str], always_install: bool = False) -> None:
             package
             for package in packages
             if not os.path.exists(f"/var/lib/dpkg/info/{package}.list")
+            and not os.path.exists(f"/var/lib/dpkg/info/{package}:amd64.list")
         ]
         if packages == []:
             return
