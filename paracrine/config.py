@@ -108,6 +108,8 @@ def create_data(server: Optional[Dict] = None):
         pathlib.Path(__file__).parent.joinpath("templates"),
     ]
     for template_path in template_paths:
+        if not template_path.exists():
+            continue
         for path in template_path.iterdir():
             templates[path.name] = path.open().read()
 
