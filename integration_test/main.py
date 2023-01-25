@@ -1,10 +1,10 @@
 import sys
 from typing import Any, Dict
 
-import pleroma
 from mitogen.parent import Router
 
 import paracrine.certs
+import paracrine.services.pleroma as pleroma
 from paracrine.aws import setup_aws
 from paracrine.config import set_data
 from paracrine.core import main

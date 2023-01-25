@@ -2,10 +2,8 @@ from pathlib import Path
 
 from paracrine.certs import get_dummy_certs
 from paracrine.config import core_config, environment, get_config_file
-from paracrine.debian import apt_install, debian_repo
+from paracrine.debian import apt_install
 from paracrine.fs import (
-    build_with_command,
-    download,
     download_and_unpack,
     link,
     make_directory,
@@ -14,7 +12,8 @@ from paracrine.fs import (
     set_file_contents,
     set_file_contents_from_template,
 )
-from paracrine.systemd import systemctl_daemon_reload, systemd_set
+from paracrine.services import postgresql
+from paracrine.systemd import link_service, systemd_set
 from paracrine.users import adduser
 
 # FIXME: Do soapbox from https://gitlab.com/soapbox-pub/soapbox/-/jobs/3371276281/artifacts/download
@@ -25,6 +24,8 @@ def do():
     config = core_config()
     env = environment()
     LOCAL = config["environments"][env]
+
+    postgresql.do()
 
     adduser("pleroma", home_dir="/opt/pleroma")
     make_directory("/opt/pleroma", owner="pleroma")
@@ -53,24 +54,6 @@ def do():
         "/opt/pleroma/setup_db.psql", "setup_db.psql.j2", **LOCAL
     )
 
-    download(
-        "https://www.postgresql.org/media/keys/ACCC4CF8.asc",
-        "/etc/apt/trusted.gpg.d/postgresql.gpg.asc",
-        "0144068502a1eddd2a0280ede10ef607d1ec592ce819940991203941564e8e76",
-    )
-    apt_install(["gpg"])
-    build_with_command(
-        "/etc/apt/trusted.gpg.d/postgresql.gpg",
-        "cat /etc/apt/trusted.gpg.d/postgresql.gpg.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/postgresql.gpg",
-        ["/etc/apt/trusted.gpg.d/postgresql.gpg.asc"],
-    )
-    debian_repo(
-        "postgresql_org_repository",
-        "deb http://apt.postgresql.org/pub/repos/apt bullseye-pgdg main",
-    )
-    apt_install(["postgresql-14"])
-    systemd_set("postgresql", enabled=True, running=True)
-
     run_with_marker(
         "/opt/pleroma/setup_db.marker",
         'su postgres -s $SHELL -lc "psql -f /opt/pleroma/setup_db.psql"',
@@ -84,13 +67,7 @@ def do():
         force_build=release_changed,
     )
 
-    link_change = link(
-        "/etc/systemd/system/pleroma.service",
-        "/opt/pleroma/installation/pleroma.service",
-    )
-    if link_change:
-        systemctl_daemon_reload()
-
+    link_service("/opt/pleroma/installation/pleroma.service")
     systemd_set(
         "pleroma", enabled=True, running=True, restart=release_changed or config_changes
     )

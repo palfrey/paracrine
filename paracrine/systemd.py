@@ -1,7 +1,8 @@
 import logging
 import subprocess
+from pathlib import Path
 
-from .fs import run_command
+from .fs import link, run_command
 
 
 def journal(name):
@@ -56,3 +57,13 @@ def systemd_set(name, enabled=None, running=None, restart=None, reloaded=None):
 
 def systemctl_daemon_reload():
     run_command("systemctl daemon-reload")
+
+
+def link_service(fullpath: str):
+    path = Path(fullpath)
+    link_change = link(
+        f"/etc/systemd/system/{path.name}",
+        path,
+    )
+    if link_change:
+        systemctl_daemon_reload()
