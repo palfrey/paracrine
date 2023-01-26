@@ -18,7 +18,7 @@ def do(data):
     data = {
         "hostname": socket.gethostname(),
         "network_devices": run_command("ip -j address"),
-        "users": users(),
+        "users": users(force_load=True),
         "groups": run_command("getent group"),
         "server_name": data["host"]["name"],
     }

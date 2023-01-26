@@ -2,12 +2,15 @@ from .config import other_self_config
 from .fs import run_command
 
 
-def users():
-    try:
-        return other_self_config()["users"]
-    except KeyError:
-        raw_users = run_command("getent passwd | cut -d: -f1")
-        return sorted(raw_users.strip().split("\n"))
+def users(force_load=True):
+    if not force_load:
+        try:
+            return other_self_config()["users"]
+        except KeyError:
+            pass
+
+    raw_users = run_command("getent passwd | cut -d: -f1")
+    return sorted(raw_users.strip().split("\n"))
 
 
 def adduser(name, home_dir=None):
