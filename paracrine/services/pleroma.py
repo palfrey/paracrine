@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from paracrine.certs import get_dummy_certs
-from paracrine.config import core_config, environment, get_config_file
+from paracrine.config import build_config, core_config, get_config_file
 from paracrine.debian import apt_install
 from paracrine.fs import (
     download_and_unpack,
@@ -21,9 +21,7 @@ from paracrine.users import adduser
 
 
 def do():
-    config = core_config()
-    env = environment()
-    LOCAL = config["environments"][env]
+    LOCAL = build_config(core_config())
 
     postgresql.do()
 

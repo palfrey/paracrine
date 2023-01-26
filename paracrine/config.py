@@ -154,3 +154,16 @@ def other_config(name):
 
 def other_self_config():
     return other_config(host()["name"])
+
+
+def build_config(config: Dict) -> Dict:
+    env = environment()
+    LOCAL = config["environments"][env]
+    common = config.get("common", {})
+    ret = dict(**common)
+    ret.update(LOCAL)
+    return ret
+
+
+def local_config() -> Dict:
+    return yaml.safe_load(open(CONFIG_NAME).read())
