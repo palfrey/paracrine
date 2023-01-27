@@ -5,10 +5,10 @@ from pathlib import Path
 from mitogen.parent import Router
 
 from .config import network_config_file, other_config_file, set_data
-from .core import in_vagrant, main
+from .core import main
 from .debian import apt_install
 from .fs import run_command
-from .users import users
+from .users import in_vagrant, users
 
 
 def do(data):

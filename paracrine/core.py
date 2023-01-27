@@ -1,25 +1,11 @@
-import logging
 import os
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict
 
 import mitogen.utils
 from mitogen.core import StreamError
 from mitogen.parent import Router
 
-from . import bootstrap
-from .config import (
-    config,
-    create_data,
-    get_config,
-    host,
-    path_to_config_file,
-    set_config,
-)
-from .users import users
-
-
-def in_vagrant():
-    return "vagrant" in users()
+from .config import config, create_data, get_config, host, path_to_config_file
 
 
 def is_wireguard():
@@ -95,16 +81,3 @@ def use_this_host(name: str) -> bool:
     hosts = [h["name"] for h in config()["servers"]]
     index = hash_fn(name, len(hosts))
     return host()["name"] == hosts[index]
-
-
-def everything(
-    inventory_path: str, bootstrap_func: Optional[Callable], core_func: Callable
-):
-    logging.basicConfig()
-    logging.root.setLevel(logging.INFO)
-
-    set_config(inventory_path)
-    run(bootstrap.core)
-    if bootstrap_func is not None:
-        run(bootstrap_func)
-    run(core_func)

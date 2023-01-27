@@ -7,7 +7,8 @@ import paracrine.certs
 import paracrine.services.pleroma as pleroma
 from paracrine.aws import setup_aws
 from paracrine.config import set_data
-from paracrine.core import everything, main
+from paracrine.core import main
+from paracrine.main import everything
 
 # FIXME: Can't get simpler because of https://github.com/mitogen-hq/mitogen/issues/894
 
