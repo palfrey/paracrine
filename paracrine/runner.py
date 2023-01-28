@@ -22,6 +22,7 @@ def main(router: Router, func: Callable[..., None], *args: Any, **kwargs: Any) -
     config = get_config()
     calls = []
     wg = core.is_wireguard()
+    data = None
     for server in config["servers"]:
         assert isinstance(server, Dict)
         hostname = server["wireguard_ip"] if wg else server["ssh_hostname"]
