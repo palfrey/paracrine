@@ -1,8 +1,9 @@
 from mitogen.parent import Router
+from mitogen.utils import run_with_router
 
-from .config import set_config
-from .core import main, run
-from .fs import run_command
+from paracrine.config import set_config
+from paracrine.fs import run_command
+from paracrine.runner import main
 
 
 def do(data):
@@ -18,4 +19,4 @@ if __name__ == "__main__":
     import sys
 
     set_config(sys.argv[1])
-    run(core)
+    run_with_router(core)
