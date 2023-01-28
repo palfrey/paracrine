@@ -100,6 +100,7 @@ def run(inventory_path: str, modules: Modules):
     print("Running:")
     for module in maketransmit(modules):
         print(f"* {module}")
+    print("")
 
     run_with_router(
         internal_runner,
