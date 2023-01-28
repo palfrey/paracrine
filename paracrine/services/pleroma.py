@@ -24,18 +24,16 @@ from paracrine.users import adduser
 def dependencies() -> Modules:
     LOCAL = build_config(local_config())
     return [
+        postgresql,
         (
             paracrine.certs,
             {"hostname": LOCAL["PLEROMA_HOST"], "email": LOCAL["PLEROMA_EMAIL"]},
-        )
+        ),
     ]
 
 
 def core_run():
     LOCAL = build_config(core_config())
-
-    postgresql.do()
-
     adduser("pleroma", home_dir="/opt/pleroma")
     make_directory("/opt/pleroma", owner="pleroma")
     apt_install(["unzip"])

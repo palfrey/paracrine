@@ -3,7 +3,7 @@ from paracrine.fs import build_with_command, download
 from paracrine.systemd import systemd_set
 
 
-def do():
+def core_run():
     download(
         "https://www.postgresql.org/media/keys/ACCC4CF8.asc",
         "/etc/apt/trusted.gpg.d/postgresql.gpg.asc",
