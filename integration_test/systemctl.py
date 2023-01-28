@@ -113,5 +113,7 @@ if __name__ == "__main__":
             subprocess.check_call([service_path, "reload"])
         else:
             raise Exception(service)
+    elif args[0] == "restart":
+        pass  # FIXME, do stuff
     else:
         raise Exception(argv)
