@@ -1,8 +1,9 @@
 from pathlib import Path
 
-from paracrine.certs import get_dummy_certs
-from paracrine.config import build_config, core_config, get_config_file
+import paracrine.certs
+from paracrine.config import build_config, core_config, get_config_file, local_config
 from paracrine.debian import apt_install
+from paracrine.deps import Modules
 from paracrine.fs import (
     download_and_unpack,
     link,
@@ -18,6 +19,16 @@ from paracrine.users import adduser
 
 # FIXME: Do soapbox from https://gitlab.com/soapbox-pub/soapbox/-/jobs/3371276281/artifacts/download
 # Unzipped with "unzip soapbox.zip -d instance" and then moved instance/static to /var/lib/pleroma
+
+
+def dependencies() -> Modules:
+    LOCAL = build_config(local_config())
+    return [
+        (
+            paracrine.certs,
+            {"hostname": LOCAL["PLEROMA_HOST"], "email": LOCAL["PLEROMA_EMAIL"]},
+        )
+    ]
 
 
 def core_run():
@@ -99,7 +110,7 @@ def core_run():
         "/etc/nginx/sites-available/pleroma.conf",
         "pleroma.nginx.j2",
         PLEROMA_HOST=LOCAL["PLEROMA_HOST"],
-        DUMMY_CERTS=get_dummy_certs(),
+        DUMMY_CERTS=paracrine.certs.get_dummy_certs(),
     )
     nginx_changes = (
         link(

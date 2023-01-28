@@ -2,7 +2,9 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Dict
 
-from .aws import set_aws_creds
+from paracrine.deps import Modules
+
+from . import aws
 from .config import core_config, other_config_file
 from .core import use_this_host
 from .fs import (
@@ -12,6 +14,8 @@ from .fs import (
     set_file_contents_from_template,
 )
 from .python import setup_venv
+
+options = {}
 
 
 # Are we in a test config where we should just not get the cert
@@ -27,7 +31,7 @@ def certbot_for_host(hostname: str, email: str) -> None:
     dummy_certs = get_dummy_certs()
 
     if use_this_host("certbot"):
-        set_aws_creds()
+        aws.set_aws_creds()
         venv = certbot.joinpath("venv")
         venv_bin = venv.joinpath("bin")
         pip = venv_bin.joinpath("pip")
@@ -83,8 +87,12 @@ def certbot_for_host(hostname: str, email: str) -> None:
         return {}
 
 
-def bootstrap_run(args: Dict) -> Dict:
-    return certbot_for_host(args["hostname"], args["email"])
+def dependencies() -> Modules:
+    return [aws]
+
+
+def bootstrap_run() -> Dict:
+    return certbot_for_host(options["hostname"], options["email"])
 
 
 def bootstrap_parse_return(info: Dict) -> None:

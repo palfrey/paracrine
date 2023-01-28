@@ -15,10 +15,14 @@ def runfunc(
         func: Optional[Callable] = getattr(module, name, None)
         if func is not None:
             setattr(module, "options", options)
-            if module.__name__ in arguments:
-                ret[module.__name__] = func(arguments[module.__name__])
-            else:
-                ret[module.__name__] = func()
+            try:
+                if module.__name__ in arguments:
+                    ret[module.__name__] = func(arguments[module.__name__])
+                else:
+                    ret[module.__name__] = func()
+            except Exception:
+                print(f"Error while running {name} for {module.__name__}")
+                raise
 
     for module in modules:
         if isinstance(module, ModuleType):

@@ -2,17 +2,13 @@ import logging
 import os
 from typing import Any, Callable, Dict
 
-import mitogen.utils
-from mitogen.core import StreamError
+from mitogen.core import Error, StreamError
 from mitogen.parent import Router
+from mitogen.utils import run_with_router
 
 from . import core
 from .config import create_data, get_config, path_to_config_file, set_config, set_data
 from .deps import Modules, TransmitModules, makereal, maketransmit, runfunc
-
-
-def run(func: Callable, *args: Any, **kwargs: Any) -> Any:
-    return mitogen.utils.run_with_router(func, *args, **kwargs)
 
 
 def decode(info):
@@ -60,7 +56,7 @@ def main(router: Router, func: Callable[..., None], *args: Any, **kwargs: Any) -
             if info is not None:
                 decode(info)
             infos.append(info)
-        except mitogen.core.Error as e:
+        except Error as e:
             print("Got error", e)
             errors.append(e)
 
@@ -73,8 +69,6 @@ def main(router: Router, func: Callable[..., None], *args: Any, **kwargs: Any) -
 def do(data, transmitmodules: TransmitModules, name: str):
     set_data(data)
     modules = makereal(transmitmodules)
-    for module in modules:
-        print("remote", module)
     return runfunc(modules, name)
 
 
@@ -86,20 +80,34 @@ def internal_runner(
         runfunc(modules, parse_func, info)
 
 
-def everything(inventory_path: str, modules: Modules):
+def run(inventory_path: str, modules: Modules):
     logging.basicConfig()
     logging.root.setLevel(logging.INFO)
-
-    modules.append(core)
-    for module in modules:
-        print("local", module)
-
     set_config(inventory_path)
-    run(
+
+    modules.insert(0, core)
+    needs_dependencies = list(modules)
+    while len(needs_dependencies) > 0:
+        new_dependencies = runfunc(needs_dependencies, "dependencies")
+        needs_dependencies = []
+        for item in new_dependencies.values():
+            for new_dependency in item:
+                if new_dependency in modules:
+                    continue
+                modules.insert(0, new_dependency)
+                needs_dependencies.append(new_dependency)
+
+    print("Running:")
+    for module in maketransmit(modules):
+        print(f"* {module}")
+
+    run_with_router(
         internal_runner,
         modules,
         "bootstrap_local",
         "bootstrap_run",
         "bootstrap_parse_return",
     )
-    run(internal_runner, modules, "core_local", "core_run", "core_parse_return")
+    run_with_router(
+        internal_runner, modules, "core_local", "core_run", "core_parse_return"
+    )
