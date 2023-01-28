@@ -1,0 +1,11 @@
+[Interface]
+Address = {{ IP }}/{{ NETMASK }}
+PrivateKey = {{ PRIVATE_KEY }}
+ListenPort = 51820
+
+{% for peer in PEERS.values() %}
+[Peer]
+PublicKey = {{ peer["public_key"] }}
+Endpoint = {{ peer["endpoint"] }}
+AllowedIPs = {{ peer["peer_addr"]}}/32
+{%- endfor %}

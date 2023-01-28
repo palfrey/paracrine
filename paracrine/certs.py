@@ -1,12 +1,12 @@
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, Dict
+from typing import Dict
 
-from mitogen.parent import Router
+from paracrine.deps import Modules
 
-from .aws import set_aws_creds
-from .config import core_config, other_config_file, set_data
-from .core import main, use_this_host
+from . import aws
+from .config import core_config, other_config_file
+from .core import use_this_host
 from .fs import (
     make_directory,
     run_command,
@@ -15,6 +15,8 @@ from .fs import (
 )
 from .python import setup_venv
 
+options = {}
+
 
 # Are we in a test config where we should just not get the cert
 def get_dummy_certs():
@@ -22,14 +24,14 @@ def get_dummy_certs():
     return config.get("dummy_certs", False)
 
 
-def certbot_for_host(hostname: str, email: str) -> None:
+def certbot_for_host(hostname: str, email: str) -> Dict:
     certbot = Path("/opt/certbot")
     live_path = certbot.joinpath("config", "live", hostname)
 
     dummy_certs = get_dummy_certs()
 
     if use_this_host("certbot"):
-        set_aws_creds()
+        aws.set_aws_creds()
         venv = certbot.joinpath("venv")
         venv_bin = venv.joinpath("bin")
         pip = venv_bin.joinpath("pip")
@@ -85,12 +87,16 @@ def certbot_for_host(hostname: str, email: str) -> None:
         return {}
 
 
-def do(data: Dict[str, Any], hostname: str, email: str) -> Dict:
-    set_data(data)
-    return certbot_for_host(hostname, email)
+def dependencies() -> Modules:
+    return [aws]
 
 
-def core(router: Router, hostname: str, email: str) -> None:
-    for info in main(router, do, hostname, email):
-        for key in info:
-            open(other_config_file(key), "w").write(info[key])
+def bootstrap_run() -> Dict:
+    return certbot_for_host(options["hostname"], options["email"])
+
+
+def bootstrap_parse_return(
+    info: Dict,
+) -> None:
+    for key in info:
+        open(other_config_file(key), "w").write(info[key])

@@ -4,7 +4,7 @@ from typing import BinaryIO
 import pytest
 import yaml
 
-from paracrine.main import everything
+from paracrine.runner import run
 
 
 def set_config_data(config_file: BinaryIO, data: object) -> None:
@@ -15,7 +15,7 @@ def set_config_data(config_file: BinaryIO, data: object) -> None:
 def test_empty_servers():
     with tempfile.NamedTemporaryFile() as config_file:
         set_config_data(config_file, {"servers": []})
-        everything(config_file.name, None, lambda router: None)
+        run(config_file.name, [])
 
 
 def test_bad_ssh_path():
@@ -28,4 +28,4 @@ def test_bad_ssh_path():
             },
         )
         with pytest.raises(Exception, match="Can't find ssh key /tmp/configs/TBD"):
-            everything(config_file.name, None, lambda: None)
+            run(config_file.name, [])

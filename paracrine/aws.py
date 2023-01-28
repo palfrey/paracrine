@@ -6,7 +6,7 @@ from .config import config_path, get_config_file
 from .fs import run_command
 
 
-def setup_aws():
+def bootstrap_local():
     aws_path = pathlib.Path(config_path()).joinpath("other-aws")
     if not aws_path.exists():
         json.dump(

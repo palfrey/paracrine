@@ -2,7 +2,7 @@ from .config import other_self_config
 from .fs import run_command
 
 
-def users(force_load=True):
+def users(force_load=False):
     if not force_load:
         try:
             return other_self_config()["users"]
