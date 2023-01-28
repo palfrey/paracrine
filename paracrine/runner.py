@@ -18,7 +18,7 @@ def decode(info):
             del info[k]
 
 
-def main(router: Router, func: Callable[..., None], *args: Any, **kwargs: Any) -> None:
+def main(router: Router, func: Callable[..., None], *args: Any, **kwargs: Any) -> Dict:
     config = get_config()
     calls = []
     wg = core.is_wireguard()
@@ -46,7 +46,8 @@ def main(router: Router, func: Callable[..., None], *args: Any, **kwargs: Any) -
             raise
 
         sudo = router.sudo(via=connect, python_path="python3")
-        calls.append(sudo.call_async(func, create_data(server=server), *args, **kwargs))
+        data = create_data(server=server)
+        calls.append(sudo.call_async(func, data, *args, **kwargs))
 
     infos = []
     errors = []
@@ -63,7 +64,7 @@ def main(router: Router, func: Callable[..., None], *args: Any, **kwargs: Any) -
     if len(errors) > 0:
         raise Exception(errors)
 
-    return infos
+    return {"infos": infos, "data": data}
 
 
 def do(data, transmitmodules: TransmitModules, name: str):
@@ -76,8 +77,9 @@ def internal_runner(
     router: Router, modules: Modules, local_func: str, run_func: str, parse_func: str
 ) -> None:
     runfunc(modules, local_func)
-    for info in main(router, do, maketransmit(modules), run_func):
-        runfunc(modules, parse_func, info)
+    infos = main(router, do, maketransmit(modules), run_func)
+    for info in infos["infos"]:
+        runfunc(modules, parse_func, info, infos["data"])
 
 
 def run(inventory_path: str, modules: Modules):

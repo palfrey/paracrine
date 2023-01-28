@@ -2,12 +2,14 @@ import importlib
 from types import ModuleType
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
+from .config import set_data
+
 Modules = List[Union[ModuleType, Tuple[ModuleType, Dict]]]
 TransmitModules = List[Union[str, Tuple[str, Dict]]]
 
 
 def runfunc(
-    modules: Modules, name: str, arguments: Dict[str, Any] = {}
+    modules: Modules, name: str, arguments: Dict[str, Any] = {}, data: Dict = {}
 ) -> Dict[str, Any]:
     ret = {}
 
@@ -15,6 +17,8 @@ def runfunc(
         func: Optional[Callable] = getattr(module, name, None)
         if func is not None:
             setattr(module, "options", options)
+            if data != {}:
+                set_data(data)
             try:
                 if module.__name__ in arguments:
                     ret[module.__name__] = func(arguments[module.__name__])

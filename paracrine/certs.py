@@ -24,7 +24,7 @@ def get_dummy_certs():
     return config.get("dummy_certs", False)
 
 
-def certbot_for_host(hostname: str, email: str) -> None:
+def certbot_for_host(hostname: str, email: str) -> Dict:
     certbot = Path("/opt/certbot")
     live_path = certbot.joinpath("config", "live", hostname)
 
@@ -95,6 +95,8 @@ def bootstrap_run() -> Dict:
     return certbot_for_host(options["hostname"], options["email"])
 
 
-def bootstrap_parse_return(info: Dict) -> None:
+def bootstrap_parse_return(
+    info: Dict,
+) -> None:
     for key in info:
         open(other_config_file(key), "w").write(info[key])

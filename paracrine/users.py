@@ -47,7 +47,3 @@ def add_user_to_group(user, group):
         return True
     else:
         return False
-
-
-def in_vagrant():
-    return "vagrant" in users()

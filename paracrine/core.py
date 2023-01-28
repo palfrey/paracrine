@@ -2,12 +2,12 @@ import json
 import os
 import socket
 from pathlib import Path
-from typing import Any, Dict
+from typing import Dict
 
 from .config import config, host, network_config_file, other_config_file
 from .debian import apt_install
 from .fs import run_command
-from .users import in_vagrant, users
+from .users import users
 
 
 def is_wireguard():
@@ -40,7 +40,7 @@ def bootstrap_run():
     if ip_file.exists():
         data["external_ip"] = json.load(ip_file.open())
     else:
-        if in_vagrant():
+        if in_vagrant() or in_docker():
             networks = json.loads(data["network_devices"])
             ext_if = [net for net in networks if net["ifname"] == "eth0"]
             if len(ext_if) > 0 and len(ext_if[0]["addr_info"]) > 0:
@@ -57,8 +57,7 @@ def bootstrap_run():
     return data
 
 
-def bootstrap_parse_return(info: Any) -> None:
-    assert isinstance(info, Dict)
+def bootstrap_parse_return(info: Dict) -> None:
     networks = json.loads(info["network_devices"])
     name = info["server_name"]
     json.dump(networks, open(network_config_file(name), "w"), indent=2)
@@ -70,3 +69,11 @@ def bootstrap_parse_return(info: Any) -> None:
         "hostname": info["hostname"],
     }
     json.dump(other, open(other_config_file(name), "w"), indent=2)
+
+
+def in_vagrant():
+    return "vagrant" in users()
+
+
+def in_docker():
+    return os.path.exists("/.dockerenv")
