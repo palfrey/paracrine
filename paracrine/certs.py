@@ -1,12 +1,10 @@
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, Dict
-
-from mitogen.parent import Router
+from typing import Dict
 
 from .aws import set_aws_creds
-from .config import core_config, other_config_file, set_data
-from .core import main, use_this_host
+from .config import core_config, other_config_file
+from .core import use_this_host
 from .fs import (
     make_directory,
     run_command,
@@ -85,12 +83,10 @@ def certbot_for_host(hostname: str, email: str) -> None:
         return {}
 
 
-def do(data: Dict[str, Any], hostname: str, email: str) -> Dict:
-    set_data(data)
-    return certbot_for_host(hostname, email)
+def bootstrap_run(args: Dict) -> Dict:
+    return certbot_for_host(args["hostname"], args["email"])
 
 
-def core(router: Router, hostname: str, email: str) -> None:
-    for info in main(router, do, hostname, email):
-        for key in info:
-            open(other_config_file(key), "w").write(info[key])
+def bootstrap_parse_return(info: Dict) -> None:
+    for key in info:
+        open(other_config_file(key), "w").write(info[key])

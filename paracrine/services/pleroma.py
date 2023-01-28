@@ -20,7 +20,7 @@ from paracrine.users import adduser
 # Unzipped with "unzip soapbox.zip -d instance" and then moved instance/static to /var/lib/pleroma
 
 
-def do():
+def core_run():
     LOCAL = build_config(core_config())
 
     postgresql.do()

@@ -1,74 +1,17 @@
+import json
 import os
-from typing import Any, Callable, Dict
+import socket
+from pathlib import Path
+from typing import Any, Dict
 
-import mitogen.utils
-from mitogen.core import StreamError
-from mitogen.parent import Router
-
-from .config import config, create_data, get_config, host, path_to_config_file
+from .config import config, host, network_config_file, other_config_file
+from .debian import apt_install
+from .fs import run_command
+from .users import in_vagrant, users
 
 
 def is_wireguard():
     return os.path.exists("/etc/wireguard")
-
-
-def decode(info):
-    for k in list(info.keys()):
-        if type(k) == bytes:
-            info[k.decode()] = info[k].decode()
-            del info[k]
-
-
-def run(func: Callable, *args: Any, **kwargs: Any) -> Any:
-    return mitogen.utils.run_with_router(func, *args, **kwargs)
-
-
-def main(router: Router, func: Callable[..., None], *args: Any, **kwargs: Any) -> None:
-    config = get_config()
-    calls = []
-    wg = is_wireguard()
-    for server in config["servers"]:
-        assert isinstance(server, Dict)
-        hostname = server["wireguard_ip"] if wg else server["ssh_hostname"]
-        port = 22 if wg else server.get("ssh_port", 22)
-        key_path = path_to_config_file(server["ssh_key"])
-        if not os.path.exists(key_path):
-            raise Exception(f"Can't find ssh key {key_path}")
-        try:
-            connect = router.ssh(
-                hostname=hostname,
-                port=port,
-                username=server["ssh_user"],
-                identity_file=key_path,
-                check_host_keys="accept",
-                python_path="python3",
-            )
-        except StreamError:
-            print(
-                "Exception while trying to login to %s@%s:%s"
-                % (server["ssh_user"], hostname, port)
-            )
-            raise
-
-        sudo = router.sudo(via=connect, python_path="python3")
-        calls.append(sudo.call_async(func, create_data(server=server), *args, **kwargs))
-
-    infos = []
-    errors = []
-    for call in calls:
-        try:
-            info = call.get().unpickle()
-            if info is not None:
-                decode(info)
-            infos.append(info)
-        except mitogen.core.Error as e:
-            print("Got error", e)
-            errors.append(e)
-
-    if len(errors) > 0:
-        raise Exception(errors)
-
-    return infos
 
 
 def hash_fn(key: str, count: int) -> int:
@@ -81,3 +24,49 @@ def use_this_host(name: str) -> bool:
     hosts = [h["name"] for h in config()["servers"]]
     index = hash_fn(name, len(hosts))
     return host()["name"] == hosts[index]
+
+
+def bootstrap_run():
+    apt_install(["iproute2"])
+
+    data = {
+        "hostname": socket.gethostname(),
+        "network_devices": run_command("ip -j address"),
+        "users": users(force_load=True),
+        "groups": run_command("getent group"),
+        "server_name": host()["name"],
+    }
+    ip_file = Path("/opt/ip_address")
+    if ip_file.exists():
+        data["external_ip"] = json.load(ip_file.open())
+    else:
+        if in_vagrant():
+            networks = json.loads(data["network_devices"])
+            ext_if = [net for net in networks if net["ifname"] == "eth0"]
+            if len(ext_if) > 0 and len(ext_if[0]["addr_info"]) > 0:
+                data["external_ip"] = json.dumps(
+                    {"ip": ext_if[0]["addr_info"][0]["local"]}
+                )
+            else:
+                data["external_ip"] = "<unknown>"
+        else:
+            apt_install(["curl", "ca-certificates"])
+            data["external_ip"] = run_command("curl https://api.ipify.org?format=json")
+        json.dump(data["external_ip"], ip_file.open("w"))
+
+    return data
+
+
+def bootstrap_parse_return(info: Any) -> None:
+    assert isinstance(info, Dict)
+    networks = json.loads(info["network_devices"])
+    name = info["server_name"]
+    json.dump(networks, open(network_config_file(name), "w"), indent=2)
+
+    other = {
+        "external_ip": json.loads(info["external_ip"])["ip"],
+        "users": info["users"],
+        "groups": info["groups"],
+        "hostname": info["hostname"],
+    }
+    json.dump(other, open(other_config_file(name), "w"), indent=2)
