@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>paracrine API documentation</title>
-<meta name="description" content="Paracrine is a system deployment tool. It&#39;s based around Mitogen and standard Python packages for
-features (although, currently there&#39;s only the one …" />
+<meta name="description" content="Paracrine is a system deployment tool. It&#39;s based around [Mitogen](https://mitogen.networkgenomics.com/) and standard Python packages for
+features …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -23,7 +23,7 @@ features (although, currently there&#39;s only the one …" />
 <h1 class="title">Package <code>paracrine</code></h1>
 </header>
 <section id="section-intro">
-<p>Paracrine is a system deployment tool. It's based around Mitogen and standard Python packages for
+<p>Paracrine is a system deployment tool. It's based around <a href="https://mitogen.networkgenomics.com/">Mitogen</a> and standard Python packages for
 features (although, currently there's only the one core package). Current status is essentially,
 "works for me, probably won't eat your computer", but thoughts and patches are welcomed.</p>
 <p>It's designed towards rapid idempotent deploys i.e. a zero-changes deploy should take in the order of a small number of seconds ideally, and so can be used as your application deployment option as well as for system changes, which has the design benefit of you could use it for GitOps-style deploys. Obviously, if you do more changes, it'll take longer, but that's generally less of an issue, but it should still be faster than most other tooling options. It assumes it's got a host system to run from, which <em>probably</em> can be anything that runs Python, but the testing for that so far has been on a Debian laptop.</p>
@@ -32,11 +32,11 @@ features (although, currently there's only the one core package). Current status
 <ol>
 <li>Setup Python. Tested against 3.8+</li>
 <li><code>pip install <a title="paracrine" href="#paracrine">paracrine</a></code></li>
-<li>Write a main file describing what you want to setup. <a href="integration_test/main.py">integration_test/main.py</a> is a reasonable example. It must call the <code>run</code> function, which takes arguments for the inventory file, and list of modules to run.</li>
-<li>Write an inventory file for the machines this is managing. Current setup assumes they're all the same. <a href="integration_test/docker/inventory.yaml">integration_test/docker/inventory.yaml</a> is a reasonable example file, but I suggest generating it from whatever you're using to create the servers (e.g. Terraform).</li>
-<li>Write a <code>config.yaml</code>. This has a main top-level key of <code>environments</code> with keys below that for each inventory file you've got (<a href="integration_test/config.yaml">integration_test/config.yaml</a> just has one, but in most scenarios you'll have at least a dev and prod setup). What you do below that is up to you, but typically it'll be environment variables and secrets to feed into the main file.</li>
+<li>Write a main file describing what you want to setup. <a href="https://github.com/palfrey/paracrine/blob/main/integration_test/main.py">integration_test/main.py</a> is a reasonable example. It must call the <code>run</code> function, which takes arguments for the inventory file, and list of modules to run.</li>
+<li>Write an inventory file for the machines this is managing. Current setup assumes they're all the same. <a href="https://github.com/palfrey/paracrine/blob/main/integration_test/docker/inventory.yaml">integration_test/docker/inventory.yaml</a> is a reasonable example file, but I suggest generating it from whatever you're using to create the servers (e.g. Terraform).</li>
+<li>Write a <code>config.yaml</code>. This has a main top-level key of <code>environments</code> with keys below that for each inventory file you've got (<a href="https://github.com/palfrey/paracrine/blob/main/integration_test/config.yaml">integration_test/config.yaml</a> just has one, but in most scenarios you'll have at least a dev and prod setup). What you do below that is up to you, but typically it'll be environment variables and secrets to feed into the main file.</li>
 <li>Run <code>python -m paracrine.setup &lt;inventory file&gt;</code> - this will install the minimum python bits so that everything else works.</li>
-<li>Run the main file.</li>
+<li>Run the main file (e.g. <code>python main.py ./docker/inventory.yaml</code>)</li>
 </ol>
 <h2 id="utilities">Utilities</h2>
 <p>All the utilities are callable as <code>python -m paracrine.&lt;utility&gt; &lt;inventory file&gt;</code> and sometimes some extra args</p>
@@ -66,7 +66,7 @@ features (although, currently there's only the one core package). Current status
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;Paracrine is a system deployment tool. It&#39;s based around Mitogen and standard Python packages for
+<pre><code class="python">&#34;&#34;&#34;Paracrine is a system deployment tool. It&#39;s based around [Mitogen](https://mitogen.networkgenomics.com/) and standard Python packages for
 features (although, currently there&#39;s only the one core package). Current status is essentially,
 &#34;works for me, probably won&#39;t eat your computer&#34;, but thoughts and patches are welcomed.
 
@@ -79,11 +79,11 @@ Usage
 
 1. Setup Python. Tested against 3.8+
 2. `pip install paracrine`
-3. Write a main file describing what you want to setup. [integration_test/main.py](integration_test/main.py) is a reasonable example. It must call the `run` function, which takes arguments for the inventory file, and list of modules to run.
-4. Write an inventory file for the machines this is managing. Current setup assumes they&#39;re all the same. [integration_test/docker/inventory.yaml](integration_test/docker/inventory.yaml) is a reasonable example file, but I suggest generating it from whatever you&#39;re using to create the servers (e.g. Terraform).
-5. Write a `config.yaml`. This has a main top-level key of `environments` with keys below that for each inventory file you&#39;ve got ([integration_test/config.yaml](integration_test/config.yaml) just has one, but in most scenarios you&#39;ll have at least a dev and prod setup). What you do below that is up to you, but typically it&#39;ll be environment variables and secrets to feed into the main file.
+3. Write a main file describing what you want to setup. [integration_test/main.py](https://github.com/palfrey/paracrine/blob/main/integration_test/main.py) is a reasonable example. It must call the `run` function, which takes arguments for the inventory file, and list of modules to run.
+4. Write an inventory file for the machines this is managing. Current setup assumes they&#39;re all the same. [integration_test/docker/inventory.yaml](https://github.com/palfrey/paracrine/blob/main/integration_test/docker/inventory.yaml) is a reasonable example file, but I suggest generating it from whatever you&#39;re using to create the servers (e.g. Terraform).
+5. Write a &lt;code&gt;config.yaml&lt;/code&gt;. This has a main top-level key of `environments` with keys below that for each inventory file you&#39;ve got ([integration_test/config.yaml](https://github.com/palfrey/paracrine/blob/main/integration_test/config.yaml) just has one, but in most scenarios you&#39;ll have at least a dev and prod setup). What you do below that is up to you, but typically it&#39;ll be environment variables and secrets to feed into the main file.
 6. Run `python -m paracrine.setup &lt;inventory file&gt;` - this will install the minimum python bits so that everything else works.
-7. Run the main file.
+7. Run the main file (e.g. `python main.py ./docker/inventory.yaml`)
 
 Utilities
 ---
