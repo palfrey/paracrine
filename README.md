@@ -1,6 +1,5 @@
 Paracrine
 =========
-
 Paracrine is a system deployment tool. It's based around Mitogen and standard Python packages for
 features (although, currently there's only the one core package). Current status is essentially,
 "works for me, probably won't eat your computer", but thoughts and patches are welcomed.
@@ -8,6 +7,8 @@ features (although, currently there's only the one core package). Current status
 It's designed towards rapid idempotent deploys i.e. a zero-changes deploy should take in the order of a small number of seconds ideally, and so can be used as your application deployment option as well as for system changes, which has the design benefit of you could use it for GitOps-style deploys. Obviously, if you do more changes, it'll take longer, but that's generally less of an issue, but it should still be faster than most other tooling options. It assumes it's got a host system to run from, which _probably_ can be anything that runs Python, but the testing for that so far has been on a Debian laptop.
 
 It's named after [Paracrine signaling](https://en.wikipedia.org/wiki/Paracrine_signaling) "a type of cellular communication in which a cell produces a signal to induce changes in nearby cells" which feels pretty accurate for a deployment tool.
+
+Main documentation is at https://palfrey.github.io/paracrine/
 
 Usage
 -----
