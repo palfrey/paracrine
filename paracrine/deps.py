@@ -5,6 +5,8 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from .config import set_data
 
 Modules = List[Union[ModuleType, Tuple[ModuleType, Dict]]]
+"""Type of modules handed to `paracrine.runner.run`"""
+
 TransmitModules = List[Union[str, Tuple[str, Dict]]]
 
 

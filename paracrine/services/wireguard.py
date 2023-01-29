@@ -3,7 +3,7 @@ import os
 import sys
 from distutils.version import LooseVersion
 
-from .config import (
+from ..config import (
     config,
     config_path,
     get_config,
@@ -12,11 +12,11 @@ from .config import (
     network_config,
     other_config_file,
 )
-from .core import in_docker
-from .debian import apt_install
-from .fs import make_directory, run_command, set_file_contents_from_template
-from .network import external_ip
-from .systemd import systemd_set
+from ..core import in_docker
+from ..debian import apt_install
+from ..fs import make_directory, run_command, set_file_contents_from_template
+from ..network import external_ip
+from ..systemd import systemd_set
 
 wg_config = "/etc/wireguard"
 private_key_file = "{wg_config}/privatekey".format(wg_config=wg_config)
@@ -137,3 +137,6 @@ def setup(name="wg0", ip="192.168.2.1", netmask=24, peers=[]):
 
 def core_run():
     setup(ip=host()["wireguard_ip"])
+
+
+__all__ = ["core_run", "bootstrap_run", "bootstrap_parse_return"]
