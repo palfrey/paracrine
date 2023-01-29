@@ -1,6 +1,6 @@
 Paracrine
 =========
-Paracrine is a system deployment tool. It's based around Mitogen and standard Python packages for
+Paracrine is a system deployment tool. It's based around [Mitogen](https://mitogen.networkgenomics.com/) and standard Python packages for
 features (although, currently there's only the one core package). Current status is essentially,
 "works for me, probably won't eat your computer", but thoughts and patches are welcomed.
 
@@ -19,7 +19,7 @@ Usage
 4. Write an inventory file for the machines this is managing. Current setup assumes they're all the same. [integration_test/docker/inventory.yaml](integration_test/docker/inventory.yaml) is a reasonable example file, but I suggest generating it from whatever you're using to create the servers (e.g. Terraform).
 5. Write a `config.yaml`. This has a main top-level key of `environments` with keys below that for each inventory file you've got ([integration_test/config.yaml](integration_test/config.yaml) just has one, but in most scenarios you'll have at least a dev and prod setup). What you do below that is up to you, but typically it'll be environment variables and secrets to feed into the main file.
 6. Run `python -m paracrine.setup <inventory file>` - this will install the minimum python bits so that everything else works.
-7. Run the main file.
+7. Run the main file (e.g. `python main.py ./docker/inventory.yaml`)
 
 Limitations
 -----------
