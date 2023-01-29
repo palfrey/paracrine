@@ -8,42 +8,75 @@
     # via -r requirements.in
 attrs==22.2.0
     # via pytest
+bleach==6.0.0
+    # via readme-renderer
 build==0.10.0
-    # via pip-tools
+    # via
+    #   -r requirements.in
+    #   pip-tools
+certifi==2022.12.7
+    # via requests
+cffi==1.15.1
+    # via cryptography
 cfgv==3.3.1
     # via pre-commit
+charset-normalizer==3.0.1
+    # via requests
 click==8.1.3
     # via pip-tools
 colorama==0.4.6
     # via pytest-watch
 coverage[toml]==7.0.5
     # via pytest-cov
+cryptography==39.0.0
+    # via secretstorage
 distlib==0.3.6
     # via virtualenv
 docopt==0.6.2
     # via pytest-watch
+docutils==0.19
+    # via readme-renderer
 exceptiongroup==1.1.0
     # via pytest
 filelock==3.9.0
     # via virtualenv
 identify==2.5.13
     # via pre-commit
+idna==3.4
+    # via requests
 importlib-metadata==6.0.0
-    # via markdown
+    # via
+    #   keyring
+    #   markdown
+    #   twine
 iniconfig==2.0.0
     # via pytest
+jaraco-classes==3.2.3
+    # via keyring
+jeepney==0.8.0
+    # via
+    #   keyring
+    #   secretstorage
 jinja2==3.1.2
     # via paracrine
+keyring==23.13.1
+    # via twine
 mako==1.2.4
     # via pdoc3
 markdown==3.4.1
     # via pdoc3
+markdown-it-py==2.1.0
+    # via rich
 markupsafe==2.1.2
     # via
     #   jinja2
     #   mako
+mdurl==0.1.2
+    # via markdown-it-py
 mitogen==0.3.3
     # via paracrine
+more-itertools==9.0.0
+    # via jaraco-classes
 nodeenv==1.7.0
     # via pre-commit
 packaging==23.0
@@ -54,12 +87,20 @@ pdoc3==0.10.0
     # via -r requirements.in
 pip-tools==6.12.1
     # via -r requirements.in
+pkginfo==1.9.6
+    # via twine
 platformdirs==2.6.2
     # via virtualenv
 pluggy==1.0.0
     # via pytest
 pre-commit==2.21.0
     # via -r requirements.in
+pycparser==2.21
+    # via cffi
+pygments==2.14.0
+    # via
+    #   readme-renderer
+    #   rich
 pyproject-hooks==1.0.0
     # via build
 pytest==7.2.1
@@ -75,16 +116,40 @@ pyyaml==6.0
     # via
     #   paracrine
     #   pre-commit
+readme-renderer==37.3
+    # via twine
+requests==2.28.2
+    # via
+    #   requests-toolbelt
+    #   twine
+requests-toolbelt==0.10.1
+    # via twine
+rfc3986==2.0.0
+    # via twine
+rich==13.3.1
+    # via twine
+secretstorage==3.3.3
+    # via keyring
+six==1.16.0
+    # via bleach
 tomli==2.0.1
     # via
     #   build
     #   coverage
     #   pyproject-hooks
     #   pytest
+twine==4.0.2
+    # via -r requirements.in
+urllib3==1.26.14
+    # via
+    #   requests
+    #   twine
 virtualenv==20.17.1
     # via pre-commit
 watchdog==2.2.1
     # via pytest-watch
+webencodings==0.5.1
+    # via bleach
 wheel==0.38.4
     # via pip-tools
 zipp==3.11.0
