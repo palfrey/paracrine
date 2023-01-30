@@ -119,6 +119,9 @@ def insert_or_replace(fname: str, matcher: re.Pattern, line: str) -> None:
 
 
 def sha_file(fname):
+    from .debian import apt_install
+
+    apt_install(["coreutils"])
     existing_sha = run_command("sha256sum %s" % fname).strip()
     return existing_sha.split(" ")[0]
 
@@ -135,6 +138,9 @@ def has_sha(fname, sha):
 def download(url, fname, sha, mode=None):
     exists = has_sha(fname, sha)
     if not exists:
+        from .debian import apt_install
+
+        apt_install(["curl"])
         run_command("curl -Lo %s %s" % (fname, url))
         existing_sha = sha_file(fname)
         assert existing_sha == sha, (existing_sha, sha)
@@ -186,9 +192,13 @@ def download_and_unpack(url, hash, name=None, dir_name=None):
 
     make_directory(dir_name)
     if os.listdir(dir_name) == []:
+        from .debian import apt_install
+
         if compressed_path.endswith("tar.gz"):
+            apt_install(["tar"])
             run_command("tar --directory=%s -zxvf %s" % (dir_name, compressed_path))
         elif compressed_path.endswith("zip"):
+            apt_install(["unzip"])
             run_command("unzip %s -d %s" % (compressed_path, dir_name))
         else:
             raise Exception(compressed_path)

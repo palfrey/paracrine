@@ -52,7 +52,7 @@ def get_all_kernel_versions():
 
 
 def bootstrap_run():
-    apt_install(["kmod"])
+    apt_install(["kmod", "wireguard"])
     modules = sorted([line.split(" ")[0] for line in run_command("lsmod").splitlines()])
     if "wireguard" not in modules:
         print("modules", modules)
@@ -77,7 +77,6 @@ def bootstrap_run():
                 run_command("reboot")
                 sys.exit(0)
 
-        apt_install(["wireguard"])
         if not in_docker():
             apt_install(["linux-headers-amd64"])
             modules = sorted(
