@@ -8,7 +8,7 @@ import Config
 config :pleroma, Pleroma.Web.Endpoint,
    url: [host: "{{ PLEROMA_HOST }}", scheme: "https", port: 443],
    http: [ip: {127, 0, 0, 1}, port: 4000],
-   secret_key_base: " {{ SECRET_KEY_BASE }}",
+   secret_key_base: "{{ SECRET_KEY_BASE }}",
    signing_salt: "{{ SIGNING_SALT }}"
 
 config :pleroma, :instance,
@@ -29,6 +29,12 @@ config :pleroma, Pleroma.Repo,
   password: "{{ DB_PASSWORD }}",
   database: "pleroma",
   hostname: "localhost"
+
+# Configure web push notifications
+config :web_push_encryption, :vapid_details,
+  subject: "mailto:{{ PLEROMA_EMAIL }}",
+  public_key: "{{ WEB_PUSH_PUBLIC }}",
+  private_key: "{{ WEB_PUSH_PRIVATE }}"
 
 config :pleroma, :database, rum_enabled: false
 config :pleroma, :instance, static_dir: "/opt/pleroma/static"
