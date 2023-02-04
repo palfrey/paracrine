@@ -1,29 +1,54 @@
 import os
-from typing import List, Optional
+import re
+from typing import Dict, List, Optional, Union
+
+from debian.debian_support import version_compare
 
 from .fs import run_command, set_file_contents
 
 host_arch: Optional[str] = None
 
+_version_pattern = re.compile(r"Version: (\S+)")
 
-def apt_install(packages: List[str], always_install: bool = False) -> None:
+
+# List is just "any version", Dict is a "name => min version" requirement
+def apt_install(
+    packages: Union[List[str], Dict[str, Optional[str]]], always_install: bool = False
+) -> None:
     global host_arch
     if host_arch is None:
         host_arch = run_command("dpkg-architecture -q DEB_HOST_ARCH").strip()
-    if not always_install:
-        packages = [
-            package
-            for package in packages
-            if not os.path.exists(f"/var/lib/dpkg/info/{package}.list")
-            and not os.path.exists(f"/var/lib/dpkg/info/{package}:{host_arch}.list")
-        ]
-        if packages == []:
+    if isinstance(packages, List):
+        packages = dict([(p, None) for p in packages])
+    if always_install:
+        to_install = list(packages.keys())
+    else:
+        to_install = []
+        for package in packages.keys():
+            paths = [
+                f"/var/lib/dpkg/info/{package}.list",
+                f"/var/lib/dpkg/info/{package}:{host_arch}.list",
+            ]
+            for path in paths:
+                if not os.path.exists(path):
+                    continue
+                wanted_version = packages[package]
+                if wanted_version is None:  # existance is enough
+                    break
+                status = run_command(f"dpkg-query --status {package}")
+                version = _version_pattern.search(status).group(1)
+                if version_compare(version, wanted_version) >= 0:
+                    break
+            else:
+                to_install.append(package)
+
+        if to_install == []:
             return
     # Confdef is to fix https://unix.stackexchange.com/a/416816/73838
     os.environ["DEBIAN_FRONTEND"] = "noninteractive"
     run_command(
         "apt-get install %s --no-install-recommends --yes -o DPkg::Options::=--force-confdef"
-        % " ".join(packages)
+        % " ".join(to_install)
     )
 
 
