@@ -83,9 +83,9 @@ def config_path(shortname=False):
 
 
 def path_to_config_file(name: str) -> str:
-    if name.startswith("/"):
-        return name
-    return os.path.normpath(f"{config_path()}/{name}")
+    if name.find("~") != -1:
+        return pathlib.Path(name).expanduser()
+    return pathlib.Path(config_path()).joinpath(name)
 
 
 def data_path():
