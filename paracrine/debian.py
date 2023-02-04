@@ -16,7 +16,8 @@ def apt_install(
     packages: Union[List[str], Dict[str, Optional[str]]], always_install: bool = False
 ) -> None:
     global host_arch
-    if host_arch is None:
+    if host_arch is None and packages != ["dpkg-dev"]:
+        apt_install(["dpkg-dev"])
         host_arch = run_command("dpkg-architecture -q DEB_HOST_ARCH").strip()
     if isinstance(packages, List):
         packages = dict([(p, None) for p in packages])
