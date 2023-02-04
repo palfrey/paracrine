@@ -12,7 +12,7 @@ classifiers = [
     "License :: OSI Approved :: GNU Affero General Public License v3",
     "Operating System :: OS Independent",
 ]
-dependencies=["mitogen", "jinja2", "pyyaml"]
+dependencies=["mitogen", "jinja2", "pyyaml", "python-debian"]
 
 [project.urls]
 "Homepage" = "https://github.com/palfrey/paracrine"
