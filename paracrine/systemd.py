@@ -59,7 +59,7 @@ def systemctl_daemon_reload():
     run_command("systemctl daemon-reload")
 
 
-def link_service(fullpath: str):
+def link_service(fullpath: str) -> bool:
     path = Path(fullpath)
     link_change = link(
         f"/etc/systemd/system/{path.name}",
@@ -67,3 +67,4 @@ def link_service(fullpath: str):
     )
     if link_change:
         systemctl_daemon_reload()
+    return link_change
