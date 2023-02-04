@@ -1,16 +1,21 @@
 import os
-from typing import List
+from typing import List, Optional
 
 from .fs import run_command, set_file_contents
 
+host_arch: Optional[str] = None
+
 
 def apt_install(packages: List[str], always_install: bool = False) -> None:
+    global host_arch
+    if host_arch is None:
+        host_arch = run_command("dpkg-architecture -q DEB_HOST_ARCH").strip()
     if not always_install:
         packages = [
             package
             for package in packages
             if not os.path.exists(f"/var/lib/dpkg/info/{package}.list")
-            and not os.path.exists(f"/var/lib/dpkg/info/{package}:amd64.list")
+            and not os.path.exists(f"/var/lib/dpkg/info/{package}:{host_arch}.list")
         ]
         if packages == []:
             return
