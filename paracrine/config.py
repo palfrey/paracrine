@@ -26,6 +26,10 @@ def config():
 
 
 def get_config_file(fname):
+    if fname not in data["configs"]:
+        raise Exception(
+            f"Can't find {fname}. We have: {sorted(data['configs'].keys())}"
+        )
     return data["configs"][fname]
 
 
@@ -120,10 +124,7 @@ def create_data(server: Optional[Dict] = None):
         configs,
         config_path(),
         shortname="configs",
-        filter=lambda f: f.startswith("wireguard-public")
-        or f.startswith("networks-")
-        or f.startswith("other-")
-        or f.startswith("ssh-"),
+        filter=lambda f: not f.startswith("."),
     )
 
     return {
