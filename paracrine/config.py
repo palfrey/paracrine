@@ -27,9 +27,7 @@ def config():
 
 def get_config_file(fname):
     if fname not in data["configs"]:
-        raise Exception(
-            f"Can't find {fname}. We have: {sorted(data['configs'].keys())}"
-        )
+        raise KeyError(f"Can't find {fname}. We have: {sorted(data['configs'].keys())}")
     return data["configs"][fname]
 
 
