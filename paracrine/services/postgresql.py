@@ -19,5 +19,5 @@ def core_run():
         "postgresql_org_repository",
         "deb http://apt.postgresql.org/pub/repos/apt bullseye-pgdg main",
     )
-    apt_install(["postgresql-14"])
-    systemd_set("postgresql", enabled=True, running=True)
+    apt_install(["postgresql-14"], target_release="bullseye-pgdg")
+    systemd_set("postgresql@14-main", enabled=True, running=True)

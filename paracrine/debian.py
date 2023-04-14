@@ -13,7 +13,9 @@ _version_pattern = re.compile(r"Version: (\S+)")
 
 # List is just "any version", Dict is a "name => min version" requirement
 def apt_install(
-    packages: Union[List[str], Dict[str, Optional[str]]], always_install: bool = False
+    packages: Union[List[str], Dict[str, Optional[str]]],
+    always_install: bool = False,
+    target_release: Optional[str] = None,
 ) -> None:
     global host_arch
     if host_arch is None and packages != ["dpkg-dev"]:
@@ -47,10 +49,13 @@ def apt_install(
             return
     # Confdef is to fix https://unix.stackexchange.com/a/416816/73838
     os.environ["DEBIAN_FRONTEND"] = "noninteractive"
-    run_command(
+    cmd = (
         "apt-get install %s --no-install-recommends --yes -o DPkg::Options::=--force-confdef"
         % " ".join(to_install)
     )
+    if target_release is not None:
+        cmd += f" --target-release {target_release}"
+    run_command(cmd)
 
 
 def apt_update():
