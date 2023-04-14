@@ -166,3 +166,13 @@ def build_config(config: Dict) -> Dict:
 
 def local_config() -> Dict:
     return yaml.safe_load(open(CONFIG_NAME).read())
+
+
+def local_server():
+    local_hostname = host()["name"]
+    for server in get_config()["servers"]:
+        name = server["name"]
+        if name == local_hostname:
+            return server
+
+    raise Exception(f"Cannot find {local_hostname}")
