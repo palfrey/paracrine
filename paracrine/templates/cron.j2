@@ -1,0 +1,6 @@
+SHELL=/bin/sh
+{% for key, value in ENVS.values() %}
+{{key}}={{value}}
+{% endfor %}
+
+{{SCHEDULE}} {{ USER }} {{ COMMAND}}
