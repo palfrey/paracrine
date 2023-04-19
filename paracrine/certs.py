@@ -2,10 +2,9 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Dict
 
-from . import aws
+from . import aws, cron
 from .config import core_config, other_config_file
 from .core import use_this_host
-from .cron import create_cron
 from .debian import apt_install
 from .deps import Modules
 from .fs import (
@@ -44,6 +43,8 @@ def certbot_for_host(hostname: str, email: str) -> Dict:
                         --work-dir={certbot.joinpath('workdir')} \
                         --logs-dir={certbot.joinpath('logs')} \
                         --dns-route53"
+        while renew_command.find("  ") != -1:
+            renew_command = renew_command.replace("  ", " ")
         if not fullchain_path.exists():
             make_directory(live_path)
             make_directory(certbot)
@@ -77,7 +78,12 @@ def certbot_for_host(hostname: str, email: str) -> Dict:
                 )
 
         apt_install(["moreutils"])
-        create_cron("certs-renew", "0 3 * * *", "root", f"chronic {renew_command}")
+        cron.create_cron(
+            "certs-renew",
+            "0 3 * * *",
+            "root",
+            f"chronic {renew_command}",
+        )
 
         return {
             "fullchain": fullchain_path.open().read(),
@@ -93,7 +99,7 @@ def certbot_for_host(hostname: str, email: str) -> Dict:
 
 
 def dependencies() -> Modules:
-    return [aws]
+    return [aws, cron]
 
 
 def bootstrap_run() -> Dict:

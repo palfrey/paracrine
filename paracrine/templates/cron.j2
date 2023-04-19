@@ -1,6 +1,6 @@
 SHELL=/bin/sh
-{% for key, value in ENVS.values() %}
+{% for key, value in ENVS.items() %}
 {{key}}={{value}}
-{% endfor %}
+{%- endfor %}
 
 {{SCHEDULE}} {{ USER }} {{ COMMAND}}
