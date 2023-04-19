@@ -75,6 +75,7 @@ if __name__ == "__main__":
     elif args[0] == "start":
         service = args[1]
         if service in get_running_services():
+            print(f"{service} already started")
             exit(0)
         service_path = Path(f"/etc/init.d/{service}")
         if service == "pleroma":
@@ -101,9 +102,14 @@ if __name__ == "__main__":
         add_running_service(service)
     elif args[0] == "enable":
         service = args[1]
-        args = ["update-rc.d", service, "enable", "2"]
-        print(args)
-        subprocess.check_call(args)
+        if "@" in service:
+            service = service[: service.find("@")]
+        if service in get_enabled_services():
+            print(f"{service} is already enabled")
+        else:
+            args = ["update-rc.d", service, "enable", "2"]
+            print(args)
+            subprocess.check_call(args)
     elif args[0] == "daemon-reload":
         pass  # FIXME, do stuff
     elif args[0] == "reload":
