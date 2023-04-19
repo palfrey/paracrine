@@ -2,11 +2,12 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Dict
 
-from paracrine.deps import Modules
-
 from . import aws
 from .config import core_config, other_config_file
 from .core import use_this_host
+from .cron import create_cron
+from .debian import apt_install
+from .deps import Modules
 from .fs import (
     make_directory,
     run_command,
@@ -38,6 +39,11 @@ def certbot_for_host(hostname: str, email: str) -> Dict:
         certbot_bin = venv_bin.joinpath("certbot")
 
         fullchain_path = live_path.joinpath("fullchain.pem")
+        renew_command = f"{certbot_bin} renew \
+                        --config-dir={certbot.joinpath('config')} \
+                        --work-dir={certbot.joinpath('workdir')} \
+                        --logs-dir={certbot.joinpath('logs')} \
+                        --dns-route53"
         if not fullchain_path.exists():
             make_directory(live_path)
             make_directory(certbot)
@@ -66,13 +72,12 @@ def certbot_for_host(hostname: str, email: str) -> Dict:
             if not dummy_certs:
                 run_with_marker(
                     "/opt/certbot/renew_marker",
-                    f"{certbot_bin} renew \
-                        --config-dir={certbot.joinpath('config')} \
-                        --work-dir={certbot.joinpath('workdir')} \
-                        --logs-dir={certbot.joinpath('logs')} \
-                        --dns-route53",
+                    renew_command,
                     max_age=timedelta(days=1),
                 )
+
+        apt_install(["moreutils"])
+        create_cron("certs-renew", "0 3 * * *", "root", f"chronic {renew_command}")
 
         return {
             "fullchain": fullchain_path.open().read(),
