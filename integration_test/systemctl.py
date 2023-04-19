@@ -74,6 +74,8 @@ if __name__ == "__main__":
             print("SubState=dead")
     elif args[0] == "start":
         service = args[1]
+        if "@" in service:
+            service = service[: service.find("@")]
         if service in get_running_services():
             print(f"{service} already started")
             exit(0)
@@ -99,6 +101,9 @@ if __name__ == "__main__":
                     args = ["nohup"] + cmd.split(" ")
                     print(args)
                     subprocess.Popen(args, start_new_session=True)
+                    break
+            else:
+                raise Exception(f"Can't find {service}")
         add_running_service(service)
     elif args[0] == "enable":
         service = args[1]
