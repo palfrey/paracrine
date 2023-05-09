@@ -140,7 +140,7 @@ def download(url, fname, sha, mode=None):
     if not exists:
         from .debian import apt_install
 
-        apt_install(["curl"])
+        apt_install(["curl", "ca-certificates"])
         run_command("curl -Lo %s %s" % (fname, url))
         existing_sha = sha_file(fname)
         assert existing_sha == sha, (existing_sha, sha)
@@ -181,7 +181,7 @@ def download_executable(url, hash, name=None, path=None):
 def download_and_unpack(url, hash, name=None, dir_name=None):
     if name is None:
         name = url.split("/")[-1]
-    compressed_path = "/opt/%s" % name
+    compressed_path: str = "/opt/%s" % name
     if dir_name is None:
         dir_name = "/opt/%s" % name.replace(".tar.gz", "").replace(".tgz", "")
     changed = download(
@@ -194,7 +194,7 @@ def download_and_unpack(url, hash, name=None, dir_name=None):
     if os.listdir(dir_name) == []:
         from .debian import apt_install
 
-        if compressed_path.endswith("tar.gz"):
+        if compressed_path.endswith("tar.gz") or compressed_path.endswith(".tgz"):
             apt_install(["tar"])
             run_command("tar --directory=%s -zxvf %s" % (dir_name, compressed_path))
         elif compressed_path.endswith("zip"):
