@@ -6,3 +6,4 @@ paracrine.egg-info/
 build/
 html/
 dist/
+.vagrant/
