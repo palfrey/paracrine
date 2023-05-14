@@ -4,11 +4,30 @@ from typing import Dict, List, Optional, Union
 
 from debian.debian_support import version_compare
 
-from .fs import run_command, set_file_contents
+from .fs import build_with_command, download, run_command, set_file_contents
 
 host_arch: Optional[str] = None
 
 _version_pattern = re.compile(r"Version: (\S+)")
+
+
+def apt_update():
+    run_command("apt-get update --allow-releaseinfo-change")
+
+
+def add_trusted_key(url: str, name: str, hash: str):
+    download(
+        url,
+        f"/etc/apt/trusted.gpg.d/{name}.gpg.asc",
+        hash,
+    )
+    apt_install(["gpg"])
+    build_with_command(
+        f"/etc/apt/trusted.gpg.d/{name}.gpg",
+        f"cat /etc/apt/trusted.gpg.d/{name}.gpg.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/{name}.gpg",
+        [f"/etc/apt/trusted.gpg.d/{name}.gpg.asc"],
+    )
+    return f"/etc/apt/trusted.gpg.d/{name}.gpg"
 
 
 # List is just "any version", Dict is a "name => min version" requirement
@@ -16,7 +35,7 @@ def apt_install(
     packages: Union[List[str], Dict[str, Optional[str]]],
     always_install: bool = False,
     target_release: Optional[str] = None,
-) -> None:
+) -> bool:
     global host_arch
     if host_arch is None and packages != ["dpkg-dev"]:
         apt_install(["dpkg-dev"])
@@ -46,7 +65,12 @@ def apt_install(
                 to_install.append(package)
 
         if to_install == []:
-            return
+            return False
+
+    # Because it's probably the first run
+    if packages == {"dpkg-dev": None}:
+        apt_update()
+
     # Confdef is to fix https://unix.stackexchange.com/a/416816/73838
     os.environ["DEBIAN_FRONTEND"] = "noninteractive"
     cmd = (
@@ -56,10 +80,7 @@ def apt_install(
     if target_release is not None:
         cmd += f" --target-release {target_release}"
     run_command(cmd)
-
-
-def apt_update():
-    run_command("apt-get update --allow-releaseinfo-change")
+    return True
 
 
 def debian_repo(name, contents=None):
