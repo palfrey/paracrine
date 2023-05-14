@@ -9,7 +9,7 @@ import stat
 import subprocess
 from datetime import datetime
 from difflib import unified_diff
-from typing import Optional, Union
+from typing import List, Optional, Union
 
 from .config import data_files, jinja_env
 
@@ -310,7 +310,10 @@ def run_with_marker(
 
 
 def run_command(
-    cmd: str, directory: Optional[str] = None, input: Optional[str] = None
+    cmd: str,
+    directory: Optional[str] = None,
+    input: Optional[str] = None,
+    allowed_exit_codes: List[int] = [0],
 ) -> str:
     display = cmd.strip()
     while display.find("  ") != -1:
@@ -339,7 +342,11 @@ def run_command(
         if input is not None:
             input = input.encode("utf-8")
         (stdout, stderr) = process.communicate(input=input)
-        assert process.returncode == 0, (process.returncode, stdout, stderr)
+        assert process.returncode in allowed_exit_codes, (
+            process.returncode,
+            stdout,
+            stderr,
+        )
         return stdout.decode("utf-8")
     except subprocess.CalledProcessError as e:
         print(e.output)
