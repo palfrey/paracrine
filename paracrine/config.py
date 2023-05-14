@@ -25,6 +25,10 @@ def config():
     return data["config"]
 
 
+def data_files():
+    return data["data"]
+
+
 def get_config_file(fname):
     if fname not in data["configs"]:
         raise KeyError(f"Can't find {fname}. We have: {sorted(data['configs'].keys())}")
@@ -102,6 +106,14 @@ def environment():
     return inventory["environment"]
 
 
+def walk(path):
+    for p in pathlib.Path(path).iterdir():
+        if p.is_dir():
+            yield from walk(p)
+            continue
+        yield p.resolve()
+
+
 def create_data(server: Optional[Dict] = None):
     config = get_config()
     templates = {}
@@ -112,8 +124,25 @@ def create_data(server: Optional[Dict] = None):
     for template_path in template_paths:
         if not template_path.exists():
             continue
-        for path in template_path.iterdir():
-            templates[path.name] = path.open().read()
+        for path in walk(template_path):
+            templates[path.name] = path.open("r").read()
+
+    data = {}
+    data_paths = [
+        pathlib.Path("data"),
+        pathlib.Path(__file__).parent.joinpath("data"),
+    ]
+    for data_path in data_paths:
+        if not data_path.exists():
+            continue
+        data_path = data_path.absolute()
+        for path in walk(data_path):
+            try:
+                local_path = path.relative_to(data_path).as_posix()
+            except ValueError:
+                # Symlink outside of local folder
+                continue
+            data[local_path] = path.open("rb").read()
 
     configs = {
         "config.yaml": open("config.yaml").read(),
@@ -132,6 +161,7 @@ def create_data(server: Optional[Dict] = None):
         "configs": configs,
         "environment": environment(),
         "inventory": get_config(),
+        "data": data,
     }
 
 

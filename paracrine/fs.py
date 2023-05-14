@@ -1,5 +1,6 @@
 import contextlib
 import grp
+import hashlib
 import logging
 import os
 import pwd
@@ -8,26 +9,56 @@ import stat
 import subprocess
 from datetime import datetime
 from difflib import unified_diff
-from typing import Optional
+from typing import Optional, Union
 
-from .config import jinja_env
+from .config import data_files, jinja_env
 
 
-def set_file_contents(fname: str, contents: str, ignore_changes: bool = False) -> bool:
+def hash_data(data: bytes) -> str:
+    m = hashlib.sha256()
+    m.update(data)
+    return m.hexdigest()
+
+
+def set_file_contents(
+    fname: str,
+    contents: Union[str, bytes],
+    ignore_changes: bool = False,
+    owner: Optional[str] = None,
+    group: Optional[str] = None,
+) -> bool:
     needs_update = False
+
+    if type(contents) == bytes:
+        try:
+            contents = contents.decode("utf-8")
+        except UnicodeDecodeError:
+            pass
+
     if not os.path.exists(fname):
         needs_update = True
         logging.info("File %s was missing" % fname)
     elif not ignore_changes:
-        data = open(fname).readlines()
-        diff = list(unified_diff(data, contents.splitlines(True)))
-        if len(diff) > 0:
-            diff = "".join(diff)
-            logging.info("File %s was different. Diff is: \n%s" % (fname, diff))
-            needs_update = True
+        if type(contents) == str:
+            data = open(fname, "rb").read().decode("utf-8").splitlines(True)
+            diff = list(unified_diff(data, contents.splitlines(True)))
+            if len(diff) > 0:
+                diff = "".join(diff)
+                logging.info("File %s was different. Diff is: \n%s" % (fname, diff))
+                needs_update = True
+        else:
+            data = open(fname, "rb").read()
+            if hash_data(data) != hash_data(contents):
+                logging.info("File %s was different" % fname)
+                needs_update = True
 
     if needs_update:
-        open(fname, "w").write(contents)
+        if type(contents) == str:
+            open(fname, "w").write(contents)
+        else:
+            open(fname, "wb").write(contents)
+
+    needs_update = set_owner(fname, owner, group) or needs_update
 
     return needs_update
 
@@ -38,6 +69,10 @@ def set_file_contents_from_template(fname, template, ignore_changes=False, **kwa
         jinja_env().get_template(template).render(**kwargs),
         ignore_changes=ignore_changes,
     )
+
+
+def set_file_contents_from_data(fname: str, data_path: str):
+    return set_file_contents(fname, data_files()[data_path])
 
 
 @contextlib.contextmanager
