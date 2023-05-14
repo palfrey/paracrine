@@ -37,7 +37,6 @@ def create_cron(name: str, schedule: str, user: str, command: str):
         envs["MAILTO"] = cron_info["mailto"]
     if cron_info["mailfrom"] is not None:
         envs["MAILFROM"] = cron_info["mailfrom"]
-    print("envs", envs, cron_info)
     set_file_contents_from_template(
         f"/etc/cron.d/{name}",
         "cron.j2",

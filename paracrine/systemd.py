@@ -51,7 +51,7 @@ def systemd_set(name, enabled=None, running=None, restart=None, reloaded=None):
             journal(name)
             raise
 
-    if reloaded is not None:
+    if reloaded is True:
         run_command("systemctl reload %s" % name)
 
 
