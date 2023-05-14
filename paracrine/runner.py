@@ -94,7 +94,7 @@ def run(inventory_path: str, modules: Modules):
         new_dependencies = runfunc(needs_dependencies, "dependencies")
         needs_dependencies = []
         for item in new_dependencies.values():
-            for new_dependency in item:
+            for new_dependency in item[0]:
                 if new_dependency in modules:
                     continue
                 modules.insert(0, new_dependency)

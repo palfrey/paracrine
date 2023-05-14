@@ -2,7 +2,7 @@ import json
 import os
 import socket
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 
 from .config import config, host, network_config_file, other_config_file
 from .debian import apt_install
@@ -57,7 +57,8 @@ def bootstrap_run():
     return data
 
 
-def bootstrap_parse_return(info: Dict) -> None:
+def bootstrap_parse_return(infos: List[Dict]) -> None:
+    info = infos[0]
     networks = json.loads(info["network_devices"])
     name = info["server_name"]
     json.dump(networks, open(network_config_file(name), "w"), indent=2)

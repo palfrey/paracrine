@@ -95,7 +95,8 @@ def bootstrap_run():
     return {"wg_publickey": open(public_key_file).read().strip()}
 
 
-def bootstrap_parse_return(info):
+def bootstrap_parse_return(infos):
+    info = infos[0]
     open(public_key_path(host()["name"]), "w").write(info["wg_publickey"])
 
     wg_ips = []

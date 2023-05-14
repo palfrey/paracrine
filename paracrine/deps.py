@@ -22,10 +22,12 @@ def runfunc(
             if data != {}:
                 set_data(data)
             try:
+                if module.__name__ not in ret:
+                    ret[module.__name__] = []
                 if module.__name__ in arguments:
-                    ret[module.__name__] = func(arguments[module.__name__])
+                    ret[module.__name__].append(func(arguments[module.__name__]))
                 else:
-                    ret[module.__name__] = func()
+                    ret[module.__name__].append(func())
             except Exception:
                 print(f"Error while running {name} for {module.__name__}")
                 raise

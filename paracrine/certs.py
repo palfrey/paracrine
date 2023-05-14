@@ -1,6 +1,6 @@
 from datetime import timedelta
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List, Union
 
 from . import aws, cron
 from .config import core_config, other_config_file
@@ -24,9 +24,13 @@ def get_dummy_certs():
     return config.get("dummy_certs", False)
 
 
-def certbot_for_host(hostname: str, email: str) -> Dict:
+def certbot_for_host(hostname: Union[str, List[str]], email: str) -> Dict:
+    if type(hostname) == str:
+        hostnames = [hostname]
+    else:
+        hostnames = hostname
     certbot = Path("/opt/certbot")
-    live_path = certbot.joinpath("config", "live", hostname)
+    live_path = certbot.joinpath("config", "live", hostnames[0])
 
     dummy_certs = get_dummy_certs()
 
@@ -67,7 +71,7 @@ def certbot_for_host(hostname: str, email: str) -> Dict:
                         --work-dir={certbot.joinpath('workdir')} \
                         --logs-dir={certbot.joinpath('logs')} \
                         -m {email} --agree-tos --non-interactive \
-                        --no-eff-email --domains {hostname} --dns-route53"
+                        --no-eff-email --domains {','.join(hostnames)} --dns-route53"
                 )
         else:
             if not dummy_certs:
@@ -79,15 +83,15 @@ def certbot_for_host(hostname: str, email: str) -> Dict:
 
         apt_install(["moreutils"])
         cron.create_cron(
-            "certs-renew",
+            f"certs-renew-{hostnames[0]}",
             "0 3 * * *",
             "root",
             f"chronic {renew_command}",
         )
 
         return {
-            "fullchain": fullchain_path.open().read(),
-            "privkey": live_path.joinpath("privkey.pem").open().read(),
+            f"fullchain-{hostnames[0]}": fullchain_path.open().read(),
+            f"privkey-{hostnames[0]}": live_path.joinpath("privkey.pem").open().read(),
             "ssl-options": venv.joinpath(
                 "lib/python3.9/site-packages/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf"  # noqa: E501
             )
@@ -107,7 +111,8 @@ def bootstrap_run() -> Dict:
 
 
 def bootstrap_parse_return(
-    info: Dict,
+    infos: List[Dict],
 ) -> None:
-    for key in info:
-        open(other_config_file(key), "w").write(info[key])
+    for info in infos:
+        for key in info:
+            open(other_config_file(key), "w").write(info[key])

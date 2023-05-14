@@ -19,6 +19,7 @@ from paracrine.users import adduser
 
 # FIXME: Do soapbox from https://gitlab.com/soapbox-pub/soapbox/-/jobs/3371276281/artifacts/download
 # Unzipped with "unzip soapbox.zip -d instance" and then moved instance/static to /var/lib/pleroma
+# https://docs.soapbox.pub/frontend/installing/#install-soapbox
 
 
 def dependencies() -> Modules:
@@ -83,13 +84,14 @@ def core_run():
     nginx_changes = (
         set_file_contents(
             cert_dir.joinpath("fullchain.pem"),
-            get_config_file("configs/other-fullchain"),
+            get_config_file(f"configs/other-fullchain-{LOCAL['PLEROMA_HOST']}"),
         )
         or nginx_changes
     )
     nginx_changes = (
         set_file_contents(
-            cert_dir.joinpath("privkey.pem"), get_config_file("configs/other-privkey")
+            cert_dir.joinpath("privkey.pem"),
+            get_config_file(f"configs/other-privkey-{LOCAL['PLEROMA_HOST']}"),
         )
         or nginx_changes
     )
