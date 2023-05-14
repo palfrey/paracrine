@@ -1,4 +1,7 @@
+from pathlib import Path
+
 from paracrine.debian import add_trusted_key, apt_install, debian_repo
+from paracrine.fs import make_directory, run_with_marker
 from paracrine.systemd import systemd_set
 
 
@@ -14,3 +17,24 @@ def core_run():
     )
     apt_install(["postgresql-14"], target_release="bullseye-pgdg")
     systemd_set("postgresql@14-main", enabled=True, running=True)
+
+
+db_dir = Path("/opt/postgresql")
+
+
+def make_user(username: str, password: str):
+    user_dir = db_dir.joinpath("users")
+    make_directory(user_dir)
+    run_with_marker(
+        user_dir.joinpath(username),
+        f"sudo -u postgres psql --command=\"CREATE USER {username} WITH ENCRYPTED PASSWORD '{password}';\"",
+    )
+
+
+def make_db(name: str, owner: str):
+    data_dir = db_dir.joinpath("databases")
+    make_directory(data_dir)
+    run_with_marker(
+        data_dir.joinpath(name),
+        f'sudo -u postgres psql --command="CREATE DATABASE {name} OWNER {owner};"',
+    )
