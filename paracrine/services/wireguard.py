@@ -13,9 +13,9 @@ from ..config import (
     other_config_file,
 )
 from ..core import in_docker
-from ..debian import apt_install
+from ..debian import apt_install, apt_update
 from ..fs import make_directory, run_command, set_file_contents_from_template
-from ..network import external_ip
+from ..network import external_ip, wireguard_ip
 from ..systemd import systemd_set
 
 wg_config = "/etc/wireguard"
@@ -56,6 +56,7 @@ def bootstrap_run():
     modules = sorted([line.split(" ")[0] for line in run_command("lsmod").splitlines()])
     if "wireguard" not in modules:
         print("modules", modules)
+        apt_update()
         apt_install(["linux-image-amd64"])
         versions = get_all_kernel_versions()
         ordered = sorted(
@@ -136,7 +137,7 @@ def setup(name="wg0", ip="192.168.2.1", netmask=24, peers=[]):
 
 
 def core_run():
-    setup(ip=host()["wireguard_ip"])
+    setup(ip=wireguard_ip())
 
 
 __all__ = ["core_run", "bootstrap_run", "bootstrap_parse_return"]

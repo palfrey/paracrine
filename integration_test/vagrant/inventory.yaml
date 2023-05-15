@@ -8,3 +8,4 @@ servers:
       ssh_port: 2222
       ssh_key: ../../.vagrant/machines/default/virtualbox/private_key
       ssh_user: vagrant
+      wireguard_ip: 192.168.1.1

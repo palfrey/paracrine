@@ -87,7 +87,10 @@ def cd(path: os.PathLike):
 
 
 def set_mode(path, mode):
-    raw_mode = int(mode, 8)
+    if type(mode) == str:
+        raw_mode = int(mode, 8)
+    else:
+        raw_mode = mode
     existing = stat.S_IMODE(os.stat(path).st_mode)
     if existing != raw_mode:
         logging.info("chmod %s %s" % (path, mode))
@@ -213,10 +216,10 @@ def download_executable(url, hash, name=None, path=None):
     )
 
 
-def download_and_unpack(url, hash, name=None, dir_name=None):
+def download_and_unpack(url, hash, name=None, dir_name=None, compressed_root="/opt"):
     if name is None:
         name = url.split("/")[-1]
-    compressed_path: str = "/opt/%s" % name
+    compressed_path: str = "%s/%s" % (compressed_root, name)
     if dir_name is None:
         dir_name = "/opt/%s" % name.replace(".tar.gz", "").replace(".tgz", "")
     changed = download(

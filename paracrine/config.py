@@ -29,9 +29,13 @@ def data_files():
     return data["data"]
 
 
+def get_config_keys():
+    return data["configs"].keys()
+
+
 def get_config_file(fname):
-    if fname not in data["configs"]:
-        raise KeyError(f"Can't find {fname}. We have: {sorted(data['configs'].keys())}")
+    if fname not in get_config_keys():
+        raise KeyError(f"Can't find {fname}. We have: {sorted(get_config_keys())}")
     return data["configs"][fname]
 
 
@@ -48,7 +52,7 @@ def set_data(new_data: Dict[str, Any]) -> None:
     data = new_data
 
 
-def add_folder_to_config(configs, folder, shortname=None, filter=None):
+def add_folder_to_config(configs, folder, shortname=None, filter=None, prefix=""):
     if not os.path.exists(folder):
         print("Skipping %s from config as doesn't exist" % folder)
         return
@@ -61,7 +65,24 @@ def add_folder_to_config(configs, folder, shortname=None, filter=None):
             full = os.path.join(folder, f)
         else:
             full = key = os.path.join(folder, f)
-        configs[key] = open(full).read()
+        if os.path.isfile(full):
+            if prefix != "":
+                if "/" in key:
+                    parts = key.split("/")
+                    key = "/".join(parts[:-1]) + "/" + prefix + parts[-1]
+                else:
+                    key = prefix + key
+            configs[key] = open(full).read()
+        else:
+            if prefix != "":
+                prefix += "/"
+            add_folder_to_config(
+                configs,
+                full,
+                shortname=shortname,
+                filter=filter,
+                prefix=prefix + f + "/",
+            )
 
 
 inventory = None
@@ -104,6 +125,13 @@ def environment():
     if inventory is None:
         return data["environment"]
     return inventory["environment"]
+
+
+def servers():
+    try:
+        return get_config()["servers"]
+    except NotADirectoryError:
+        return core_config()["servers"]
 
 
 def walk(path):
@@ -200,7 +228,7 @@ def local_config() -> Dict:
 
 def local_server():
     local_hostname = host()["name"]
-    for server in get_config()["servers"]:
+    for server in servers():
         name = server["name"]
         if name == local_hostname:
             return server
