@@ -3,7 +3,7 @@ import pathlib
 from typing import Optional
 
 from .config import config_path, get_config_file
-from .fs import set_file_contents_from_template
+from .fs import set_file_contents, set_file_contents_from_template
 
 mailto: Optional[str] = None
 mailfrom: Optional[str] = None
@@ -12,12 +12,13 @@ mailfrom: Optional[str] = None
 def bootstrap_local():
     global mailto, mailfrom
     cron_path = pathlib.Path(config_path()).joinpath("cron-info")
-    if not cron_path.exists():
-        json.dump(
+    set_file_contents(
+        cron_path,
+        json.dumps(
             {"mailto": mailto, "mailfrom": mailfrom},
-            cron_path.open("w"),
             indent=2,
-        )
+        ),
+    )
 
 
 def set_mailto(email: str) -> None:
