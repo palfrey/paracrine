@@ -16,7 +16,7 @@ from paracrine.services import ntp, wireguard
 from paracrine.systemd import systemctl_daemon_reload, systemd_set
 from paracrine.users import adduser
 
-# https://www.cockroachlabs.com/docs/v22.2/secure-a-cluster
+options = {}
 
 
 def dependencies():
@@ -60,7 +60,7 @@ def bootstrap_local():
         )
 
 
-def bootstrap_run():
+def core_run():
     unpacked = download_and_unpack(
         cockroach_url,
         cockroach_hash,
@@ -78,6 +78,9 @@ def bootstrap_run():
             new_fname = new_fname.replace(wireguard_ip(), "node")
         set_file_contents(new_fname, get_config_file(fname), owner="cockroach")
         set_mode(new_fname, "700")
+
+    COCKROACH_PORT = options.get("COCKROACH_PORT", 26257)
+    SQL_PORT = options.get("SQL_PORT", 26258)
     changes = set_file_contents_from_template(
         "/etc/systemd/system/cockroach.service",
         "cockroach.service.j2",
@@ -86,14 +89,17 @@ def bootstrap_run():
         USER=USER,
         CERTS_DIR=CERTS_DIR,
         WIREGUARD_IP=wireguard_ip(),
-        HOST_LIST=",".join([f"{ip}:26257" for ip in wireguard_ips().values()]),
+        HTTP_PORT=options.get("HTTP_PORT", 8080),
+        COCKROACH_PORT=COCKROACH_PORT,
+        SQL_PORT=SQL_PORT,
+        HOST_LIST=",".join(
+            [f"{ip}:{COCKROACH_PORT}" for ip in wireguard_ips().values()]
+        ),
     )
     if changes:
         systemctl_daemon_reload()
     systemd_set("cockroach", enabled=True, running=True, restart=changes)
 
-
-def core_run():
     if use_this_host("cockroach"):
         run_with_marker(
             HOME_DIR.joinpath("init_done"),
