@@ -1,6 +1,6 @@
 [project]
 name = "paracrine"
-version = "0.0.4"
+version = "0.0.5"
 authors = [
   { name="Tom Parker-Shemilt", email="palfrey@tevp.net" },
 ]
