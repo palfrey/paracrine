@@ -23,9 +23,14 @@ def dependencies():
     return [ntp, wireguard]
 
 
-cockroach_url = "https://binaries.cockroachdb.com/cockroach-v22.2.9.linux-amd64.tgz"
-cockroach_hash = "7ed169bf5f1f27bd49ab4e04a00068f7b44cff8a0672778b0f67d87ece3de07b"
-binary_path = "cockroach-v22.2.9.linux-amd64/cockroach"
+cockroach_version = "23.1.1"
+cockroach_url = (
+    f"https://binaries.cockroachdb.com/cockroach-v{cockroach_version}.linux-amd64.tgz"
+)
+cockroach_hash = "8197562ce59d1ac4f53f67c9d277827d382db13c5e650980942bcb5e5104bb4e"
+binary_path = f"cockroach-v{cockroach_version}.linux-amd64/cockroach"
+# FIXME
+cockroach_binary = f"/opt/cockroach-v{cockroach_version}.linux-amd64/{binary_path}"
 HOME_DIR = Path("/var/lib/cockroach")
 CERTS_DIR = HOME_DIR.joinpath("certs")
 USER = "cockroach"
@@ -45,25 +50,21 @@ def bootstrap_local():
     make_directory(certs_dir)
     build_with_command(
         store_path.joinpath("ca.key"),
-        f"{cockroach} cert create-ca --certs-dir={certs_dir} --ca-key={store_path}/ca.key",
+        f"{cockroach} cert create-ca --certs-dir={certs_dir} --ca-key={store_path}/ca.key --overwrite --allow-ca-key-reuse",
     )
     build_with_command(
         certs_dir.joinpath("client.root.key"),
-        f"{cockroach} cert create-client root --certs-dir={certs_dir} --ca-key={store_path}/ca.key",
+        f"{cockroach} cert create-client root --certs-dir={certs_dir} --ca-key={store_path}/ca.key --overwrite",
+        deps=[f"{store_path}/ca.key"],
     )
 
     for ip in wireguard_ips().values():
         crt_path = certs_dir.joinpath(f"{ip}.crt")
         build_with_command(
             crt_path,
-            f"{cockroach} cert create-node localhost {ip} --certs-dir={certs_dir} --ca-key={store_path}/ca.key && mv {certs_dir.joinpath('node.crt')} {crt_path} && mv {certs_dir.joinpath('node.key')} {crt_path.with_suffix('.key')}",
+            f"{cockroach} cert create-node localhost {ip} --certs-dir={certs_dir} --ca-key={store_path}/ca.key --overwrite && mv {certs_dir.joinpath('node.crt')} {crt_path} && mv {certs_dir.joinpath('node.key')} {crt_path.with_suffix('.key')}",
+            deps=[f"{store_path}/ca.key"],
         )
-
-
-# FIXME
-cockroach_binary = (
-    "/opt/cockroach-v22.2.9.linux-amd64/cockroach-v22.2.9.linux-amd64/cockroach"
-)
 
 
 def core_run():
@@ -74,6 +75,7 @@ def core_run():
     cockroach_path = Path(unpacked["dir_name"]).joinpath(binary_path)
     adduser(USER, HOME_DIR)
     make_directory(CERTS_DIR)
+    file_changes = False
     for fname in get_config_keys():
         if "cockroach-certs" not in fname:
             continue
@@ -82,12 +84,15 @@ def core_run():
         ).as_posix()
         if wireguard_ip() in fname:
             new_fname = new_fname.replace(wireguard_ip(), "node")
-        set_file_contents(new_fname, get_config_file(fname), owner="cockroach")
-        set_mode(new_fname, "700")
+        file_changes = (
+            set_file_contents(new_fname, get_config_file(fname), owner="cockroach")
+            or file_changes
+        )
+        file_changes = set_mode(new_fname, "700") or file_changes
 
     COCKROACH_PORT = options.get("COCKROACH_PORT", 26257)
     SQL_PORT = options.get("SQL_PORT", 26258)
-    changes = set_file_contents_from_template(
+    service_file_changes = set_file_contents_from_template(
         "/etc/systemd/system/cockroach.service",
         "cockroach.service.j2",
         COCKROACH_PATH=cockroach_path,
@@ -102,9 +107,14 @@ def core_run():
             [f"{ip}:{COCKROACH_PORT}" for ip in wireguard_ips().values()]
         ),
     )
-    if changes:
+    if service_file_changes:
         systemctl_daemon_reload()
-    systemd_set("cockroach", enabled=True, running=True, restart=changes)
+    systemd_set(
+        "cockroach",
+        enabled=True,
+        running=True,
+        restart=file_changes or service_file_changes,
+    )
 
     if use_this_host("cockroach"):
         run_with_marker(

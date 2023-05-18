@@ -9,6 +9,7 @@ import stat
 import subprocess
 from datetime import datetime
 from difflib import unified_diff
+from pathlib import Path
 from typing import List, Optional, Union
 
 from .config import data_files, jinja_env
@@ -229,7 +230,8 @@ def download_and_unpack(url, hash, name=None, dir_name=None, compressed_root="/o
     )
 
     make_directory(dir_name)
-    if os.listdir(dir_name) == []:
+    marker_name = Path(compressed_path + ".unpacked")
+    if not marker_name.exists():
         from .debian import apt_install
 
         if compressed_path.endswith("tar.gz") or compressed_path.endswith(".tgz"):
@@ -240,6 +242,8 @@ def download_and_unpack(url, hash, name=None, dir_name=None, compressed_root="/o
             run_command("unzip %s -d %s" % (compressed_path, dir_name))
         else:
             raise Exception(compressed_path)
+
+        marker_name.open("w").write("")
 
         changed = True
 
