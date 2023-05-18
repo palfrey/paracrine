@@ -60,6 +60,12 @@ def bootstrap_local():
         )
 
 
+# FIXME
+cockroach_binary = (
+    "/opt/cockroach-v22.2.9.linux-amd64/cockroach-v22.2.9.linux-amd64/cockroach"
+)
+
+
 def core_run():
     unpacked = download_and_unpack(
         cockroach_url,
@@ -103,5 +109,25 @@ def core_run():
     if use_this_host("cockroach"):
         run_with_marker(
             HOME_DIR.joinpath("init_done"),
-            f"/opt/cockroach-v22.2.9.linux-amd64/cockroach-v22.2.9.linux-amd64/cockroach init --certs-dir={CERTS_DIR} --host={wireguard_ip()}:26257",
+            f"{cockroach_binary} init --certs-dir={CERTS_DIR} --host={wireguard_ip()}:{COCKROACH_PORT}",
         )
+
+
+def make_user(username: str, password: str):
+    user_dir = HOME_DIR.joinpath("users")
+    make_directory(user_dir)
+    SQL_PORT = options.get("SQL_PORT", 26258)
+    run_with_marker(
+        user_dir.joinpath(username),
+        f"{cockroach_binary} sql --certs-dir={CERTS_DIR} --host={wireguard_ip()}:{SQL_PORT} --execute \"CREATE USER {username} WITH PASSWORD '{password}';\"",
+    )
+
+
+def make_db(name: str, owner: str):
+    data_dir = HOME_DIR.joinpath("databases")
+    make_directory(data_dir)
+    SQL_PORT = options.get("SQL_PORT", 26258)
+    run_with_marker(
+        data_dir.joinpath(name),
+        f'{cockroach_binary} sql --certs-dir={CERTS_DIR} --host={wireguard_ip()}:{SQL_PORT} --execute="CREATE DATABASE {name} OWNER {owner};"',
+    )
