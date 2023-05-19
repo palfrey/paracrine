@@ -39,5 +39,5 @@ jobs:
                   cd integration_test
                   chmod 600 docker/configs/test_key
                   docker-compose up --build -d
-                  python -m paracrine.setup ./docker/inventory.yaml
+                  python -m paracrine.commands.setup ./docker/inventory.yaml
                   python main.py ./docker/inventory.yaml
