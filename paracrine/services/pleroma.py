@@ -1,10 +1,9 @@
 from pathlib import Path
 
-import paracrine.certs
-from paracrine.config import build_config, core_config, get_config_file, local_config
-from paracrine.debian import apt_install
-from paracrine.deps import Modules
-from paracrine.fs import (
+from ..deps import Modules
+from ..helpers.config import build_config, core_config, get_config_file, local_config
+from ..helpers.debian import apt_install
+from ..helpers.fs import (
     download_and_unpack,
     link,
     make_directory,
@@ -13,9 +12,10 @@ from paracrine.fs import (
     set_file_contents,
     set_file_contents_from_template,
 )
-from paracrine.services import postgresql
-from paracrine.systemd import link_service, systemd_set
-from paracrine.users import adduser
+from ..helpers.systemd import link_service, systemd_set
+from ..helpers.users import adduser
+from ..runners import certs
+from . import postgresql
 
 # FIXME: Do soapbox from https://gitlab.com/soapbox-pub/soapbox/-/jobs/3371276281/artifacts/download
 # Unzipped with "unzip soapbox.zip -d instance" and then moved instance/static to /var/lib/pleroma
@@ -27,13 +27,13 @@ def dependencies() -> Modules:
     return [
         postgresql,
         (
-            paracrine.certs,
+            certs,
             {"hostname": LOCAL["PLEROMA_HOST"], "email": LOCAL["PLEROMA_EMAIL"]},
         ),
     ]
 
 
-def core_run():
+def run():
     LOCAL = build_config(core_config())
     adduser("pleroma", home_dir="/opt/pleroma")
     make_directory("/opt/pleroma", owner="pleroma")
@@ -109,7 +109,7 @@ def core_run():
         "/etc/nginx/sites-available/pleroma.conf",
         "pleroma.nginx.j2",
         PLEROMA_HOST=LOCAL["PLEROMA_HOST"],
-        DUMMY_CERTS=paracrine.certs.get_dummy_certs(),
+        DUMMY_CERTS=certs.get_dummy_certs(),
     )
     nginx_changes = (
         link(

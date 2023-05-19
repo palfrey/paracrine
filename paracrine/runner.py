@@ -83,10 +83,11 @@ def do(data, transmitmodules: TransmitModules, name: str):
 def internal_runner(
     router: Router, modules: Modules, local_func: str, run_func: str, parse_func: str
 ) -> None:
-    runfunc(modules, local_func)
-    infos = main(router, do, maketransmit(modules), run_func)
-    for info in infos["infos"]:
-        runfunc(modules, parse_func, info, infos["data"])
+    for module in modules:
+        runfunc([module], local_func)
+        infos = main(router, do, maketransmit([module]), run_func)
+        for info in infos["infos"]:
+            runfunc([module], parse_func, info, infos["data"])
 
 
 def run(inventory_path: str, modules: Modules):
@@ -94,7 +95,6 @@ def run(inventory_path: str, modules: Modules):
     logging.root.setLevel(logging.INFO)
     set_config(inventory_path)
 
-    modules.insert(0, core)
     needs_dependencies = list(modules)
     while len(needs_dependencies) > 0:
         new_dependencies = runfunc(needs_dependencies, "dependencies")
@@ -105,19 +105,11 @@ def run(inventory_path: str, modules: Modules):
                     continue
                 modules.insert(0, new_dependency)
                 needs_dependencies.append(new_dependency)
+    modules.insert(0, core)
 
     print("Running:")
     for module in maketransmit(modules):
         print(f"* {module}")
     print("")
 
-    run_with_router(
-        internal_runner,
-        modules,
-        "bootstrap_local",
-        "bootstrap_run",
-        "bootstrap_parse_return",
-    )
-    run_with_router(
-        internal_runner, modules, "core_local", "core_run", "core_parse_return"
-    )
+    run_with_router(internal_runner, modules, "local", "run", "parse_return")

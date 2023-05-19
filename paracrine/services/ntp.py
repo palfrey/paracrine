@@ -1,7 +1,7 @@
-from paracrine.debian import apt_install
-from paracrine.systemd import systemd_set
+from ..helpers.debian import apt_install
+from ..helpers.systemd import systemd_set
 
 
-def core_run():
+def run():
     apt_install(["ntp"])
     systemd_set("ntp", enabled=True, running=True)

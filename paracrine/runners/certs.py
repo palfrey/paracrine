@@ -107,11 +107,11 @@ def dependencies() -> Modules:
     return [aws, cron]
 
 
-def bootstrap_run() -> Dict:
+def run() -> Dict:
     return certbot_for_host(options["hostname"], options["email"])
 
 
-def bootstrap_parse_return(
+def parse_return(
     infos: List[Dict],
 ) -> None:
     for info in infos:
