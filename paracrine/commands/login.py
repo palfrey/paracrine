@@ -1,7 +1,7 @@
 import subprocess
 import sys
 
-from .config import get_config, path_to_config_file, set_config
+from ..helpers.config import get_config, path_to_config_file, set_config
 
 
 def ssh_server(server, run="", as_root=False):

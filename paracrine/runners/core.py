@@ -4,10 +4,10 @@ import socket
 from pathlib import Path
 from typing import Dict, List
 
-from .config import config, host, network_config_file, other_config_file
-from .debian import apt_install
-from .fs import run_command
-from .users import users
+from ..helpers.config import config, host, network_config_file, other_config_file
+from ..helpers.debian import apt_install
+from ..helpers.fs import run_command
+from ..helpers.users import users
 
 
 def is_wireguard():

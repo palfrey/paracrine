@@ -2,7 +2,7 @@ import importlib
 from types import ModuleType
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-from .config import set_data
+from .helpers.config import set_data
 
 Modules = List[Union[ModuleType, Tuple[ModuleType, Dict]]]
 """Type of modules handed to `paracrine.runner.run`"""

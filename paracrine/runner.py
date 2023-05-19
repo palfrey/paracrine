@@ -6,9 +6,15 @@ from mitogen.core import Error, StreamError
 from mitogen.parent import Router
 from mitogen.utils import run_with_router
 
-from . import core
-from .config import create_data, get_config, path_to_config_file, set_config, set_data
 from .deps import Modules, TransmitModules, makereal, maketransmit, runfunc
+from .helpers.config import (
+    create_data,
+    get_config,
+    path_to_config_file,
+    set_config,
+    set_data,
+)
+from .runners import core
 
 
 def decode(info):

@@ -2,8 +2,8 @@ import json
 import os
 import pathlib
 
-from .config import config_path, get_config_file
-from .fs import run_command
+from ..helpers.config import config_path, get_config_file
+from ..helpers.fs import run_command
 
 
 def bootstrap_local():
