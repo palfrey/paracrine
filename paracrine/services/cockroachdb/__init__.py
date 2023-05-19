@@ -1,5 +1,5 @@
-from paracrine.fs import make_directory, run_with_marker
-from paracrine.network import wireguard_ip
+from ...helpers.fs import make_directory, run_with_marker
+from ...helpers.network import wireguard_ip
 
 options = {}
 
