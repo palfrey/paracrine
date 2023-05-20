@@ -8,3 +8,4 @@ servers:
       ssh_port: 2000
       ssh_key: test_key
       ssh_user: root
+      wireguard_ip: 192.168.1.1
