@@ -1,10 +1,17 @@
 import os
 import re
+from glob import glob
 from typing import Dict, List, Optional, Union
 
 from debian.debian_support import version_compare
 
-from .fs import build_with_command, download, run_command, set_file_contents
+from .fs import (
+    build_with_command,
+    download,
+    run_command,
+    run_with_marker,
+    set_file_contents,
+)
 
 host_arch: Optional[str] = None
 
@@ -12,7 +19,13 @@ _version_pattern = re.compile(r"Version: (\S+)")
 
 
 def apt_update():
-    run_command("apt-get update --allow-releaseinfo-change")
+    run_with_marker(
+        "/opt/apt-update",
+        "apt-get update --allow-releaseinfo-change",
+        deps=glob("/etc/apt/sources.list.d/*")
+        + glob("/etc/apt/trusted.gpg.d/*")
+        + ["/etc/apt/sources.list"],
+    )
 
 
 def add_trusted_key(url: str, name: str, hash: str):
@@ -36,6 +49,7 @@ def apt_install(
     always_install: bool = False,
     target_release: Optional[str] = None,
 ) -> bool:
+    apt_update()
     global host_arch
     if host_arch is None and packages != ["dpkg-dev"]:
         apt_install(["dpkg-dev"])
@@ -66,10 +80,6 @@ def apt_install(
 
         if to_install == []:
             return False
-
-    # Because it's probably the first run
-    if packages == {"dpkg-dev": None}:
-        apt_update()
 
     # Confdef is to fix https://unix.stackexchange.com/a/416816/73838
     os.environ["DEBIAN_FRONTEND"] = "noninteractive"

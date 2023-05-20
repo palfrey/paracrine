@@ -10,7 +10,7 @@ from ...helpers.config import (
     network_config,
     other_config_file,
 )
-from ...helpers.debian import apt_install, apt_update
+from ...helpers.debian import apt_install
 from ...helpers.fs import make_directory, run_command
 from .common import private_key_file, public_key_file, public_key_path, wg_config
 
@@ -44,7 +44,6 @@ def run():
     modules = sorted([line.split(" ")[0] for line in run_command("lsmod").splitlines()])
     if "wireguard" not in modules:
         print("modules", modules)
-        apt_update()
         apt_install(["linux-image-amd64"])
         versions = get_all_kernel_versions()
         ordered = sorted(
