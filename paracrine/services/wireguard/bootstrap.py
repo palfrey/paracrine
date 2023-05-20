@@ -87,13 +87,16 @@ def run():
     if not os.path.exists(public_key_file):
         run_command("cat %s | wg pubkey > %s" % (private_key_file, public_key_file))
 
-    return {"wg_publickey": open(public_key_file).read().strip()}
+    return {
+        "wg_publickey": open(public_key_file).read().strip(),
+        "host": host()["name"],
+    }
 
 
 def parse_return(infos):
     assert len(infos) == 1, infos
     info = infos[0]
-    set_file_contents(public_key_path(host()["name"]), info["wg_publickey"])
+    set_file_contents(public_key_path(info["host"]), info["wg_publickey"])
 
     wg_ips = []
 
