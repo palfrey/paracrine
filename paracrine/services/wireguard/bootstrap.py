@@ -42,16 +42,23 @@ def get_all_kernel_versions():
 def run():
     apt_install(["kmod", "wireguard"])
     modules = sorted([line.split(" ")[0] for line in run_command("lsmod").splitlines()])
-    if "wireguard" not in modules:
+    if "wireguard" not in modules and not in_docker():
         print("modules", modules)
         apt_install(["linux-image-amd64"])
         versions = get_all_kernel_versions()
+        version_keys = [
+            x.replace("linux-image-", "")
+            for x in versions.keys()
+            if x
+            not in [
+                "linux-image-amd64",
+                "linux-image-cloud-amd64",
+                "linux-image-rt-amd64",
+            ]
+        ]
+        print("kernel version keys", version_keys)
         ordered = sorted(
-            [
-                x.replace("linux-image-", "")
-                for x in versions.keys()
-                if x not in ["linux-image-amd64", "linux-image-cloud-amd64"]
-            ],
+            version_keys,
             key=LooseVersion,
             reverse=True,
         )

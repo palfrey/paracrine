@@ -1,4 +1,4 @@
 def dependencies():
-    from . import bootstrap, core
+    from . import core
 
-    return [bootstrap, core]
+    return [core]

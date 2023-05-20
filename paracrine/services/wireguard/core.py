@@ -1,8 +1,13 @@
-from ...helpers.config import config, get_config_file, host
+from ...helpers.config import config, get_config_file, host, in_docker
 from ...helpers.fs import set_file_contents_from_template
 from ...helpers.network import external_ip, wireguard_ip
 from ...helpers.systemd import systemd_set
+from . import bootstrap
 from .common import private_key_file, public_key_path
+
+
+def dependencies():
+    return [bootstrap]
 
 
 def setup(name="wg0", ip="192.168.2.1", netmask=24, peers=[]):
@@ -26,7 +31,8 @@ def setup(name="wg0", ip="192.168.2.1", netmask=24, peers=[]):
         NETMASK=netmask,
     )
 
-    systemd_set(f"wg-quick@{name}", enabled=True, restart=conf_change)
+    if not in_docker():
+        systemd_set(f"wg-quick@{name}", enabled=True, restart=conf_change)
 
 
 def run():
