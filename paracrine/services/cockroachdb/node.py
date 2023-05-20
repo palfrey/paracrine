@@ -47,6 +47,8 @@ def run():
         ).as_posix()
         if local_node_ip() in fname:
             new_fname = new_fname.replace(local_node_ip(), "node")
+        elif "192.168" in new_fname:  # wireguard
+            continue
         file_changes = (
             set_file_contents(new_fname, get_config_file(fname), owner="cockroach")
             or file_changes
