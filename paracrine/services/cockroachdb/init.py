@@ -8,7 +8,7 @@ options = {}
 
 
 def dependencies():
-    return [node, certs]
+    return [(node, options), (certs, options)]
 
 
 def run():

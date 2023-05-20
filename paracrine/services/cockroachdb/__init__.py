@@ -7,7 +7,7 @@ options = {}
 def dependencies():
     from . import init
 
-    return [init]
+    return [(init, options)]
 
 
 def make_user(username: str, password: str):

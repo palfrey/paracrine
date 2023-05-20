@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from ...helpers.config import config_path
 from ...helpers.fs import (
@@ -17,7 +17,7 @@ options = {}
 
 def run():
     if not use_this_host("cockroach-certs"):
-        return
+        return None
     unpacked = download_and_unpack(
         cockroach_url,
         cockroach_hash,
@@ -54,9 +54,11 @@ def run():
     }
 
 
-def parse_return(infos: List[Dict]):
+def parse_return(infos: List[Optional[Dict]]):
     assert len(infos) == 1, infos
     info = infos[0]
+    if info is None:
+        return
     certs_dir = Path(config_path()).joinpath("cockroach-certs")
     make_directory(certs_dir)
     set_file_contents(certs_dir.joinpath("client.root.key"), info["root_key"])
