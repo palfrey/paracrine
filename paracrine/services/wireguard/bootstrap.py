@@ -11,7 +11,7 @@ from ...helpers.config import (
     other_config_file,
 )
 from ...helpers.debian import apt_install
-from ...helpers.fs import make_directory, run_command
+from ...helpers.fs import make_directory, run_command, set_file_contents
 from .common import private_key_file, public_key_file, public_key_path, wg_config
 
 
@@ -91,8 +91,9 @@ def run():
 
 
 def parse_return(infos):
+    assert len(infos) == 1, infos
     info = infos[0]
-    open(public_key_path(host()["name"]), "w").write(info["wg_publickey"])
+    set_file_contents(public_key_path(host()["name"]), info["wg_publickey"])
 
     wg_ips = []
 
@@ -103,4 +104,4 @@ def parse_return(infos):
         ]
         if len(wireguard_networks) == 1:
             wg_ips.append(wireguard_networks[0]["addr_info"][0]["local"])
-    json.dump(wg_ips, open(other_config_file("wireguard-ips"), "w"), indent=2)
+    set_file_contents(other_config_file("wireguard-ips"), json.dumps(wg_ips, indent=2))
