@@ -11,6 +11,7 @@ from ...helpers.fs import (
 from ...helpers.network import wireguard_ip, wireguard_ips
 from ...helpers.systemd import systemctl_daemon_reload, systemd_set
 from ...helpers.users import adduser
+from .. import wireguard
 from . import certs
 from .common import (
     CERTS_DIR,
@@ -25,7 +26,7 @@ options = {}
 
 
 def dependencies():
-    return [certs]
+    return [certs, wireguard]
 
 
 def run():
