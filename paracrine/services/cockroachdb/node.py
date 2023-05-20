@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from ...helpers.config import get_config_file, get_config_keys
+from ...helpers.config import get_config_file, get_config_keys, in_docker
 from ...helpers.fs import (
     download_and_unpack,
     make_directory,
@@ -74,9 +74,12 @@ def run():
     )
     if service_file_changes:
         systemctl_daemon_reload()
-    systemd_set(
-        "cockroach",
-        enabled=True,
-        running=True,
-        restart=file_changes or service_file_changes,
-    )
+
+    # FIXME: Can't make this work in Docker
+    if not in_docker():
+        systemd_set(
+            "cockroach",
+            enabled=True,
+            running=True,
+            restart=file_changes or service_file_changes,
+        )
