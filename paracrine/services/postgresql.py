@@ -1,11 +1,11 @@
 from pathlib import Path
 
-from paracrine.debian import add_trusted_key, apt_install, debian_repo
-from paracrine.fs import make_directory, run_with_marker
-from paracrine.systemd import systemd_set
+from ..helpers.debian import add_trusted_key, apt_install, debian_repo
+from ..helpers.fs import make_directory, run_with_marker
+from ..helpers.systemd import systemd_set
 
 
-def core_run():
+def run():
     add_trusted_key(
         "https://www.postgresql.org/media/keys/ACCC4CF8.asc",
         "postgresql",

@@ -3,28 +3,16 @@ import os
 import sys
 from distutils.version import LooseVersion
 
-from ..config import (
-    config,
-    config_path,
+from ...helpers.config import (
     get_config,
-    get_config_file,
     host,
+    in_docker,
     network_config,
     other_config_file,
 )
-from ..core import in_docker
-from ..debian import apt_install, apt_update
-from ..fs import make_directory, run_command, set_file_contents_from_template
-from ..network import external_ip, wireguard_ip
-from ..systemd import systemd_set
-
-wg_config = "/etc/wireguard"
-private_key_file = "{wg_config}/privatekey".format(wg_config=wg_config)
-public_key_file = "{wg_config}/publickey".format(wg_config=wg_config)
-
-
-def public_key_path(name):
-    return config_path() + "/wireguard-public-{name}.key".format(name=name)
+from ...helpers.debian import apt_install
+from ...helpers.fs import make_directory, run_command, set_file_contents
+from .common import private_key_file, public_key_file, public_key_path, wg_config
 
 
 def get_output(host, command):
@@ -51,20 +39,26 @@ def get_all_kernel_versions():
     return versions
 
 
-def bootstrap_run():
+def run():
     apt_install(["kmod", "wireguard"])
     modules = sorted([line.split(" ")[0] for line in run_command("lsmod").splitlines()])
-    if "wireguard" not in modules:
+    if "wireguard" not in modules and not in_docker():
         print("modules", modules)
-        apt_update()
         apt_install(["linux-image-amd64"])
         versions = get_all_kernel_versions()
+        version_keys = [
+            x.replace("linux-image-", "")
+            for x in versions.keys()
+            if x
+            not in [
+                "linux-image-amd64",
+                "linux-image-cloud-amd64",
+                "linux-image-rt-amd64",
+            ]
+        ]
+        print("kernel version keys", version_keys)
         ordered = sorted(
-            [
-                x.replace("linux-image-", "")
-                for x in versions.keys()
-                if x not in ["linux-image-amd64", "linux-image-cloud-amd64"]
-            ],
+            version_keys,
             key=LooseVersion,
             reverse=True,
         )
@@ -96,9 +90,10 @@ def bootstrap_run():
     return {"wg_publickey": open(public_key_file).read().strip()}
 
 
-def bootstrap_parse_return(infos):
+def parse_return(infos):
+    assert len(infos) == 1, infos
     info = infos[0]
-    open(public_key_path(host()["name"]), "w").write(info["wg_publickey"])
+    set_file_contents(public_key_path(host()["name"]), info["wg_publickey"])
 
     wg_ips = []
 
@@ -109,35 +104,4 @@ def bootstrap_parse_return(infos):
         ]
         if len(wireguard_networks) == 1:
             wg_ips.append(wireguard_networks[0]["addr_info"][0]["local"])
-    json.dump(wg_ips, open(other_config_file("wireguard-ips"), "w"), indent=2)
-
-
-def setup(name="wg0", ip="192.168.2.1", netmask=24, peers=[]):
-    peers = {}
-    for h in config()["servers"]:
-        if h["name"] == host()["name"]:
-            continue
-        public_key = get_config_file(public_key_path(h["name"]))
-        peers[h["name"]] = {
-            "public_key": public_key,
-            "endpoint": "%s:51820" % external_ip(h),
-            "peer_addr": h["wireguard_ip"],
-        }
-
-    conf_change = set_file_contents_from_template(
-        f"/etc/wireguard/{name}.conf",
-        "wg.conf.j2",
-        PRIVATE_KEY=open(private_key_file).read().strip(),
-        PEERS=peers,
-        IP=ip,
-        NETMASK=netmask,
-    )
-
-    systemd_set(f"wg-quick@{name}", enabled=True, restart=conf_change)
-
-
-def core_run():
-    setup(ip=wireguard_ip())
-
-
-__all__ = ["core_run", "bootstrap_run", "bootstrap_parse_return"]
+    set_file_contents(other_config_file("wireguard-ips"), json.dumps(wg_ips, indent=2))

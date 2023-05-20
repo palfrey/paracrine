@@ -4,10 +4,16 @@ import socket
 from pathlib import Path
 from typing import Dict, List
 
-from .config import config, host, network_config_file, other_config_file
-from .debian import apt_install
-from .fs import run_command
-from .users import users
+from ..helpers.config import (
+    config,
+    host,
+    in_docker,
+    network_config_file,
+    other_config_file,
+)
+from ..helpers.debian import apt_install
+from ..helpers.fs import run_command
+from ..helpers.users import in_vagrant, users
 
 
 def is_wireguard():
@@ -26,7 +32,7 @@ def use_this_host(name: str) -> bool:
     return host()["name"] == hosts[index]
 
 
-def bootstrap_run():
+def run():
     apt_install(["iproute2"])
 
     data = {
@@ -57,7 +63,7 @@ def bootstrap_run():
     return data
 
 
-def bootstrap_parse_return(infos: List[Dict]) -> None:
+def parse_return(infos: List[Dict]) -> None:
     info = infos[0]
     networks = json.loads(info["network_devices"])
     name = info["server_name"]
@@ -70,11 +76,3 @@ def bootstrap_parse_return(infos: List[Dict]) -> None:
         "hostname": info["hostname"],
     }
     json.dump(other, open(other_config_file(name), "w"), indent=2)
-
-
-def in_vagrant():
-    return "vagrant" in users()
-
-
-def in_docker():
-    return os.path.exists("/.dockerenv")

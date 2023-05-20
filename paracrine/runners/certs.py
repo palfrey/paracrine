@@ -2,18 +2,19 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Dict, List, Union
 
-from . import aws, cron
-from .config import core_config, other_config_file
-from .core import use_this_host
-from .debian import apt_install
-from .deps import Modules
-from .fs import (
+from ..deps import Modules
+from ..helpers import cron
+from ..helpers.config import core_config, other_config_file
+from ..helpers.debian import apt_install
+from ..helpers.fs import (
     make_directory,
     run_command,
     run_with_marker,
     set_file_contents_from_template,
 )
-from .python import setup_venv
+from ..helpers.python import setup_venv
+from . import aws
+from .core import use_this_host
 
 options = {}
 
@@ -106,11 +107,11 @@ def dependencies() -> Modules:
     return [aws, cron]
 
 
-def bootstrap_run() -> Dict:
+def run() -> Dict:
     return certbot_for_host(options["hostname"], options["email"])
 
 
-def bootstrap_parse_return(
+def parse_return(
     infos: List[Dict],
 ) -> None:
     for info in infos:

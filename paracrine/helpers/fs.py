@@ -276,6 +276,7 @@ def build_with_command(fname, command, deps=[], force_build=False, directory=Non
         if last_modified(dep) > target_modified:
             logging.info("%s is younger than %s" % (dep, fname))
             changed = True
+            break
     if not os.path.exists(fname) or changed:
         logging.info("Building %s" % fname)
         if command.find("|") != -1:
@@ -308,6 +309,7 @@ def run_with_marker(
         if dep_modified > target_modified:
             logging.info("%s is younger than %s" % (dep, fname))
             changed = True
+            break
 
     if changed:
         run_command(command, directory=directory)

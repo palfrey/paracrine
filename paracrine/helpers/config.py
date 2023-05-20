@@ -147,7 +147,7 @@ def create_data(server: Optional[Dict] = None):
     templates = {}
     template_paths = [
         pathlib.Path("templates"),
-        pathlib.Path(__file__).parent.joinpath("templates"),
+        pathlib.Path(__file__).parent.parent.joinpath("templates"),
     ]
     for template_path in template_paths:
         if not template_path.exists():
@@ -234,3 +234,7 @@ def local_server():
             return server
 
     raise Exception(f"Cannot find {local_hostname}")
+
+
+def in_docker():
+    return os.path.exists("/.dockerenv")
