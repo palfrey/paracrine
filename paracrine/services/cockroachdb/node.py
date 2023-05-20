@@ -8,7 +8,7 @@ from ...helpers.fs import (
     set_file_contents_from_template,
     set_mode,
 )
-from ...helpers.network import wireguard_ip, wireguard_ips
+from ...helpers.network import wireguard_ips
 from ...helpers.systemd import systemctl_daemon_reload, systemd_set
 from ...helpers.users import adduser
 from .. import wireguard
@@ -20,6 +20,7 @@ from .common import (
     binary_path,
     cockroach_hash,
     cockroach_url,
+    local_node_ip,
 )
 
 options = {}
@@ -44,8 +45,8 @@ def run():
         new_fname = CERTS_DIR.joinpath(
             fname.replace("configs/cockroach-certs/", "")
         ).as_posix()
-        if wireguard_ip() in fname:
-            new_fname = new_fname.replace(wireguard_ip(), "node")
+        if local_node_ip() in fname:
+            new_fname = new_fname.replace(local_node_ip(), "node")
         file_changes = (
             set_file_contents(new_fname, get_config_file(fname), owner="cockroach")
             or file_changes
@@ -61,7 +62,7 @@ def run():
         HOME_DIR=HOME_DIR,
         USER=USER,
         CERTS_DIR=CERTS_DIR,
-        WIREGUARD_IP=wireguard_ip(),
+        WIREGUARD_IP=local_node_ip(),
         HTTP_PORT=options.get("HTTP_PORT", 8080),
         COCKROACH_PORT=COCKROACH_PORT,
         SQL_PORT=SQL_PORT,

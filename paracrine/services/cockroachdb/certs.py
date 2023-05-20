@@ -10,7 +10,7 @@ from ...helpers.fs import (
 )
 from ...helpers.network import wireguard_ips
 from ...runners.core import use_this_host
-from .common import CERTS_DIR, binary_path, cockroach_hash, cockroach_url
+from .common import CERTS_DIR, binary_path, cockroach_hash, cockroach_url, local_node_ip
 
 options = {}
 
@@ -37,7 +37,9 @@ def run():
     )
 
     node_keys = {}
-    for ip in wireguard_ips().values():
+    ip_keys = set(wireguard_ips().values())
+    ip_keys.add(local_node_ip())
+    for ip in ip_keys:
         crt_path = CERTS_DIR.joinpath(f"{ip}.crt")
         key_path = crt_path.with_suffix(".key")
         build_with_command(
