@@ -1,6 +1,7 @@
 import os
 import re
 from glob import glob
+from pathlib import Path
 from typing import Dict, List, Optional, Union
 
 from debian.debian_support import version_compare
@@ -53,7 +54,11 @@ def apt_install(
     global host_arch
     if host_arch is None and packages != ["dpkg-dev"]:
         apt_install(["dpkg-dev"])
-        host_arch = run_command("dpkg-architecture -q DEB_HOST_ARCH").strip()
+        host_arch_path = Path("/opt/host-arch")
+        build_with_command(
+            host_arch_path, f"dpkg-architecture -q DEB_HOST_ARCH > {host_arch_path}"
+        )
+        host_arch = host_arch_path.open().read().strip()
     if isinstance(packages, List):
         packages = dict([(p, None) for p in packages])
     if always_install:
