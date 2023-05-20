@@ -12,9 +12,10 @@ def dependencies():
 
 
 def run():
-    if use_this_host("cockroach"):
-        COCKROACH_PORT = options.get("COCKROACH_PORT", 26257)
-        run_with_marker(
-            HOME_DIR.joinpath("init_done"),
-            f"{cockroach_binary} init --certs-dir={CERTS_DIR} --host={wireguard_ip()}:{COCKROACH_PORT}",
-        )
+    if not use_this_host("cockroach-init"):
+        return
+    COCKROACH_PORT = options.get("COCKROACH_PORT", 26257)
+    run_with_marker(
+        HOME_DIR.joinpath("init_done"),
+        f"{cockroach_binary} init --certs-dir={CERTS_DIR} --host={wireguard_ip()}:{COCKROACH_PORT}",
+    )
