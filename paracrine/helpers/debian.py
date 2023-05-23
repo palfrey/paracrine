@@ -50,7 +50,6 @@ def apt_install(
     always_install: bool = False,
     target_release: Optional[str] = None,
 ) -> bool:
-    apt_update()
     global host_arch
     if host_arch is None and packages != ["dpkg-dev"]:
         apt_install(["dpkg-dev"])
@@ -86,6 +85,7 @@ def apt_install(
         if to_install == []:
             return False
 
+    apt_update()
     # Confdef is to fix https://unix.stackexchange.com/a/416816/73838
     os.environ["DEBIAN_FRONTEND"] = "noninteractive"
     cmd = (
