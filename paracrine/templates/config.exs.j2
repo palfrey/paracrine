@@ -16,7 +16,8 @@ config :pleroma, :instance,
   email: "{{ PLEROMA_EMAIL }}",
   notify_email: "{{ PLEROMA_EMAIL }}",
   limit: 5000,
-  registrations_open: false
+  registrations_open: false,
+  invites_enabled: true
 
 config :pleroma, :media_proxy,
   enabled: false,
