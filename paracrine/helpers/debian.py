@@ -63,16 +63,16 @@ def apt_install(
     if always_install:
         to_install = list(packages.keys())
     else:
-        to_install = []
+        to_install = {}
         for package in packages.keys():
             paths = [
                 f"/var/lib/dpkg/info/{package}.list",
                 f"/var/lib/dpkg/info/{package}:{host_arch}.list",
             ]
+            wanted_version = packages[package]
             for path in paths:
                 if not os.path.exists(path):
                     continue
-                wanted_version = packages[package]
                 if wanted_version is None:  # existance is enough
                     break
                 status = run_command(f"dpkg-query --status {package}")
@@ -80,9 +80,9 @@ def apt_install(
                 if version_compare(version, wanted_version) >= 0:
                     break
             else:
-                to_install.append(package)
+                to_install[package] = wanted_version
 
-        if to_install == []:
+        if to_install == {}:
             return False
 
     apt_update()
@@ -90,7 +90,12 @@ def apt_install(
     os.environ["DEBIAN_FRONTEND"] = "noninteractive"
     cmd = (
         "apt-get install %s --no-install-recommends --yes -o DPkg::Options::=--force-confdef"
-        % " ".join(to_install)
+        % " ".join(
+            [
+                name if version is None else f"{name}>={version}"
+                for (name, version) in to_install.items()
+            ]
+        )
     )
     if target_release is not None:
         cmd += f" --target-release {target_release}"
