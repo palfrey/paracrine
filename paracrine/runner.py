@@ -3,7 +3,7 @@ import os
 from typing import Any, Callable, Dict
 
 from mitogen.core import Error, StreamError
-from mitogen.parent import Router
+from mitogen.parent import Context, Router
 from mitogen.utils import run_with_router
 
 from .deps import Modules, TransmitModules, makereal, maketransmit, runfunc
@@ -24,6 +24,9 @@ def decode(info):
             del info[k]
 
 
+ssh_cache: Dict[str, Context] = {}
+
+
 def main(router: Router, func: Callable[..., None], *args: Any, **kwargs: Any) -> Dict:
     config = get_config()
     calls = []
@@ -33,28 +36,31 @@ def main(router: Router, func: Callable[..., None], *args: Any, **kwargs: Any) -
         assert isinstance(server, Dict)
         hostname = server["wireguard_ip"] if wg else server["ssh_hostname"]
         port = 22 if wg else server.get("ssh_port", 22)
-        key_path = path_to_config_file(server["ssh_key"])
-        if not os.path.exists(key_path):
-            raise Exception(f"Can't find ssh key {key_path}")
-        try:
-            connect = router.ssh(
-                hostname=hostname,
-                port=port,
-                username=server["ssh_user"],
-                identity_file=key_path,
-                check_host_keys="accept",
-                python_path="python3",
-            )
-        except StreamError:
-            print(
-                "Exception while trying to login to %s@%s:%s"
-                % (server["ssh_user"], hostname, port)
-            )
-            raise
+        cache_key = f"{hostname}-{port}"
+        if cache_key not in ssh_cache:
+            key_path = path_to_config_file(server["ssh_key"])
+            if not os.path.exists(key_path):
+                raise Exception(f"Can't find ssh key {key_path}")
+            try:
+                connect = router.ssh(
+                    hostname=hostname,
+                    port=port,
+                    username=server["ssh_user"],
+                    identity_file=key_path,
+                    check_host_keys="accept",
+                    python_path="python3",
+                )
+            except StreamError:
+                print(
+                    "Exception while trying to login to %s@%s:%s"
+                    % (server["ssh_user"], hostname, port)
+                )
+                raise
 
-        sudo = router.sudo(via=connect, python_path="python3")
+            sudo = router.sudo(via=connect, python_path="python3")
+            ssh_cache[cache_key] = sudo
         data = create_data(server=server)
-        calls.append(sudo.call_async(func, data, *args, **kwargs))
+        calls.append(ssh_cache[cache_key].call_async(func, data, *args, **kwargs))
 
     infos = []
     errors = []
