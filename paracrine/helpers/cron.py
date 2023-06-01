@@ -3,7 +3,7 @@ import pathlib
 from typing import Optional
 
 from .config import config_path, get_config_file
-from .fs import set_file_contents, set_file_contents_from_template
+from .fs import delete, set_file_contents, set_file_contents_from_template
 
 mailto: Optional[str] = None
 mailfrom: Optional[str] = None
@@ -31,6 +31,10 @@ def set_mailfrom(email: str) -> None:
     mailfrom = email
 
 
+def cron_path(name: str):
+    return f"/etc/cron.d/{name}"
+
+
 def create_cron(name: str, schedule: str, user: str, command: str):
     cron_info = json.loads(get_config_file("configs/cron-info"))
     envs = {}
@@ -39,10 +43,14 @@ def create_cron(name: str, schedule: str, user: str, command: str):
     if cron_info["mailfrom"] is not None:
         envs["MAILFROM"] = cron_info["mailfrom"]
     set_file_contents_from_template(
-        f"/etc/cron.d/{name}",
+        cron_path(name),
         "cron.j2",
         SCHEDULE=schedule,
         USER=user,
         COMMAND=command,
         ENVS=envs,
     )
+
+
+def delete_cron(name: str):
+    delete(cron_path(name))
