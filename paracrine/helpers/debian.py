@@ -111,6 +111,7 @@ def debian_repo(name, contents=None):
     changed = set_file_contents(fname, contents)
     if changed:
         apt_update()
+    return changed
 
 
 def set_alternative(alt_name: str, option: str):
@@ -120,3 +121,6 @@ def set_alternative(alt_name: str, option: str):
             f"current alt path for {alt_name} is {current_alt_path} not {option}, so fixing"
         )
         run_command(f"update-alternatives --set {alt_name} {option}")
+        return True
+    else:
+        return False
