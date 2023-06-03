@@ -296,7 +296,13 @@ def build_with_command(fname, command, deps=[], force_build=False, directory=Non
 
 
 def run_with_marker(
-    fname, command, deps=[], max_age=None, force_build=False, directory=None
+    fname,
+    command,
+    deps=[],
+    max_age=None,
+    force_build=False,
+    directory=None,
+    input: Optional[str] = None,
 ):
     changed = not os.path.exists(fname) or force_build
     target_modified = last_modified(fname)
@@ -312,7 +318,7 @@ def run_with_marker(
             break
 
     if changed:
-        run_command(command, directory=directory)
+        run_command(command, directory=directory, input=input)
         open(fname, "w").write(command)
 
     return changed

@@ -24,12 +24,22 @@ def hash_fn(key: str, count: int) -> int:
     return sum(bytearray(key.encode("utf-8"))) % count
 
 
+def _index_fn(name: str) -> Dict:
+    hosts = config()["servers"]
+    index = hash_fn(name, len(hosts))
+    return hosts[index]
+
+
 # Use this host for a given service
 # Intended for "run on one machine" things
 def use_this_host(name: str) -> bool:
-    hosts = [h["name"] for h in config()["servers"]]
-    index = hash_fn(name, len(hosts))
-    return host()["name"] == hosts[index]
+    use_host = _index_fn(name)
+    return host()["name"] == use_host["name"]
+
+
+def wireguard_ip_for_machine_for(name: str) -> str:
+    use_host = _index_fn(name)
+    return use_host["wireguard_ip"]
 
 
 def run():
