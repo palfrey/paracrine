@@ -1,6 +1,6 @@
-from ...helpers.fs import run_command, run_with_marker
+from ...helpers.fs import run_command
 from ...helpers.network import wireguard_ips
-from ...runners.core import use_this_host
+from ...runners.core import wireguard_ip_for_machine_for
 from . import node
 
 options = {}
@@ -11,17 +11,15 @@ def dependencies():
 
 
 def run():
-    if not use_this_host("redis-init"):
-        return
-    ips = list(wireguard_ips().values())
-    nodes = " ".join([f"{ip}:7000" for ip in ips])
-    run_with_marker(
-        "/var/lib/redis/init-done",
-        f"redis-cli --cluster create {nodes} --cluster-replicas 1",
-        input="yes",
-    )
+    output = run_command("redis-cli info replication")
+    master_ip = wireguard_ip_for_machine_for("redis-master")
 
-    output = run_command(f"redis-cli --cluster check {ips[0]}:7000")
-
-    for ip in ips:
-        assert f"{ip}:7000" in output
+    if "role:slave" in output:
+        assert f"master_host:{master_ip}" in output, output
+        assert "master_link_status:up" in output, output
+    else:
+        assert "role:master" in output, output
+        for ip in wireguard_ips().values():
+            if ip == master_ip:
+                continue
+            assert f"ip={ip},port=6379,state=online" in output, output
