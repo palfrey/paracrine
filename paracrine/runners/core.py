@@ -48,10 +48,14 @@ def run():
     else:
         if in_vagrant() or in_docker():
             networks = json.loads(data["network_devices"])
-            ext_if = [net for net in networks if net["ifname"] == "eth0"]
-            if len(ext_if) > 0 and len(ext_if[0]["addr_info"]) > 0:
+            ext_if = [
+                net
+                for net in networks
+                if net["ifname"].startswith("eth") and len(net["addr_info"]) > 0
+            ]
+            if len(ext_if) > 0:
                 data["external_ip"] = json.dumps(
-                    {"ip": ext_if[0]["addr_info"][0]["local"]}
+                    {"ip": ext_if[-1]["addr_info"][0]["local"]}
                 )
             else:
                 data["external_ip"] = "<unknown>"
