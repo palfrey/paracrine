@@ -1,0 +1,20 @@
+port 7000
+cluster-enabled yes
+cluster-config-file nodes.conf
+cluster-node-timeout 5000
+appendonly yes
+
+timeout 0
+daemonize yes
+supervised no
+pidfile /var/run/redis/redis-server.pid
+loglevel notice
+logfile /var/log/redis/redis-server.log
+save 900 1
+save 300 10
+save 60 10000
+stop-writes-on-bgsave-error yes
+dbfilename dump.rdb
+dir /var/lib/redis
+
+bind 127.0.0.1 {{ WIREGUARD_IP }}

@@ -1,3 +1,5 @@
+from typing import Dict
+
 from .config import host, network_config, other_config, servers
 
 
@@ -21,7 +23,7 @@ def external_ips():
     return dict([(h["name"], external_ip(h)) for h in servers()])
 
 
-def wireguard_ips():
+def wireguard_ips() -> Dict[str, str]:
     return dict([(h["name"], h["wireguard_ip"]) for h in servers()])
 
 
