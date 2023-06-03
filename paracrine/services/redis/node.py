@@ -5,6 +5,8 @@ from ...helpers.systemd import systemd_set
 from ...runners.core import wireguard_ip_for_machine_for
 from .. import wireguard
 
+options = {}
+
 
 def dependencies():
     return [wireguard]
@@ -26,6 +28,7 @@ def run():
         "redis-sentinel.conf.j2",
         WIREGUARD_IP=local_ip,
         MASTER_IP=master_ip,
+        QUORUM_REQUIRED=options.get("quorum", "2"),
         ignore_changes=True,
     )
     systemd_set("redis-server", enabled=True, running=True, restart=server_changes)
