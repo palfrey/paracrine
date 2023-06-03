@@ -116,4 +116,6 @@ def parse_return(
 ) -> None:
     for info in infos:
         for key in info:
+            if key == "selector":
+                continue
             open(other_config_file(key), "w").write(info[key])

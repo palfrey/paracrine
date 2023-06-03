@@ -5,6 +5,7 @@ from typing import Any, Dict, Optional
 
 import jinja2
 import yaml
+from mergedeep import merge
 
 _jinja_env = None
 data = None
@@ -50,6 +51,24 @@ def set_data(new_data: Dict[str, Any]) -> None:
         loader=loader, undefined=jinja2.StrictUndefined, keep_trailing_newline=True
     )
     data = new_data
+
+
+return_data = {}
+
+
+def clear_return_data() -> None:
+    global return_data
+    return_data = {}
+
+
+def add_return_data(new_data: Dict[str, Any]) -> None:
+    global return_data
+    merge(return_data, new_data)
+
+
+def get_return_data() -> Dict:
+    global return_data
+    return return_data
 
 
 def add_folder_to_config(configs, folder, shortname=None, filter=None, prefix=""):

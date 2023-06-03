@@ -61,7 +61,7 @@ def run():
 def parse_return(infos: List[Optional[Dict]]):
     assert len(infos) == 1, infos
     info = infos[0]
-    if info is None:
+    if info is None or "ca_crt" not in info:
         return
     certs_dir = Path(config_path()).joinpath("cockroach-certs")
     make_directory(certs_dir)

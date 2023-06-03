@@ -1,7 +1,9 @@
+import json
 import logging
 import os
 from typing import Any, Callable, Dict
 
+from mergedeep import merge
 from mitogen.core import Error, StreamError
 from mitogen.parent import Context, Router
 from mitogen.utils import run_with_router
@@ -10,10 +12,12 @@ from .deps import Modules, TransmitModules, makereal, maketransmit, runfunc
 from .helpers.config import (
     create_data,
     get_config,
+    other_config_file,
     path_to_config_file,
     set_config,
     set_data,
 )
+from .helpers.fs import set_file_contents
 from .runners import core
 
 
@@ -94,6 +98,22 @@ def internal_runner(
         infos = main(router, do, maketransmit([module]), run_func)
         for info in infos["infos"]:
             runfunc([module], parse_func, info, infos["data"])
+            for module_name in info:
+                for per_node in info[module_name]:
+                    if not isinstance(per_node, Dict):
+                        continue
+                    if "selector" not in per_node:
+                        continue
+                    config_path = other_config_file("selectors.json")
+                    if os.path.exists(config_path):
+                        selector_config = json.load(open(config_path))
+                    else:
+                        selector_config = {}
+                    merge(selector_config, per_node["selector"])
+                    selector_config = dict(sorted(selector_config.items()))
+                    set_file_contents(
+                        config_path, json.dumps(selector_config, indent=2)
+                    )
 
 
 def run(inventory_path: str, modules: Modules):
