@@ -5,10 +5,12 @@ from pathlib import Path
 from typing import Dict, List
 
 from ..helpers.config import (
+    add_return_data,
     config,
     host,
     in_docker,
     network_config_file,
+    other_config,
     other_config_file,
 )
 from ..helpers.debian import apt_install
@@ -26,8 +28,13 @@ def hash_fn(key: str, count: int) -> int:
 
 def _index_fn(name: str) -> Dict:
     hosts = config()["servers"]
-    index = hash_fn(name, len(hosts))
-    return hosts[index]
+    try:
+        existing_selectors = other_config("selectors.json")
+        return [host for host in hosts if host["name"] == existing_selectors[name]][0]
+    except KeyError:
+        index = hash_fn(name, len(hosts))
+        add_return_data({"selector": {name: hosts[index]["name"]}})
+        return hosts[index]
 
 
 # Use this host for a given service

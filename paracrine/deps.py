@@ -2,7 +2,9 @@ import importlib
 from types import ModuleType
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-from .helpers.config import set_data
+from mergedeep import merge
+
+from .helpers.config import clear_return_data, get_return_data, set_data
 
 Modules = List[Union[ModuleType, Tuple[ModuleType, Dict]]]
 """Type of modules handed to `paracrine.runner.run`"""
@@ -19,15 +21,22 @@ def runfunc(
         func: Optional[Callable] = getattr(module, name, None)
         if func is not None:
             setattr(module, "options", options)
+            clear_return_data()
             if data != {}:
                 set_data(data)
             try:
                 if module.__name__ not in ret:
                     ret[module.__name__] = []
                 if module.__name__ in arguments:
-                    ret[module.__name__].append(func(arguments[module.__name__]))
+                    info = func(arguments[module.__name__])
                 else:
-                    ret[module.__name__].append(func())
+                    info = func()
+                if isinstance(info, Dict):
+                    info = merge({}, info, get_return_data())
+                    print("ret", info.keys(), get_return_data())
+                elif info is None:
+                    info = get_return_data()
+                ret[module.__name__].append(info)
             except Exception:
                 print(f"Error while running {name} for {module.__name__}")
                 raise
