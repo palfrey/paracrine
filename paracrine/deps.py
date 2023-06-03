@@ -33,7 +33,6 @@ def runfunc(
                     info = func()
                 if isinstance(info, Dict):
                     info = merge({}, info, get_return_data())
-                    print("ret", info.keys(), get_return_data())
                 elif info is None:
                     info = get_return_data()
                 ret[module.__name__].append(info)
