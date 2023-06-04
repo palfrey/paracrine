@@ -9,6 +9,7 @@ environments:
         JOKEN_SIGNER: joken-secret
         WEB_PUSH_PUBLIC: web-push-public
         WEB_PUSH_PRIVATE: web-push-private
+        REDIS_PASSWORD: foo-bar-baz
     vagrant:
         PLEROMA_HOST: pleroma-docker.tevps.net
         PLEROMA_EMAIL: anon@penet.fi
@@ -18,6 +19,7 @@ environments:
         JOKEN_SIGNER: joken-secret
         WEB_PUSH_PUBLIC: web-push-public
         WEB_PUSH_PRIVATE: web-push-private
+        REDIS_PASSWORD: foo-bar-baz
 
 
 dummy_certs: true # so we don't actually try and get bad certs
