@@ -64,10 +64,14 @@ def set_file_contents(
     return needs_update
 
 
+def render_template(template, **kwargs):
+    return jinja_env().get_template(template).render(**kwargs)
+
+
 def set_file_contents_from_template(fname, template, ignore_changes=False, **kwargs):
     return set_file_contents(
         fname,
-        jinja_env().get_template(template).render(**kwargs),
+        render_template(template, **kwargs),
         ignore_changes=ignore_changes,
     )
 
@@ -146,15 +150,17 @@ def insert_line(fname, line):
         return False
 
 
-def insert_or_replace(fname: str, matcher: re.Pattern, line: str) -> None:
+def insert_or_replace(fname: str, matcher: Union[re.Pattern, str], line: str) -> bool:
     existing = open(fname).read()
-    results = matcher.search(existing)
-    if results is not None:
-        set_file_contents(
-            fname, existing[: results.start()] + line + existing[results.end() :]
-        )
-    else:
-        set_file_contents(fname, existing + "\n" + line)
+    if isinstance(matcher, re.Pattern):
+        results = matcher.search(existing)
+        if results is not None:
+            return set_file_contents(
+                fname, existing[: results.start()] + line + existing[results.end() :]
+            )
+    elif matcher in existing:
+        return set_file_contents(fname, existing.replace(matcher, line))
+    return set_file_contents(fname, existing + "\n" + line)
 
 
 def sha_file(fname):

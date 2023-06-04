@@ -16,6 +16,9 @@ dir /var/lib/redis
 
 bind 127.0.0.1 {{ WIREGUARD_IP }}
 
-{% if not IS_MASTER %}
+{% if not IS_MASTER -%}
 replicaof {{ MASTER_IP }} 6379
-{% endif %}
+masterauth {{ REDIS_PASSWORD }}
+{% endif -%}
+
+requirepass {{ REDIS_PASSWORD }}
