@@ -1,8 +1,8 @@
 from ...helpers.config import build_config, core_config
 from ...helpers.fs import run_command
 from ...helpers.network import wireguard_ips
-from ...runners.core import wireguard_ip_for_machine_for
 from . import node
+from .common import get_master_ip
 
 options = {}
 
@@ -14,7 +14,7 @@ def dependencies():
 def run():
     LOCAL = build_config(core_config())
     output = run_command(f"redis-cli -a {LOCAL['REDIS_PASSWORD']} info replication")
-    master_ip = wireguard_ip_for_machine_for("redis-master")
+    master_ip = get_master_ip()
 
     if "role:slave" in output:
         assert f"master_host:{master_ip}" in output, output

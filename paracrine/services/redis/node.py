@@ -10,8 +10,8 @@ from ...helpers.fs import (
 )
 from ...helpers.network import wireguard_ip
 from ...helpers.systemd import systemd_set
-from ...runners.core import wireguard_ip_for_machine_for
 from .. import wireguard
+from .common import get_master_ip
 
 options = {}
 
@@ -21,10 +21,10 @@ def dependencies():
 
 
 def run():
-    LOCAL = build_config(core_config())
     apt_install(["redis-sentinel", "redis-server"])
-    master_ip = wireguard_ip_for_machine_for("redis-master")
+    LOCAL = build_config(core_config())
     local_ip = wireguard_ip()
+    master_ip = get_master_ip()
     server_changes = set_file_contents_from_template(
         "/etc/redis/redis.conf",
         "redis.conf.j2",
