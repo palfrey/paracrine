@@ -8,7 +8,14 @@ from mitogen.core import Error, StreamError
 from mitogen.parent import Context, Router
 from mitogen.utils import run_with_router
 
-from .deps import Modules, TransmitModules, makereal, maketransmit, runfunc
+from .deps import (
+    Modules,
+    TransmitModules,
+    makereal,
+    maketransmit,
+    maketransmit_single,
+    runfunc,
+)
 from .helpers.config import (
     create_data,
     get_config,
@@ -116,22 +123,51 @@ def internal_runner(
                     )
 
 
+def generate_dependencies(modules: Modules):
+    tree = {}
+    mapping = {}
+    checked = []
+    needs_dependencies = list(modules) + [core]
+    modules = []
+    while len(needs_dependencies) > 0:
+        check = needs_dependencies.pop()
+        checked.append(check)
+        key = str(maketransmit_single(check))
+        tree[key] = []
+        mapping[key] = check
+        new_dependencies = runfunc([check], "dependencies")
+        for item in new_dependencies.values():
+            for new_dependency in item[0]:
+                tree[key].append(new_dependency)
+                if new_dependency in needs_dependencies or new_dependency in checked:
+                    continue
+                needs_dependencies.append(new_dependency)
+
+    count = 0
+    while len(checked) > 0:
+        count += 1
+        if count == 100:
+            raise Exception((modules, checked))
+        for key, value in tree.items():
+            mapped = mapping[key]
+            if mapped in modules:
+                continue
+            for dep in value:
+                if dep not in modules:
+                    break
+            else:
+                modules.append(mapped)
+                checked.remove(mapped)
+
+    return modules
+
+
 def run(inventory_path: str, modules: Modules):
     logging.basicConfig()
     logging.root.setLevel(logging.INFO)
     set_config(inventory_path)
 
-    needs_dependencies = list(modules)
-    while len(needs_dependencies) > 0:
-        new_dependencies = runfunc(needs_dependencies, "dependencies")
-        needs_dependencies = []
-        for item in new_dependencies.values():
-            for new_dependency in item[0]:
-                if new_dependency in modules:
-                    continue
-                modules.insert(0, new_dependency)
-                needs_dependencies.append(new_dependency)
-    modules.insert(0, core)
+    modules = generate_dependencies(modules)
 
     print("Running:")
     for module in maketransmit(modules):

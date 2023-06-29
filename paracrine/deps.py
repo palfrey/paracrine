@@ -6,10 +6,12 @@ from mergedeep import merge
 
 from .helpers.config import clear_return_data, get_return_data, set_data
 
-Modules = List[Union[ModuleType, Tuple[ModuleType, Dict]]]
+Module = Union[ModuleType, Tuple[ModuleType, Dict]]
+Modules = List[Module]
 """Type of modules handed to `paracrine.runner.run`"""
 
-TransmitModules = List[Union[str, Tuple[str, Dict]]]
+TransmitModule = Union[str, Tuple[str, Dict]]
+TransmitModules = List[TransmitModule]
 
 
 def runfunc(
@@ -48,15 +50,15 @@ def runfunc(
     return ret
 
 
-def maketransmit(modules: Modules) -> TransmitModules:
-    ret = []
-    for module in modules:
-        if isinstance(module, ModuleType):
-            ret.append(module.__name__)
-        else:
-            ret.append((module[0].__name__, module[1]))
+def maketransmit_single(module: Module) -> TransmitModule:
+    if isinstance(module, ModuleType):
+        return module.__name__
+    else:
+        return (module[0].__name__, module[1])
 
-    return ret
+
+def maketransmit(modules: Modules) -> TransmitModules:
+    return [maketransmit_single(module) for module in modules]
 
 
 def makereal(modules: TransmitModules) -> Modules:
