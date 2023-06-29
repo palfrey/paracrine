@@ -37,17 +37,17 @@ def run():
     LOCAL = build_config(core_config())
     adduser("pleroma", home_dir="/opt/pleroma")
     make_directory("/opt/pleroma", owner="pleroma")
-    # Taken from https://git.pleroma.social/pleroma/pleroma/-/pipelines?page=1&scope=branches&ref=stable
+    # Taken from https://git.pleroma.social/pleroma/pleroma/-/pipelines?page=1&scope=branches&ref=stable using amd64:archive
     res = download_and_unpack(
-        "https://git.pleroma.social/pleroma/pleroma/-/jobs/220705/artifacts/download?file_type=archive",
-        "8b4e2ab17362c7b0ed3ca685e19d578ad842ac00cde2db7d8c54dfd5a4e05891",
-        "pleroma-2.4.4.zip",
-        "/opt/pleroma-2.4.4",
+        "https://git.pleroma.social/pleroma/pleroma/-/jobs/234433/artifacts/download?file_type=archive",
+        "8ef0bea62671d39e60f9e08d13109a4c332c552a1f855184063353987d46c84a",
+        "pleroma-2.5.2.zip",
+        "/opt/pleroma-2.5.2",
     )
     release_changed = res["changed"]
 
     if release_changed:
-        run_command("cp -R /opt/pleroma-2.4.4/release/* /opt/pleroma")
+        run_command("cp -R /opt/pleroma-2.5.2/release/* /opt/pleroma")
         run_command("chown -R pleroma /opt/pleroma")
 
     make_directory("/var/lib/pleroma/uploads", owner="pleroma")
