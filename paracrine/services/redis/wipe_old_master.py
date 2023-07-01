@@ -10,4 +10,4 @@ def run():
 
 
 def parse_return(infos: List[Dict]) -> None:
-    delete(other_config_file(MASTER_FILE))
+    delete(other_config_file(MASTER_FILE), True)

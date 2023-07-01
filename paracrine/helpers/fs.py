@@ -263,9 +263,10 @@ def last_modified(fname):
         return float(0)
 
 
-def delete(fname):
+def delete(fname: str, quiet: bool = False) -> bool:
     if os.path.exists(fname):
-        logging.info("Deleting %s", fname)
+        if not quiet:
+            logging.info("Deleting %s", fname)
         os.remove(fname)
         return True
     else:
