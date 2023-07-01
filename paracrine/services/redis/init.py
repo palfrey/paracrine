@@ -1,21 +1,21 @@
 from ...helpers.config import build_config, core_config
 from ...helpers.fs import run_command
 from ...helpers.network import wireguard_ips
-from . import node
+from . import check_master, node
 from .common import get_master_ip
 
 options = {}
 
 
 def dependencies():
-    return [(node, options)]
+    return [(node, options), check_master]
 
 
 def run():
-    LOCAL = build_config(core_config())
-    output = run_command(f"redis-cli -a {LOCAL['REDIS_PASSWORD']} info replication")
     master_ip = get_master_ip()
 
+    LOCAL = build_config(core_config())
+    output = run_command(f"redis-cli -a {LOCAL['REDIS_PASSWORD']} info replication")
     if "role:slave" in output:
         assert f"master_host:{master_ip}" in output, output
         assert "master_link_status:up" in output, output

@@ -11,13 +11,14 @@ from ...helpers.fs import (
 from ...helpers.network import wireguard_ip
 from ...helpers.systemd import systemd_set
 from .. import wireguard
+from . import check_master
 from .common import get_master_ip
 
 options = {}
 
 
 def dependencies():
-    return [wireguard]
+    return [wireguard, check_master]
 
 
 def run():

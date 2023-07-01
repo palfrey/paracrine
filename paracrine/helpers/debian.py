@@ -44,6 +44,24 @@ def add_trusted_key(url: str, name: str, hash: str):
     return f"/etc/apt/trusted.gpg.d/{name}.gpg"
 
 
+def apt_is_installed(package: str, wanted_version: Optional[str] = None) -> bool:
+    paths = [
+        f"/var/lib/dpkg/info/{package}.list",
+        f"/var/lib/dpkg/info/{package}:{host_arch}.list",
+    ]
+    for path in paths:
+        if not os.path.exists(path):
+            continue
+        if wanted_version is None:  # existance is enough
+            return True
+        status = run_command(f"dpkg-query --status {package}")
+        version = _version_pattern.search(status).group(1)
+        if version_compare(version, wanted_version) >= 0:
+            return True
+
+    return False
+
+
 # List is just "any version", Dict is a "name => min version" requirement
 def apt_install(
     packages: Union[List[str], Dict[str, Optional[str]]],
@@ -65,21 +83,8 @@ def apt_install(
     else:
         to_install = {}
         for package in packages.keys():
-            paths = [
-                f"/var/lib/dpkg/info/{package}.list",
-                f"/var/lib/dpkg/info/{package}:{host_arch}.list",
-            ]
             wanted_version = packages[package]
-            for path in paths:
-                if not os.path.exists(path):
-                    continue
-                if wanted_version is None:  # existance is enough
-                    break
-                status = run_command(f"dpkg-query --status {package}")
-                version = _version_pattern.search(status).group(1)
-                if version_compare(version, wanted_version) >= 0:
-                    break
-            else:
+            if not apt_is_installed(package, wanted_version):
                 to_install[package] = wanted_version
 
         if to_install == {}:

@@ -192,7 +192,7 @@ def create_data(server: Optional[Dict] = None):
             data[local_path] = path.open("rb").read()
 
     configs = {
-        "config.yaml": open("config.yaml").read(),
+        CONFIG_NAME: open(CONFIG_NAME).read(),
     }
     add_folder_to_config(
         configs,
