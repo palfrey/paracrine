@@ -38,6 +38,11 @@ def decode(info):
 ssh_cache: Dict[str, Context] = {}
 
 
+def clear_ssh_cache():
+    global ssh_cache
+    ssh_cache = {}
+
+
 def main(router: Router, func: Callable[..., None], *args: Any, **kwargs: Any) -> Dict:
     config = get_config()
     calls = []
