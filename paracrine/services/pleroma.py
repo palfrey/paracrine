@@ -105,11 +105,14 @@ def run():
 
     apt_install(["nginx"])
 
-    nginx_changes = set_file_contents_from_template(
-        "/etc/nginx/sites-available/pleroma.conf",
-        "pleroma.nginx.j2",
-        PLEROMA_HOST=LOCAL["PLEROMA_HOST"],
-        DUMMY_CERTS=certs.get_dummy_certs(),
+    nginx_changes = (
+        set_file_contents_from_template(
+            "/etc/nginx/sites-available/pleroma.conf",
+            "pleroma.nginx.j2",
+            PLEROMA_HOST=LOCAL["PLEROMA_HOST"],
+            DUMMY_CERTS=certs.get_dummy_certs(),
+        )
+        or nginx_changes
     )
     nginx_changes = (
         link(
