@@ -50,18 +50,19 @@ def certbot_for_host(hostname: Union[str, List[str]], email: str) -> Dict:
                         --dns-route53"
         while renew_command.find("  ") != -1:
             renew_command = renew_command.replace("  ", " ")
-        if not fullchain_path.exists():
-            make_directory(live_path)
-            make_directory(certbot)
-            setup_venv(venv)
-            set_file_contents_from_template(
-                "/opt/certbot/requirements.txt", "certbot_requirements.txt"
-            )
-            run_with_marker(
-                "/opt/certbot/deps_installed",
-                f"{pip} install -r /opt/certbot/requirements.txt",
-            )
+        make_directory(live_path)
+        make_directory(certbot)
+        setup_venv(venv)
+        set_file_contents_from_template(
+            "/opt/certbot/requirements.txt", "certbot_requirements.txt"
+        )
+        run_with_marker(
+            "/opt/certbot/deps_installed",
+            f"{pip} install -r /opt/certbot/requirements.txt",
+            deps=["/opt/certbot/requirements.txt"],
+        )
 
+        if not fullchain_path.exists():
             if dummy_certs:
                 fullchain_path.open("w").write("")
                 live_path.joinpath("privkey.pem").open("w").write("")
