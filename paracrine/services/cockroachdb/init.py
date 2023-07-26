@@ -19,4 +19,5 @@ def run():
     run_with_marker(
         HOME_DIR.joinpath("init_done"),
         f"{cockroach_binary} init --certs-dir={CERTS_DIR} --host={local_node_ip()}:{COCKROACH_PORT}",
+        run_if_command_changed=False,
     )

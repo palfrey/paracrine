@@ -66,6 +66,7 @@ def run():
         'su postgres -s $SHELL -lc "psql -f /opt/pleroma/setup_db.psql"',
         deps=["/opt/pleroma/setup_db.psql"],
         force_build=release_changed and db_changes,
+        run_if_command_changed=False,
     )
     run_with_marker(
         "/opt/pleroma/migrate.marker",

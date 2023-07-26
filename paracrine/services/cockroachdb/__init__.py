@@ -19,6 +19,7 @@ def make_user(username: str, password: str):
     run_with_marker(
         user_dir.joinpath(username),
         f"{cockroach_binary} sql --certs-dir={CERTS_DIR} --host={wireguard_ip()}:{SQL_PORT} --execute \"CREATE USER {username} WITH PASSWORD '{password}';\"",
+        run_if_command_changed=False,
     )
 
 
@@ -31,4 +32,5 @@ def make_db(name: str, owner: str):
     run_with_marker(
         data_dir.joinpath(name),
         f'{cockroach_binary} sql --certs-dir={CERTS_DIR} --host={wireguard_ip()}:{SQL_PORT} --execute="CREATE DATABASE {name} OWNER {owner};"',
+        run_if_command_changed=False,
     )

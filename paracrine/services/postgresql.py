@@ -28,6 +28,7 @@ def make_user(username: str, password: str):
     run_with_marker(
         user_dir.joinpath(username),
         f"sudo -u postgres psql --command=\"CREATE USER {username} WITH ENCRYPTED PASSWORD '{password}';\"",
+        run_if_command_changed=False,
     )
 
 
@@ -37,4 +38,5 @@ def make_db(name: str, owner: str):
     run_with_marker(
         data_dir.joinpath(name),
         f'sudo -u postgres psql --command="CREATE DATABASE {name} OWNER {owner};"',
+        run_if_command_changed=False,
     )
