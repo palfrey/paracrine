@@ -309,6 +309,7 @@ def run_with_marker(
     max_age=None,
     force_build=False,
     directory=None,
+    run_if_command_changed=True,
     input: Optional[str] = None,
 ):
     changed = not os.path.exists(fname) or force_build
@@ -323,6 +324,10 @@ def run_with_marker(
             logging.info("%s is younger than %s" % (dep, fname))
             changed = True
             break
+
+    if run_if_command_changed and not changed:
+        old_command = open(fname).read()
+        changed = old_command != command
 
     if changed:
         run_command(command, directory=directory, input=input)
