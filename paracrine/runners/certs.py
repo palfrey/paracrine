@@ -31,7 +31,8 @@ def certbot_for_host(hostname: Union[str, List[str]], email: str) -> Dict:
     else:
         hostnames = hostname
     certbot = Path("/opt/certbot")
-    live_path = certbot.joinpath("config", "live", hostnames[0])
+    cert_name = "_".join(hostnames)
+    live_path = certbot.joinpath("config", "live", cert_name)
 
     dummy_certs = get_dummy_certs()
 
@@ -44,6 +45,7 @@ def certbot_for_host(hostname: Union[str, List[str]], email: str) -> Dict:
 
         fullchain_path = live_path.joinpath("fullchain.pem")
         renew_command = f"{certbot_bin} renew \
+                        --cert-name={cert_name} \
                         --config-dir={certbot.joinpath('config')} \
                         --work-dir={certbot.joinpath('workdir')} \
                         --logs-dir={certbot.joinpath('logs')} \
@@ -62,8 +64,9 @@ def certbot_for_host(hostname: Union[str, List[str]], email: str) -> Dict:
             f"{pip} install -r /opt/certbot/requirements.txt",
             deps=["/opt/certbot/requirements.txt"],
         )
+        config_path = certbot.joinpath(f"config/renewal/{cert_name}.conf")
 
-        if not fullchain_path.exists():
+        if not config_path.exists():
             if dummy_certs:
                 fullchain_path.open("w").write("")
                 live_path.joinpath("privkey.pem").open("w").write("")
@@ -73,6 +76,7 @@ def certbot_for_host(hostname: Union[str, List[str]], email: str) -> Dict:
                         --config-dir={certbot.joinpath('config')} \
                         --work-dir={certbot.joinpath('workdir')} \
                         --logs-dir={certbot.joinpath('logs')} \
+                        --cert-name={cert_name} \
                         -m {email} --agree-tos --non-interactive \
                         --no-eff-email --domains {','.join(hostnames)} --dns-route53"
                 )
