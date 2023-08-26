@@ -7,6 +7,7 @@ from typing import Dict, List
 from ..helpers.config import (
     add_return_data,
     config,
+    config_path,
     host,
     in_docker,
     network_config_file,
@@ -14,7 +15,7 @@ from ..helpers.config import (
     other_config_file,
 )
 from ..helpers.debian import apt_install
-from ..helpers.fs import run_command
+from ..helpers.fs import make_directory, run_command
 from ..helpers.users import in_vagrant, users
 
 
@@ -88,6 +89,7 @@ def parse_return(infos: List[Dict]) -> None:
     info = infos[0]
     networks = json.loads(info["network_devices"])
     name = info["server_name"]
+    make_directory(config_path())
     json.dump(networks, open(network_config_file(name), "w"), indent=2)
 
     other = {
