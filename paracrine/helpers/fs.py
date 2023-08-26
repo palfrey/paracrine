@@ -228,7 +228,9 @@ def download_and_unpack(url, hash, name=None, dir_name=None, compressed_root="/o
         name = url.split("/")[-1]
     compressed_path: str = "%s/%s" % (compressed_root, name)
     if dir_name is None:
-        dir_name = "/opt/%s" % name.replace(".tar.gz", "").replace(".tgz", "")
+        dir_name = "/opt/%s" % name.replace(".tar.gz", "").replace(".tgz", "").replace(
+            ".tar.xz", ""
+        )
     changed = download(
         url,
         compressed_path,
@@ -243,6 +245,9 @@ def download_and_unpack(url, hash, name=None, dir_name=None, compressed_root="/o
         if compressed_path.endswith("tar.gz") or compressed_path.endswith(".tgz"):
             apt_install(["tar"])
             run_command("tar --directory=%s -zxvf %s" % (dir_name, compressed_path))
+        elif compressed_path.endswith("tar.xz"):
+            apt_install(["tar", "xz-utils"])
+            run_command("tar --directory=%s -Jxvf %s" % (dir_name, compressed_path))
         elif compressed_path.endswith("zip"):
             apt_install(["unzip"])
             run_command("unzip %s -d %s" % (compressed_path, dir_name))
