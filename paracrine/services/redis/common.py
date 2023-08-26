@@ -52,7 +52,9 @@ def get_master_ip():
     LOCAL = build_config(core_config())
     local_ip = wireguard_ip()
     try:
-        output = run_command(f"redis-cli -a {LOCAL['REDIS_PASSWORD']} info replication")
+        output = run_command(
+            f"redis-cli -a {LOCAL['REDIS_PASSWORD']} -h {local_ip} info replication"
+        )
     except AssertionError:
         # redis isn't up
         return wireguard_ip_for_machine_for("redis-master")
