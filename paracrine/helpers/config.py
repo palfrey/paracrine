@@ -5,6 +5,7 @@ from typing import Any, Dict, Optional
 
 import jinja2
 import yaml
+from mergedeep import merge
 
 _jinja_env = None
 data = None
@@ -25,7 +26,17 @@ def config():
     return data["config"]
 
 
+def data_files():
+    return data["data"]
+
+
+def get_config_keys():
+    return data["configs"].keys()
+
+
 def get_config_file(fname):
+    if fname not in get_config_keys():
+        raise KeyError(f"Can't find {fname}. We have: {sorted(get_config_keys())}")
     return data["configs"][fname]
 
 
@@ -42,7 +53,25 @@ def set_data(new_data: Dict[str, Any]) -> None:
     data = new_data
 
 
-def add_folder_to_config(configs, folder, shortname=None, filter=None):
+return_data = {}
+
+
+def clear_return_data() -> None:
+    global return_data
+    return_data = {}
+
+
+def add_return_data(new_data: Dict[str, Any]) -> None:
+    global return_data
+    merge(return_data, new_data)
+
+
+def get_return_data() -> Dict:
+    global return_data
+    return return_data
+
+
+def add_folder_to_config(configs, folder, shortname=None, filter=None, prefix=""):
     if not os.path.exists(folder):
         print("Skipping %s from config as doesn't exist" % folder)
         return
@@ -55,7 +84,24 @@ def add_folder_to_config(configs, folder, shortname=None, filter=None):
             full = os.path.join(folder, f)
         else:
             full = key = os.path.join(folder, f)
-        configs[key] = open(full).read()
+        if os.path.isfile(full):
+            if prefix != "":
+                if "/" in key:
+                    parts = key.split("/")
+                    key = "/".join(parts[:-1]) + "/" + prefix + parts[-1]
+                else:
+                    key = prefix + key
+            configs[key] = open(full).read()
+        else:
+            if prefix != "":
+                prefix += "/"
+            add_folder_to_config(
+                configs,
+                full,
+                shortname=shortname,
+                filter=filter,
+                prefix=prefix + f + "/",
+            )
 
 
 inventory = None
@@ -83,9 +129,9 @@ def config_path(shortname=False):
 
 
 def path_to_config_file(name: str) -> str:
-    if name.startswith("/"):
-        return name
-    return os.path.normpath(f"{config_path()}/{name}")
+    if name.find("~") != -1:
+        return pathlib.Path(name).expanduser()
+    return pathlib.Path(config_path()).joinpath(name)
 
 
 def data_path():
@@ -100,30 +146,59 @@ def environment():
     return inventory["environment"]
 
 
+def servers():
+    try:
+        return get_config()["servers"]
+    except NotADirectoryError:
+        return core_config()["servers"]
+
+
+def walk(path):
+    for p in pathlib.Path(path).iterdir():
+        if p.is_dir():
+            yield from walk(p)
+            continue
+        yield p.resolve()
+
+
 def create_data(server: Optional[Dict] = None):
     config = get_config()
     templates = {}
     template_paths = [
         pathlib.Path("templates"),
-        pathlib.Path(__file__).parent.joinpath("templates"),
+        pathlib.Path(__file__).parent.parent.joinpath("templates"),
     ]
     for template_path in template_paths:
         if not template_path.exists():
             continue
-        for path in template_path.iterdir():
-            templates[path.name] = path.open().read()
+        for path in walk(template_path):
+            templates[path.name] = path.open("r").read()
+
+    data = {}
+    data_paths = [
+        pathlib.Path("data"),
+        pathlib.Path(__file__).parent.joinpath("data"),
+    ]
+    for data_path in data_paths:
+        if not data_path.exists():
+            continue
+        data_path = data_path.absolute()
+        for path in walk(data_path):
+            try:
+                local_path = path.relative_to(data_path).as_posix()
+            except ValueError:
+                # Symlink outside of local folder
+                continue
+            data[local_path] = path.open("rb").read()
 
     configs = {
-        "config.yaml": open("config.yaml").read(),
+        CONFIG_NAME: open(CONFIG_NAME).read(),
     }
     add_folder_to_config(
         configs,
         config_path(),
         shortname="configs",
-        filter=lambda f: f.startswith("wireguard-public")
-        or f.startswith("networks-")
-        or f.startswith("other-")
-        or f.startswith("ssh-"),
+        filter=lambda f: not f.startswith("."),
     )
 
     return {
@@ -133,6 +208,7 @@ def create_data(server: Optional[Dict] = None):
         "configs": configs,
         "environment": environment(),
         "inventory": get_config(),
+        "data": data,
     }
 
 
@@ -167,3 +243,17 @@ def build_config(config: Dict) -> Dict:
 
 def local_config() -> Dict:
     return yaml.safe_load(open(CONFIG_NAME).read())
+
+
+def local_server():
+    local_hostname = host()["name"]
+    for server in servers():
+        name = server["name"]
+        if name == local_hostname:
+            return server
+
+    raise Exception(f"Cannot find {local_hostname}")
+
+
+def in_docker():
+    return os.path.exists("/.dockerenv")

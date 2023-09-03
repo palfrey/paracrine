@@ -2,11 +2,11 @@ import json
 import os
 import pathlib
 
-from .config import config_path, get_config_file
-from .fs import run_command
+from ..helpers.config import config_path, get_config_file
+from ..helpers.fs import run_command
 
 
-def bootstrap_local():
+def local():
     aws_path = pathlib.Path(config_path()).joinpath("other-aws")
     if not aws_path.exists():
         json.dump(

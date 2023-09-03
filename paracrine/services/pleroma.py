@@ -1,10 +1,9 @@
 from pathlib import Path
 
-import paracrine.certs
-from paracrine.config import build_config, core_config, get_config_file, local_config
-from paracrine.debian import apt_install
-from paracrine.deps import Modules
-from paracrine.fs import (
+from ..deps import Modules
+from ..helpers.config import build_config, core_config, get_config_file, local_config
+from ..helpers.debian import apt_install
+from ..helpers.fs import (
     download_and_unpack,
     link,
     make_directory,
@@ -13,12 +12,14 @@ from paracrine.fs import (
     set_file_contents,
     set_file_contents_from_template,
 )
-from paracrine.services import postgresql
-from paracrine.systemd import link_service, systemd_set
-from paracrine.users import adduser
+from ..helpers.systemd import link_service, systemd_set
+from ..helpers.users import adduser
+from ..runners import certs
+from . import postgresql
 
 # FIXME: Do soapbox from https://gitlab.com/soapbox-pub/soapbox/-/jobs/3371276281/artifacts/download
 # Unzipped with "unzip soapbox.zip -d instance" and then moved instance/static to /var/lib/pleroma
+# https://docs.soapbox.pub/frontend/installing/#install-soapbox
 
 
 def dependencies() -> Modules:
@@ -26,28 +27,27 @@ def dependencies() -> Modules:
     return [
         postgresql,
         (
-            paracrine.certs,
+            certs,
             {"hostname": LOCAL["PLEROMA_HOST"], "email": LOCAL["PLEROMA_EMAIL"]},
         ),
     ]
 
 
-def core_run():
+def run():
     LOCAL = build_config(core_config())
     adduser("pleroma", home_dir="/opt/pleroma")
     make_directory("/opt/pleroma", owner="pleroma")
-    apt_install(["unzip"])
-    # Taken from https://git.pleroma.social/pleroma/pleroma/-/pipelines?page=1&scope=branches&ref=stable
+    # Taken from https://git.pleroma.social/pleroma/pleroma/-/pipelines?page=1&scope=branches&ref=stable using amd64:archive
     res = download_and_unpack(
-        "https://git.pleroma.social/pleroma/pleroma/-/jobs/220705/artifacts/download?file_type=archive",
-        "8b4e2ab17362c7b0ed3ca685e19d578ad842ac00cde2db7d8c54dfd5a4e05891",
-        "pleroma-2.4.4.zip",
-        "/opt/pleroma-2.4.4",
+        "https://git.pleroma.social/pleroma/pleroma/-/jobs/234433/artifacts/download?file_type=archive",
+        "8ef0bea62671d39e60f9e08d13109a4c332c552a1f855184063353987d46c84a",
+        "pleroma-2.5.2.zip",
+        "/opt/pleroma-2.5.2",
     )
     release_changed = res["changed"]
 
     if release_changed:
-        run_command("cp -R /opt/pleroma-2.4.4/release/* /opt/pleroma")
+        run_command("cp -R /opt/pleroma-2.5.2/release/* /opt/pleroma")
         run_command("chown -R pleroma /opt/pleroma")
 
     make_directory("/var/lib/pleroma/uploads", owner="pleroma")
@@ -66,6 +66,7 @@ def core_run():
         'su postgres -s $SHELL -lc "psql -f /opt/pleroma/setup_db.psql"',
         deps=["/opt/pleroma/setup_db.psql"],
         force_build=release_changed and db_changes,
+        run_if_command_changed=False,
     )
     run_with_marker(
         "/opt/pleroma/migrate.marker",
@@ -84,13 +85,14 @@ def core_run():
     nginx_changes = (
         set_file_contents(
             cert_dir.joinpath("fullchain.pem"),
-            get_config_file("configs/other-fullchain"),
+            get_config_file(f"configs/other-fullchain-{LOCAL['PLEROMA_HOST']}"),
         )
         or nginx_changes
     )
     nginx_changes = (
         set_file_contents(
-            cert_dir.joinpath("privkey.pem"), get_config_file("configs/other-privkey")
+            cert_dir.joinpath("privkey.pem"),
+            get_config_file(f"configs/other-privkey-{LOCAL['PLEROMA_HOST']}"),
         )
         or nginx_changes
     )
@@ -104,11 +106,14 @@ def core_run():
 
     apt_install(["nginx"])
 
-    nginx_changes = set_file_contents_from_template(
-        "/etc/nginx/sites-available/pleroma.conf",
-        "pleroma.nginx.j2",
-        PLEROMA_HOST=LOCAL["PLEROMA_HOST"],
-        DUMMY_CERTS=paracrine.certs.get_dummy_certs(),
+    nginx_changes = (
+        set_file_contents_from_template(
+            "/etc/nginx/sites-available/pleroma.conf",
+            "pleroma.nginx.j2",
+            PLEROMA_HOST=LOCAL["PLEROMA_HOST"],
+            DUMMY_CERTS=certs.get_dummy_certs(),
+        )
+        or nginx_changes
     )
     nginx_changes = (
         link(

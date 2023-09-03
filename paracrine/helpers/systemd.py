@@ -18,7 +18,7 @@ def systemd_set(name, enabled=None, running=None, restart=None, reloaded=None):
         run_command("systemctl unmask %s" % name)
     if enabled is not None:
         if enabled:
-            if status["UnitFileState"] != "enabled":
+            if status["UnitFileState"] not in ["enabled", "enabled-runtime"]:
                 logging.info("%s is currently %s" % (name, status["UnitFileState"]))
                 run_command("systemctl enable %s" % name)
         else:
@@ -51,7 +51,7 @@ def systemd_set(name, enabled=None, running=None, restart=None, reloaded=None):
             journal(name)
             raise
 
-    if reloaded is not None:
+    if reloaded is True:
         run_command("systemctl reload %s" % name)
 
 
@@ -59,7 +59,7 @@ def systemctl_daemon_reload():
     run_command("systemctl daemon-reload")
 
 
-def link_service(fullpath: str):
+def link_service(fullpath: str) -> bool:
     path = Path(fullpath)
     link_change = link(
         f"/etc/systemd/system/{path.name}",
@@ -67,3 +67,4 @@ def link_service(fullpath: str):
     )
     if link_change:
         systemctl_daemon_reload()
+    return link_change

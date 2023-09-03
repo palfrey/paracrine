@@ -1,0 +1,24 @@
+port 6379
+appendonly yes
+
+timeout 0
+daemonize no
+supervised systemd
+pidfile "/var/run/redis/redis-server.pid"
+loglevel notice
+logfile "/var/log/redis/redis-server.log"
+save 900 1
+save 300 10
+save 60 10000
+stop-writes-on-bgsave-error yes
+dbfilename "dump.rdb"
+dir "/var/lib/redis"
+
+bind 127.0.0.1 {{ WIREGUARD_IP }}
+
+{% if not IS_MASTER -%}
+replicaof {{ MASTER_IP }} 6379
+masterauth {{ REDIS_PASSWORD }}
+{% endif -%}
+
+requirepass {{ REDIS_PASSWORD }}

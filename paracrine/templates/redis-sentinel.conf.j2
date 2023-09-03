@@ -1,0 +1,20 @@
+bind {{ WIREGUARD_IP }} 127.0.0.1
+port 26379
+daemonize no
+pidfile "/var/run/sentinel/redis-sentinel.pid"
+logfile "/var/log/redis/redis-sentinel.log"
+loglevel notice
+sentinel announce-ip "{{ WIREGUARD_IP }}"
+dir "/var/lib/redis"
+
+sentinel monitor mymaster {{ MASTER_IP }} 6379 {{ QUORUM_REQUIRED }}
+sentinel down-after-milliseconds mymaster 60000
+sentinel failover-timeout mymaster 180000
+sentinel parallel-syncs mymaster 1
+
+protected-mode no
+supervised systemd
+user default on nopass ~* +@all
+
+requirepass {{ REDIS_PASSWORD }}
+sentinel auth-pass mymaster {{ REDIS_PASSWORD }}

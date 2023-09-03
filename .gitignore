@@ -5,3 +5,5 @@ paracrine.egg-info/
 .coverage
 build/
 html/
+dist/
+.vagrant/

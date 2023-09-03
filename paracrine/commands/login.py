@@ -1,10 +1,12 @@
 import subprocess
 import sys
 
-from .config import get_config, path_to_config_file, set_config
+from ..helpers.config import get_config, path_to_config_file, set_config
 
 
-def ssh_server(server, run=""):
+def ssh_server(server, run="", as_root=False):
+    if run != "" and as_root and server["ssh_user"] != "root":
+        run = f"sudo {run}"
     command = f"ssh {server['ssh_user']}@{server['ssh_hostname']} \
         -i {path_to_config_file(server['ssh_key'])} \
         -p {server['ssh_port']} \
@@ -16,15 +18,15 @@ def ssh_server(server, run=""):
     subprocess.check_call(command.split(" "))
 
 
-def ssh(run="", index=None):
+def ssh(run="", index=None, as_root=False):
     set_config(sys.argv[1])
 
     if index is not None:
         server = get_config()["servers"][index]
-        ssh_server(server, run)
+        ssh_server(server, run, as_root)
     else:
         for server in get_config()["servers"]:
-            ssh_server(server, run)
+            ssh_server(server, run, as_root)
 
 
 if __name__ == "__main__":

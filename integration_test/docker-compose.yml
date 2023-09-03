@@ -8,3 +8,5 @@ services:
         ports:
             - "2000:22"
         command: systemctl
+        # volumes:
+        #     - .:/app

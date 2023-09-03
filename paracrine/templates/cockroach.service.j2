@@ -1,0 +1,16 @@
+[Unit]
+Description=Cockroach database cluster node
+Requires=network.target
+
+[Service]
+Type=notify
+WorkingDirectory={{ HOME_DIR }}
+ExecStart={{ COCKROACH_PATH }} start --certs-dir={{ CERTS_DIR }} --store={{ HOME_DIR }}/node --listen-addr={{ WIREGUARD_IP }}:{{COCKROACH_PORT}} --sql-addr={{ WIREGUARD_IP }}:{{SQL_PORT}} --http-addr=0.0.0.0:{{ HTTP_PORT }} --join={{ HOST_LIST }}
+TimeoutStopSec=300
+Restart=always
+RestartSec=10
+SyslogIdentifier=cockroach
+User={{ USER }}
+
+[Install]
+WantedBy=default.target

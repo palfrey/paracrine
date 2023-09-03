@@ -1,6 +1,6 @@
 [project]
 name = "paracrine"
-version = "0.0.1"
+version = "0.0.9"
 authors = [
   { name="Tom Parker-Shemilt", email="palfrey@tevp.net" },
 ]
@@ -12,7 +12,7 @@ classifiers = [
     "License :: OSI Approved :: GNU Affero General Public License v3",
     "Operating System :: OS Independent",
 ]
-dependencies=["mitogen", "jinja2", "pyyaml"]
+dependencies=["mitogen", "jinja2", "pyyaml", "python-debian", "mergedeep"]
 
 [project.urls]
 "Homepage" = "https://github.com/palfrey/paracrine"
@@ -23,4 +23,4 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-include = ["paracrine", "paracrine.services"]
+include = ["paracrine*"]

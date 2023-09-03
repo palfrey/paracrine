@@ -1,4 +1,6 @@
-from .config import core_config, network_config, other_config
+from typing import Dict
+
+from .config import host, network_config, other_config, servers
 
 
 def networks_by_interface(h):
@@ -18,11 +20,15 @@ def external_ip(h):
 
 
 def external_ips():
-    return dict([(h["name"], external_ip(h)) for h in core_config()["servers"]])
+    return dict([(h["name"], external_ip(h)) for h in servers()])
 
 
-def wireguard_ips():
-    return dict([(h["name"], h["wireguard_ip"]) for h in core_config()["servers"]])
+def wireguard_ips() -> Dict[str, str]:
+    return dict([(h["name"], h["wireguard_ip"]) for h in servers()])
+
+
+def wireguard_ip():
+    return host()["wireguard_ip"]
 
 
 def ips_for_network(net):

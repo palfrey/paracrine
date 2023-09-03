@@ -2,12 +2,21 @@ import json
 import os
 import socket
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 
-from .config import config, host, network_config_file, other_config_file
-from .debian import apt_install
-from .fs import run_command
-from .users import users
+from ..helpers.config import (
+    add_return_data,
+    config,
+    config_path,
+    host,
+    in_docker,
+    network_config_file,
+    other_config,
+    other_config_file,
+)
+from ..helpers.debian import apt_install
+from ..helpers.fs import make_directory, run_command
+from ..helpers.users import in_vagrant, users
 
 
 def is_wireguard():
@@ -18,15 +27,30 @@ def hash_fn(key: str, count: int) -> int:
     return sum(bytearray(key.encode("utf-8"))) % count
 
 
+def _index_fn(name: str) -> Dict:
+    hosts = config()["servers"]
+    try:
+        existing_selectors = other_config("selectors.json")
+        return [host for host in hosts if host["name"] == existing_selectors[name]][0]
+    except KeyError:
+        index = hash_fn(name, len(hosts))
+        add_return_data({"selector": {name: hosts[index]["name"]}})
+        return hosts[index]
+
+
 # Use this host for a given service
 # Intended for "run on one machine" things
 def use_this_host(name: str) -> bool:
-    hosts = [h["name"] for h in config()["servers"]]
-    index = hash_fn(name, len(hosts))
-    return host()["name"] == hosts[index]
+    use_host = _index_fn(name)
+    return host()["name"] == use_host["name"]
 
 
-def bootstrap_run():
+def wireguard_ip_for_machine_for(name: str) -> str:
+    use_host = _index_fn(name)
+    return use_host["wireguard_ip"]
+
+
+def run():
     apt_install(["iproute2"])
 
     data = {
@@ -42,10 +66,14 @@ def bootstrap_run():
     else:
         if in_vagrant() or in_docker():
             networks = json.loads(data["network_devices"])
-            ext_if = [net for net in networks if net["ifname"] == "eth0"]
-            if len(ext_if) > 0 and len(ext_if[0]["addr_info"]) > 0:
+            ext_if = [
+                net
+                for net in networks
+                if net["ifname"].startswith("eth") and len(net["addr_info"]) > 0
+            ]
+            if len(ext_if) > 0:
                 data["external_ip"] = json.dumps(
-                    {"ip": ext_if[0]["addr_info"][0]["local"]}
+                    {"ip": ext_if[-1]["addr_info"][0]["local"]}
                 )
             else:
                 data["external_ip"] = "<unknown>"
@@ -57,9 +85,11 @@ def bootstrap_run():
     return data
 
 
-def bootstrap_parse_return(info: Dict) -> None:
+def parse_return(infos: List[Dict]) -> None:
+    info = infos[0]
     networks = json.loads(info["network_devices"])
     name = info["server_name"]
+    make_directory(config_path())
     json.dump(networks, open(network_config_file(name), "w"), indent=2)
 
     other = {
@@ -69,11 +99,3 @@ def bootstrap_parse_return(info: Dict) -> None:
         "hostname": info["hostname"],
     }
     json.dump(other, open(other_config_file(name), "w"), indent=2)
-
-
-def in_vagrant():
-    return "vagrant" in users()
-
-
-def in_docker():
-    return os.path.exists("/.dockerenv")
