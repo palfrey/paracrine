@@ -11,5 +11,7 @@ pypi:
 
 docs:
 	pdoc --html paracrine --force --output-dir docs
+	mv docs/paracrine/* docs
+	rmdir docs/paracrine
 
 .PHONY: docs
