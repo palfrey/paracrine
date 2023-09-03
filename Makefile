@@ -8,3 +8,8 @@ testpypi:
 
 pypi:
 	twine upload dist/*
+
+docs:
+	pdoc --html paracrine --force --output-dir docs
+
+.PHONY: docs

@@ -1,8 +1,8 @@
 from mitogen.parent import Router
 from mitogen.utils import run_with_router
 
-from paracrine.config import set_config
-from paracrine.fs import run_command
+from paracrine.helpers.config import set_config
+from paracrine.helpers.fs import run_command
 from paracrine.runner import main
 
 
