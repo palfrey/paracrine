@@ -26,7 +26,7 @@ All the utilities are callable as `python -m paracrine.commands.<utility> <inven
 
 Built-in modules
 ---
-* `paracrine.runners.aws` - Runs locally, gets the AWS access/secret keys of the current user during bootstrap for access later. Has a function `set_aws_creds` for setting them in a run step.
+* `paracrine.runners.aws` - Runs locally, gets the AWS access/secret keys of the current user during bootstrap for access later. Has a function `get_env_with_creds` for setting them in a run step using the `env` commmand.
 * `paracrine.runners.certs` - Creates SSL certificates via LetsEncrypt. Takes two args "hostname" and "email".
 * `paracrine.services.cockroachdb` - Sets up a [CockroachDB server](https://www.cockroachlabs.com/)
 * `paracrine.services.pleroma` - Sets up a [Pleroma server](https://pleroma.social/). Uses the PostgreSQL and certs modules.

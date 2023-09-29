@@ -1,5 +1,4 @@
 import json
-import os
 import pathlib
 
 from ..helpers.config import config_path, get_config_file
@@ -23,7 +22,6 @@ def local():
         )
 
 
-def set_aws_creds():
+def get_env_with_creds():
     aws_conf = json.loads(get_config_file("configs/other-aws"))
-    os.environ["AWS_ACCESS_KEY_ID"] = aws_conf["access_key"]
-    os.environ["AWS_SECRET_ACCESS_KEY"] = aws_conf["secret_key"]
+    return f"env AWS_ACCESS_KEY_ID={aws_conf['access_key']} AWS_SECRET_ACCESS_KEY={aws_conf['secret_key']}"

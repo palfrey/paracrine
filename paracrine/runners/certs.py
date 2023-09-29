@@ -37,14 +37,14 @@ def certbot_for_host(hostname: Union[str, List[str]], email: str) -> Dict:
     dummy_certs = get_dummy_certs()
 
     if use_this_host("certbot"):
-        aws.set_aws_creds()
         venv = certbot.joinpath("venv")
         venv_bin = venv.joinpath("bin")
         pip = venv_bin.joinpath("pip")
         certbot_bin = venv_bin.joinpath("certbot")
 
         fullchain_path = live_path.joinpath("fullchain.pem")
-        renew_command = f"{certbot_bin} renew \
+        envs = aws.get_env_with_creds()
+        renew_command = f"{envs} {certbot_bin} renew \
                         --cert-name={cert_name} \
                         --config-dir={certbot.joinpath('config')} \
                         --work-dir={certbot.joinpath('workdir')} \
@@ -72,7 +72,7 @@ def certbot_for_host(hostname: Union[str, List[str]], email: str) -> Dict:
                 live_path.joinpath("privkey.pem").open("w").write("")
             else:
                 run_command(
-                    f"{certbot_bin} certonly \
+                    f"{envs} {certbot_bin} certonly \
                         --config-dir={certbot.joinpath('config')} \
                         --work-dir={certbot.joinpath('workdir')} \
                         --logs-dir={certbot.joinpath('logs')} \
