@@ -1,3 +1,4 @@
+import sys
 from datetime import timedelta
 from pathlib import Path
 from typing import Dict, List, Union
@@ -96,11 +97,13 @@ def certbot_for_host(hostname: Union[str, List[str]], email: str) -> Dict:
             f"chronic {renew_command}",
         )
 
+        python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
+
         return {
             f"fullchain-{hostnames[0]}": fullchain_path.open().read(),
             f"privkey-{hostnames[0]}": live_path.joinpath("privkey.pem").open().read(),
             "ssl-options": venv.joinpath(
-                "lib/python3.9/site-packages/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf"  # noqa: E501
+                f"lib/python{python_version}/site-packages/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf"  # noqa: E501
             )
             .open()
             .read(),
