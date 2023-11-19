@@ -5,8 +5,9 @@ from typing import Any, Callable, Dict
 
 from mergedeep import merge
 from mitogen.core import Error, StreamError
-from mitogen.parent import Context, Router
+from mitogen.parent import Context, EofError, Router
 from mitogen.utils import run_with_router
+from retry.api import retry_call
 
 from .deps import (
     Modules,
@@ -58,13 +59,18 @@ def main(router: Router, func: Callable[..., None], *args: Any, **kwargs: Any) -
             if not os.path.exists(key_path):
                 raise Exception(f"Can't find ssh key {key_path}")
             try:
-                connect = router.ssh(
-                    hostname=hostname,
-                    port=port,
-                    username=server["ssh_user"],
-                    identity_file=key_path,
-                    check_host_keys="accept",
-                    python_path="python3",
+                connect = retry_call(
+                    router.ssh,
+                    exceptions=EofError,
+                    tries=3,
+                    fkwargs={
+                        "hostname": hostname,
+                        "port": port,
+                        "username": server["ssh_user"],
+                        "identity_file": key_path,
+                        "check_host_keys": "accept",
+                        "python_path": "python3",
+                    },
                 )
             except StreamError:
                 print(
