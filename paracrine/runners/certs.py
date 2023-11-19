@@ -5,7 +5,7 @@ from typing import Dict, List, Union
 
 from ..deps import Modules
 from ..helpers import cron
-from ..helpers.config import core_config, other_config_file
+from ..helpers.config import core_config, local_config, other_config_file
 from ..helpers.debian import apt_install
 from ..helpers.fs import (
     make_directory,
@@ -22,7 +22,10 @@ options = {}
 
 # Are we in a test config where we should just not get the cert
 def get_dummy_certs():
-    config = core_config()
+    try:
+        config = local_config()
+    except FileNotFoundError:
+        config = core_config()
     return config.get("dummy_certs", False)
 
 
