@@ -13,17 +13,18 @@ def journal(name):
 def systemd_set(name, enabled=None, running=None, restart=None, reloaded=None):
     raw = run_command("systemctl show %s --no-page" % name)
     status = dict([line.split("=", 1) for line in raw.splitlines()])
-    if status.get("UnitFileState") == "masked":
+    unitFileState = status.get("UnitFileState")
+    if unitFileState == "masked":
         logging.info("Unmasking %s" % name)
         run_command("systemctl unmask %s" % name)
     if enabled is not None:
         if enabled:
-            if status["UnitFileState"] not in ["enabled", "enabled-runtime"]:
-                logging.info("%s is currently %s" % (name, status["UnitFileState"]))
+            if unitFileState not in ["enabled", "enabled-runtime"]:
+                logging.info("%s is currently %s" % (name, unitFileState))
                 run_command("systemctl enable %s" % name)
         else:
-            if status["UnitFileState"] != "disabled":
-                logging.info("%s is currently %s" % (name, status["UnitFileState"]))
+            if unitFileState is not None and unitFileState != "disabled":
+                logging.info("%s is currently %s" % (name, unitFileState))
                 run_command("systemctl disable %s" % name)
     started = False
     if running is not None:
