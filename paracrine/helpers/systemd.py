@@ -1,8 +1,9 @@
 import logging
 import subprocess
+from glob import glob
 from pathlib import Path
 
-from .fs import link, run_command
+from .fs import link, run_command, run_with_marker
 
 
 def journal(name):
@@ -11,6 +12,7 @@ def journal(name):
 
 
 def systemd_set(name, enabled=None, running=None, restart=None, reloaded=None):
+    systemctl_daemon_reload()
     raw = run_command("systemctl show %s --no-page" % name)
     status = dict([line.split("=", 1) for line in raw.splitlines()])
     unitFileState = status.get("UnitFileState")
@@ -57,7 +59,12 @@ def systemd_set(name, enabled=None, running=None, restart=None, reloaded=None):
 
 
 def systemctl_daemon_reload():
-    run_command("systemctl daemon-reload")
+    run_with_marker(
+        "/opt/daemon-reload",
+        "systemctl daemon-reload",
+        deps=glob("/etc/systemd/system/*.service")
+        + glob("/etc/systemd/user/*.service"),
+    )
 
 
 def link_service(fullpath: str) -> bool:
