@@ -1,4 +1,8 @@
+import logging
 from pathlib import Path
+
+import requests
+import urllib3
 
 from ...helpers.config import get_config_file, get_config_keys, in_docker
 from ...helpers.fs import (
@@ -24,6 +28,8 @@ from .common import (
 )
 
 options = {}
+
+urllib3.disable_warnings()
 
 
 def dependencies():
@@ -75,11 +81,27 @@ def run():
     if service_file_changes:
         systemctl_daemon_reload()
 
+    needs_restart = file_changes or service_file_changes
+    if needs_restart is False:
+        # Check it's up and doesn't need a restart anyways
+        try:
+            resp = requests.get(
+                f"https://{local_node_ip()}:9080/_admin/v1/health", verify=False
+            )
+            if resp.status_code != 200:
+                logging.warning(
+                    f"Cockroach status was {resp.status_code} so restarting"
+                )
+                needs_restart = True
+        except requests.exceptions.ConnectionError:
+            logging.warning("Can't connect to Cockroach health endpoint, so restarting")
+            needs_restart = True
+
     # FIXME: Can't make this work in Docker
     if not in_docker():
         systemd_set(
             "cockroach",
             enabled=True,
             running=True,
-            restart=file_changes or service_file_changes,
+            restart=needs_restart,
         )
