@@ -87,7 +87,7 @@ def certbot_for_host(hostname: Union[str, List[str]], email: str) -> Dict:
         else:
             if not dummy_certs:
                 run_with_marker(
-                    "/opt/certbot/renew_marker",
+                    f"/opt/certbot/renew_marker_{cert_name}",
                     renew_command,
                     max_age=timedelta(days=1),
                 )
