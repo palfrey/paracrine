@@ -7,6 +7,8 @@ import jinja2
 import yaml
 from mergedeep import merge
 
+from paracrine import is_dry_run
+
 _jinja_env = None
 data = None
 
@@ -217,7 +219,12 @@ def network_config_file(name, shortname=False):
 
 
 def network_config(name):
-    return json.loads(get_config_file(network_config_file(name, shortname=True)))
+    try:
+        return json.loads(get_config_file(network_config_file(name, shortname=True)))
+    except KeyError:
+        if not is_dry_run():
+            raise
+        return {}
 
 
 def other_config_file(name, shortname=False):
