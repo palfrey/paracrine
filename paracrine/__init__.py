@@ -15,7 +15,7 @@ Usage
 4. Write an inventory file for the machines this is managing. Current setup assumes they're all the same. [integration_test/docker/inventory.yaml](https://github.com/palfrey/paracrine/blob/main/integration_test/docker/inventory.yaml) is a reasonable example file, but I suggest generating it from whatever you're using to create the servers (e.g. Terraform).
 5. Write a <code>config.yaml</code>. This has a main top-level key of `environments` with keys below that for each inventory file you've got ([integration_test/config.yaml](https://github.com/palfrey/paracrine/blob/main/integration_test/config.yaml) just has one, but in most scenarios you'll have at least a dev and prod setup). What you do below that is up to you, but typically it'll be environment variables and secrets to feed into the main file.
 6. Run `python -m paracrine.commands.setup <inventory file>` - this will install the minimum python bits so that everything else works.
-7. Run the main file (e.g. `python main.py ./docker/inventory.yaml`)
+7. Run the main file (e.g. `python main.py -i ./docker/inventory.yaml`)
 
 Utilities
 ---
@@ -45,3 +45,21 @@ Writing a module file
 
 You can just use plain Python code, but `paracrine.helpers.fs/config/debian/network/python/systemd/users` have lots of useful functions you should preferably use instead.
 """
+
+import os
+import pathlib
+
+DRY_RUN_ENV = "PARACRINE_DRY_RUN"
+
+
+def is_dry_run() -> bool:
+    return os.environ[DRY_RUN_ENV].lower() == "true"
+
+
+def dry_run_safe_read(filepath: pathlib.Path, fakecontent: str) -> str:
+    try:
+        return filepath.open().read()
+    except FileNotFoundError:
+        if is_dry_run():
+            return fakecontent
+        raise

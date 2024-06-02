@@ -4,6 +4,8 @@ import socket
 from pathlib import Path
 from typing import Dict, List
 
+from paracrine import is_dry_run
+
 from ..helpers.config import (
     add_return_data,
     config,
@@ -15,7 +17,12 @@ from ..helpers.config import (
     other_config_file,
 )
 from ..helpers.debian import apt_install
-from ..helpers.fs import make_directory, run_command
+from ..helpers.fs import (
+    MissingCommandException,
+    make_directory,
+    run_command,
+    set_file_contents,
+)
 from ..helpers.users import in_vagrant, users
 
 
@@ -55,11 +62,17 @@ def run():
 
     data = {
         "hostname": socket.gethostname(),
-        "network_devices": run_command("ip -j address"),
         "users": users(force_load=True),
-        "groups": run_command("getent group"),
+        "groups": run_command("getent group", dry_run_safe=True),
         "server_name": host()["name"],
     }
+    try:
+        data["network_devices"] = run_command("ip -j address", dry_run_safe=True)
+    except MissingCommandException:
+        if is_dry_run():
+            data["network_devices"] = "{}"
+        else:
+            raise
     ip_file = Path("/opt/ip_address")
     if ip_file.exists():
         data["external_ip"] = json.load(ip_file.open())
@@ -79,8 +92,10 @@ def run():
                 data["external_ip"] = "<unknown>"
         else:
             apt_install(["curl", "ca-certificates"])
-            data["external_ip"] = run_command("curl https://api.ipify.org?format=json")
-        json.dump(data["external_ip"], ip_file.open("w"))
+            data["external_ip"] = run_command(
+                "curl https://api.ipify.org?format=json", dry_run_safe=True
+            )
+        set_file_contents(ip_file, json.dumps(data["external_ip"]))
 
     return data
 
@@ -90,12 +105,19 @@ def parse_return(infos: List[Dict]) -> None:
     networks = json.loads(info["network_devices"])
     name = info["server_name"]
     make_directory(config_path())
-    json.dump(networks, open(network_config_file(name), "w"), indent=2)
+    set_file_contents(network_config_file(name), json.dumps(networks, indent=2))
 
     other = {
-        "external_ip": json.loads(info["external_ip"])["ip"],
         "users": info["users"],
         "groups": info["groups"],
         "hostname": info["hostname"],
     }
-    json.dump(other, open(other_config_file(name), "w"), indent=2)
+    try:
+        other["external_ip"] = json.loads(info["external_ip"])["ip"]
+    except json.JSONDecodeError:
+        if is_dry_run():
+            other["external_ip"] = "<unknown>"
+        else:
+            raise
+
+    set_file_contents(other_config_file(name), json.dumps(other, indent=2))

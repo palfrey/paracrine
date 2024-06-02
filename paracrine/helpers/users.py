@@ -9,7 +9,7 @@ def users(force_load=False):
         except KeyError:
             pass
 
-    raw_users = run_command("getent passwd | cut -d: -f1")
+    raw_users = run_command("getent passwd | cut -d: -f1", dry_run_safe=True)
     return sorted(raw_users.strip().split("\n"))
 
 

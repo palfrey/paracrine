@@ -15,7 +15,7 @@ def set_config_data(config_file: BinaryIO, data: object) -> None:
 def test_empty_servers():
     with tempfile.NamedTemporaryFile() as config_file:
         set_config_data(config_file, {"servers": []})
-        run(config_file.name, [])
+        run(["-i", config_file.name], [])
 
 
 def test_bad_ssh_path():
@@ -28,4 +28,4 @@ def test_bad_ssh_path():
             },
         )
         with pytest.raises(Exception, match="Can't find ssh key /tmp/configs/TBD"):
-            run(config_file.name, [])
+            run(["-i", config_file.name], [])

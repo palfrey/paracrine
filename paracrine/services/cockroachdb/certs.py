@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import Dict, List, Optional
 
+from paracrine import dry_run_safe_read
+
 from ...helpers.config import config_path
 from ...helpers.fs import (
     build_with_command,
@@ -48,12 +50,17 @@ def run():
             f"{cockroach} cert create-node localhost {ip} --certs-dir={certs_dir} --ca-key={ca_key_path} --overwrite && mv {certs_dir.joinpath('node.crt')} {crt_path} && mv {certs_dir.joinpath('node.key')} {key_path}",
             deps=[ca_key_path],
         )
-        node_keys[ip] = {"crt": crt_path.open().read(), "key": key_path.open().read()}
+        node_keys[ip] = {
+            "crt": dry_run_safe_read(crt_path, "fake crt"),
+            "key": dry_run_safe_read(key_path, "fake key"),
+        }
 
     return {
-        "ca_crt": ca_key_path.with_suffix(".crt").open().read(),
-        "root_key": root_key_path.open().read(),
-        "root_crt": root_key_path.with_suffix(".crt").open().read(),
+        "ca_crt": dry_run_safe_read(ca_key_path.with_suffix(".crt"), "fake crt"),
+        "root_key": dry_run_safe_read(root_key_path, "fake root key"),
+        "root_crt": dry_run_safe_read(
+            root_key_path.with_suffix(".crt"), "fake root crt"
+        ),
         "node_keys": node_keys,
     }
 

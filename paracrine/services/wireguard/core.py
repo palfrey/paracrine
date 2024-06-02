@@ -1,3 +1,7 @@
+from pathlib import Path
+
+from paracrine import dry_run_safe_read
+
 from ...helpers.config import config, get_config_file, host, in_docker
 from ...helpers.fs import set_file_contents_from_template
 from ...helpers.network import external_ip, wireguard_ip
@@ -25,7 +29,9 @@ def setup(name="wg0", ip="192.168.2.1", netmask=24, peers=[]):
     conf_change = set_file_contents_from_template(
         f"/etc/wireguard/{name}.conf",
         "wg.conf.j2",
-        PRIVATE_KEY=open(private_key_file).read().strip(),
+        PRIVATE_KEY=dry_run_safe_read(
+            Path(private_key_file), "fake private key"
+        ).strip(),
         PEERS=peers,
         IP=ip,
         NETMASK=netmask,

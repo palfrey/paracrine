@@ -2,6 +2,9 @@ import json
 import os
 import sys
 from distutils.version import LooseVersion
+from pathlib import Path
+
+from paracrine import dry_run_safe_read, is_dry_run
 
 from ...helpers.config import (
     get_config,
@@ -11,7 +14,12 @@ from ...helpers.config import (
     other_config_file,
 )
 from ...helpers.debian import apt_install
-from ...helpers.fs import make_directory, run_command, set_file_contents
+from ...helpers.fs import (
+    MissingCommandException,
+    make_directory,
+    run_command,
+    set_file_contents,
+)
 from .common import private_key_file, public_key_file, public_key_path, wg_config
 
 
@@ -41,7 +49,18 @@ def get_all_kernel_versions():
 
 def run():
     apt_install(["kmod", "wireguard"])
-    modules = sorted([line.split(" ")[0] for line in run_command("lsmod").splitlines()])
+    try:
+        modules = sorted(
+            [
+                line.split(" ")[0]
+                for line in run_command("lsmod", dry_run_safe=True).splitlines()
+            ]
+        )
+    except MissingCommandException:
+        if is_dry_run():
+            modules = []
+        else:
+            raise
     if "wireguard" not in modules and not in_docker():
         print("modules", modules)
         apt_install(["linux-image-amd64"])
@@ -74,9 +93,18 @@ def run():
 
         if not in_docker():
             apt_install(["linux-headers-amd64"])
-            modules = sorted(
-                [line.split(" ")[0] for line in run_command("lsmod").splitlines()]
-            )
+            try:
+                modules = sorted(
+                    [
+                        line.split(" ")[0]
+                        for line in run_command("lsmod", dry_run_safe=True).splitlines()
+                    ]
+                )
+            except MissingCommandException:
+                if is_dry_run():
+                    modules = []
+                else:
+                    raise
             if "wireguard" not in modules:
                 print("modules", modules)
                 run_command("modprobe wireguard")
@@ -88,7 +116,7 @@ def run():
         run_command("cat %s | wg pubkey > %s" % (private_key_file, public_key_file))
 
     return {
-        "wg_publickey": open(public_key_file).read().strip(),
+        "wg_publickey": dry_run_safe_read(Path(public_key_file), "dummy wg publickey"),
         "host": host()["name"],
     }
 

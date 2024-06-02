@@ -12,6 +12,8 @@ from difflib import unified_diff
 from pathlib import Path
 from typing import List, Optional, Union
 
+from paracrine import is_dry_run
+
 from .config import data_files, jinja_env
 
 
@@ -22,7 +24,7 @@ def hash_data(data: bytes) -> str:
 
 
 def set_file_contents(
-    fname: str,
+    fname: Union[str, os.PathLike],
     contents: Union[str, bytes],
     ignore_changes: bool = False,
     owner: Optional[str] = None,
@@ -53,7 +55,7 @@ def set_file_contents(
                 logging.info("File %s was different" % fname)
                 needs_update = True
 
-    if needs_update:
+    if needs_update and not is_dry_run():
         if type(contents) == str:
             open(fname, "w").write(contents)
         else:
@@ -96,17 +98,39 @@ def set_mode(path, mode):
         raw_mode = int(mode, 8)
     else:
         raw_mode = mode
-    existing = stat.S_IMODE(os.stat(path).st_mode)
+
+    dry_run = is_dry_run()
+
+    try:
+        existing = stat.S_IMODE(os.stat(path).st_mode)
+    except FileNotFoundError:
+        if dry_run:
+            logging.info(f"Missing {path}, but would have set mode to {mode}")
+            return True
+        else:
+            raise
     if existing != raw_mode:
         logging.info("chmod %s %s" % (path, mode))
-        os.chmod(path, raw_mode)
+        if not dry_run:
+            os.chmod(path, raw_mode)
         return True
     else:
         return False
 
 
-def set_owner(path, owner: Optional[str] = None, group: Optional[str] = None):
-    st = os.stat(path)
+def set_owner(path, owner: Optional[str] = None, group: Optional[str] = None) -> bool:
+    if owner is None and group is None:
+        return False
+    try:
+        st = os.stat(path)
+    except FileNotFoundError:
+        if is_dry_run():
+            logging.info(
+                f"Can't find {path}, but would have set owner {owner} and group {group}"
+            )
+            return True
+        else:
+            raise
     if owner is not None:
         owner_id = pwd.getpwnam(owner).pw_uid
     else:
@@ -117,7 +141,8 @@ def set_owner(path, owner: Optional[str] = None, group: Optional[str] = None):
         group_id = st.st_gid
 
     if st.st_uid != owner_id or st.st_gid != group_id:
-        os.chown(path, owner_id, group_id)
+        if not is_dry_run():
+            os.chown(path, owner_id, group_id)
         return True
     else:
         return False
@@ -127,7 +152,8 @@ def make_directory(path, mode=None, owner=None, group=None):
     ret = False
     if not os.path.exists(path):
         logging.info("Make directory %s" % path)
-        os.makedirs(path)
+        if not is_dry_run():
+            os.makedirs(path)
         ret = True
     if mode is not None:
         ret = set_mode(path, mode) or ret
@@ -167,7 +193,7 @@ def sha_file(fname):
     from .debian import apt_install
 
     apt_install(["coreutils"])
-    existing_sha = run_command("sha256sum %s" % fname).strip()
+    existing_sha = run_command("sha256sum %s" % fname, dry_run_safe=True).strip()
     return existing_sha.split(" ")[0]
 
 
@@ -185,10 +211,11 @@ def download(url, fname, sha, mode=None):
     if not exists:
         from .debian import apt_install
 
-        apt_install(["curl", "ca-certificates"])
-        run_command("curl -Lo %s %s" % (fname, url))
-        existing_sha = sha_file(fname)
-        assert existing_sha == sha, (existing_sha, sha)
+        if not is_dry_run():
+            apt_install(["curl", "ca-certificates"])
+            run_command("curl -Lo %s %s" % (fname, url))
+            existing_sha = sha_file(fname)
+            assert existing_sha == sha, (existing_sha, sha)
 
     if mode is not None:
         set_mode(fname, mode)
@@ -201,10 +228,12 @@ def link(target, source):
         not os.path.exists(target) or not os.path.samefile(source, target)
     ):
         logging.info("Unlink %s" % target)
-        os.remove(target)
+        if not is_dry_run():
+            os.remove(target)
     if not os.path.lexists(target):
         logging.info("Link %s to %s" % (target, source))
-        os.symlink(source, target)
+        if not is_dry_run():
+            os.symlink(source, target)
         return True
     else:
         return False
@@ -254,7 +283,7 @@ def download_and_unpack(url, hash, name=None, dir_name=None, compressed_root="/o
         else:
             raise Exception(compressed_path)
 
-        marker_name.open("w").write("")
+        set_file_contents(marker_name, "")
 
         changed = True
 
@@ -272,7 +301,8 @@ def delete(fname: str, quiet: bool = False) -> bool:
     if os.path.exists(fname):
         if not quiet:
             logging.info("Deleting %s", fname)
-        os.remove(fname)
+        if not is_dry_run():
+            os.remove(fname)
         return True
     else:
         return False
@@ -316,6 +346,7 @@ def run_with_marker(
     directory=None,
     run_if_command_changed=True,
     input: Optional[str] = None,
+    dry_run_safe: bool = False,
 ):
     changed = not os.path.exists(fname) or force_build
     target_modified = last_modified(fname)
@@ -335,10 +366,17 @@ def run_with_marker(
         changed = old_command != command
 
     if changed:
-        run_command(command, directory=directory, input=input)
-        open(fname, "w").write(command)
+        run_command(
+            command, directory=directory, input=input, dry_run_safe=dry_run_safe
+        )
+        if dry_run_safe or not is_dry_run():
+            open(fname, "w").write(command)
 
     return changed
+
+
+class MissingCommandException(Exception):
+    pass
 
 
 def run_command(
@@ -346,40 +384,55 @@ def run_command(
     directory: Optional[str] = None,
     input: Optional[str] = None,
     allowed_exit_codes: List[int] = [0],
+    dry_run_safe: bool = False,
 ) -> str:
+    run_for_real = dry_run_safe or not is_dry_run()
     display = cmd.strip()
     while display.find("  ") != -1:
         display = display.replace("  ", " ")
     try:
         if directory is not None:
-            logging.info("Run in %s: %s" % (directory, display))
-            with cd(directory):
+            if run_for_real:
+                logging.info("Run in %s: %s" % (directory, display))
+                with cd(directory):
+                    process = subprocess.Popen(
+                        cmd,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        shell=True,
+                        stdin=subprocess.PIPE,
+                        encoding="utf-8",
+                    )
+            else:
+                logging.info("Would have run in %s: %s" % (directory, display))
+        else:
+            if run_for_real:
+                logging.info("Run: %s" % display)
                 process = subprocess.Popen(
                     cmd,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     shell=True,
                     stdin=subprocess.PIPE,
+                    encoding="utf-8",
                 )
-        else:
-            logging.info("Run: %s" % display)
-            process = subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                shell=True,
-                stdin=subprocess.PIPE,
-            )
+            else:
+                logging.info("Would have run: %s" % display)
 
-        if input is not None:
-            input = input.encode("utf-8")
-        (stdout, stderr) = process.communicate(input=input)
-        assert process.returncode in allowed_exit_codes, (
-            process.returncode,
-            stdout,
-            stderr,
-        )
-        return stdout.decode("utf-8")
+        if run_for_real:
+            (stdout, stderr) = process.communicate(input=input)
+            if process.returncode not in allowed_exit_codes:
+                if ": not found" in stderr:
+                    # missing command
+                    raise MissingCommandException
+                assert process.returncode in allowed_exit_codes, (
+                    process.returncode,
+                    stdout,
+                    stderr,
+                )
+            return stdout
+        else:
+            return ""
     except subprocess.CalledProcessError as e:
         print(e.output)
         raise

@@ -1,13 +1,16 @@
+import argparse
 import json
 import logging
 import os
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, List
 
 from mergedeep import merge
 from mitogen.core import Error, StreamError
 from mitogen.parent import Context, EofError, Router
 from mitogen.utils import run_with_router
 from retry.api import retry_call
+
+from paracrine import DRY_RUN_ENV
 
 from .deps import (
     Modules,
@@ -58,6 +61,8 @@ def main(router: Router, func: Callable[..., None], *args: Any, **kwargs: Any) -
             key_path = path_to_config_file(server["ssh_key"])
             if not os.path.exists(key_path):
                 raise Exception(f"Can't find ssh key {key_path}")
+            username = server["ssh_user"]
+
             try:
                 connect = retry_call(
                     router.ssh,
@@ -66,7 +71,7 @@ def main(router: Router, func: Callable[..., None], *args: Any, **kwargs: Any) -
                     fkwargs={
                         "hostname": hostname,
                         "port": port,
-                        "username": server["ssh_user"],
+                        "username": username,
                         "identity_file": key_path,
                         "check_host_keys": "accept",
                         "python_path": "python3",
@@ -75,12 +80,17 @@ def main(router: Router, func: Callable[..., None], *args: Any, **kwargs: Any) -
             except StreamError:
                 print(
                     "Exception while trying to login to %s@%s:%s"
-                    % (server["ssh_user"], hostname, port)
+                    % (username, hostname, port)
                 )
                 raise
 
-            sudo = router.sudo(via=connect, python_path="python3")
-            ssh_cache[cache_key] = sudo
+            if username != "root":
+                sudo = router.sudo(
+                    via=connect, python_path="python3", preserve_env=True
+                )
+                ssh_cache[cache_key] = sudo
+            else:
+                ssh_cache[cache_key] = connect
         data = create_data(server=server)
         calls.append(ssh_cache[cache_key].call_async(func, data, *args, **kwargs))
 
@@ -102,19 +112,26 @@ def main(router: Router, func: Callable[..., None], *args: Any, **kwargs: Any) -
     return {"infos": infos, "data": data}
 
 
-def do(data, transmitmodules: TransmitModules, name: str):
+def do(data, transmitmodules: TransmitModules, name: str, dry_run: bool):
+    os.environ[DRY_RUN_ENV] = str(dry_run)
     set_data(data)
     modules = makereal(transmitmodules)
     return runfunc(modules, name)
 
 
 def internal_runner(
-    router: Router, modules: Modules, local_func: str, run_func: str, parse_func: str
+    router: Router,
+    modules: Modules,
+    local_func: str,
+    run_func: str,
+    parse_func: str,
+    dry_run: bool,
 ) -> None:
     for module in modules:
         runfunc([module], local_func)
-        infos = main(router, do, maketransmit([module]), run_func)
+        infos = main(router, do, maketransmit([module]), run_func, dry_run)
         for info in infos["infos"]:
+            os.environ[DRY_RUN_ENV] = str(dry_run)
             runfunc([module], parse_func, info, infos["data"])
             for module_name in info:
                 for per_node in info[module_name]:
@@ -173,10 +190,15 @@ def generate_dependencies(modules: Modules):
     return modules
 
 
-def run(inventory_path: str, modules: Modules):
+def run(args: List[str], modules: Modules):
     logging.basicConfig()
     logging.root.setLevel(logging.INFO)
-    set_config(inventory_path)
+
+    parser = argparse.ArgumentParser(prog="paracrine")
+    parser.add_argument("-i", "--inventory-path", dest="inventory_path", required=True)
+    parser.add_argument("-a", "--apply", default=False, action="store_true")
+    parsed_args = parser.parse_args(args)
+    set_config(parsed_args.inventory_path)
 
     modules = generate_dependencies(modules)
 
@@ -185,4 +207,6 @@ def run(inventory_path: str, modules: Modules):
         print(f"* {module}")
     print("")
 
-    run_with_router(internal_runner, modules, "local", "run", "parse_return")
+    run_with_router(
+        internal_runner, modules, "local", "run", "parse_return", not parsed_args.apply
+    )
