@@ -196,7 +196,7 @@ def run(args: List[str], modules: Modules):
 
     parser = argparse.ArgumentParser(prog="paracrine")
     parser.add_argument("-i", "--inventory-path", dest="inventory_path", required=True)
-    parser.add_argument("-d", "--dry-run", type=bool, default=True)
+    parser.add_argument("-a", "--apply", default=False, action="store_true")
     parsed_args = parser.parse_args(args)
     set_config(parsed_args.inventory_path)
 
@@ -208,5 +208,5 @@ def run(args: List[str], modules: Modules):
     print("")
 
     run_with_router(
-        internal_runner, modules, "local", "run", "parse_return", parsed_args.dry_run
+        internal_runner, modules, "local", "run", "parse_return", not parsed_args.apply
     )

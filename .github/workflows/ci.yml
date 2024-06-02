@@ -44,3 +44,4 @@ jobs:
                   ./wait-for-it.sh -h localhost -p 2000 -t 120
                   python -m paracrine.commands.setup ./docker/inventory.yaml
                   python main.py -i ./docker/inventory.yaml
+                  python main.py -i ./docker/inventory.yaml --apply
