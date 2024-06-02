@@ -55,9 +55,9 @@ def run():
 
     data = {
         "hostname": socket.gethostname(),
-        "network_devices": run_command("ip -j address"),
+        "network_devices": run_command("ip -j address", dry_run_safe=True),
         "users": users(force_load=True),
-        "groups": run_command("getent group"),
+        "groups": run_command("getent group", dry_run_safe=True),
         "server_name": host()["name"],
     }
     ip_file = Path("/opt/ip_address")
@@ -79,7 +79,9 @@ def run():
                 data["external_ip"] = "<unknown>"
         else:
             apt_install(["curl", "ca-certificates"])
-            data["external_ip"] = run_command("curl https://api.ipify.org?format=json")
+            data["external_ip"] = run_command(
+                "curl https://api.ipify.org?format=json", dry_run_safe=True
+            )
         json.dump(data["external_ip"], ip_file.open("w"))
 
     return data

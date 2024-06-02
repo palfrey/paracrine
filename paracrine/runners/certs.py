@@ -3,6 +3,8 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Dict, List, Union
 
+from paracrine import dry_run_safe_read
+
 from ..deps import Modules
 from ..helpers import cron
 from ..helpers.config import core_config, local_config, other_config_file
@@ -11,6 +13,7 @@ from ..helpers.fs import (
     make_directory,
     run_command,
     run_with_marker,
+    set_file_contents,
     set_file_contents_from_template,
 )
 from ..helpers.python import setup_venv
@@ -72,8 +75,8 @@ def certbot_for_host(hostname: Union[str, List[str]], email: str) -> Dict:
 
         if not config_path.exists():
             if dummy_certs:
-                fullchain_path.open("w").write("")
-                live_path.joinpath("privkey.pem").open("w").write("")
+                set_file_contents(fullchain_path.as_posix(), "")
+                set_file_contents(live_path.joinpath("privkey.pem").as_posix(), "")
             else:
                 run_command(
                     f"{envs} {certbot_bin} certonly \
@@ -103,13 +106,18 @@ def certbot_for_host(hostname: Union[str, List[str]], email: str) -> Dict:
         python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
 
         return {
-            f"fullchain-{hostnames[0]}": fullchain_path.open().read(),
-            f"privkey-{hostnames[0]}": live_path.joinpath("privkey.pem").open().read(),
-            "ssl-options": venv.joinpath(
-                f"lib/python{python_version}/site-packages/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf"  # noqa: E501
-            )
-            .open()
-            .read(),
+            f"fullchain-{hostnames[0]}": dry_run_safe_read(
+                fullchain_path, "dummy fullchain"
+            ),
+            f"privkey-{hostnames[0]}": dry_run_safe_read(
+                live_path.joinpath("privkey.pem"), "dummy privkey"
+            ),
+            "ssl-options": dry_run_safe_read(
+                venv.joinpath(
+                    f"lib/python{python_version}/site-packages/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf"  # noqa: E501
+                ),
+                "fake ssl options",
+            ),
         }
     else:
         return {}

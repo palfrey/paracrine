@@ -13,7 +13,7 @@ def journal(name):
 
 def systemd_set(name, enabled=None, running=None, restart=None, reloaded=None):
     systemctl_daemon_reload()
-    raw = run_command("systemctl show %s --no-page" % name)
+    raw = run_command("systemctl show %s --no-page" % name, dry_run_safe=True)
     status = dict([line.split("=", 1) for line in raw.splitlines()])
     unitFileState = status.get("UnitFileState")
     if unitFileState == "masked":

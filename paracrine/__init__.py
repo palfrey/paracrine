@@ -45,3 +45,21 @@ Writing a module file
 
 You can just use plain Python code, but `paracrine.helpers.fs/config/debian/network/python/systemd/users` have lots of useful functions you should preferably use instead.
 """
+
+import os
+import pathlib
+
+DRY_RUN_ENV = "PARACRINE_DRY_RUN"
+
+
+def is_dry_run() -> bool:
+    return os.environ[DRY_RUN_ENV].lower() == "true"
+
+
+def dry_run_safe_read(filepath: pathlib.Path, fakecontent: str) -> str:
+    try:
+        return filepath.open().read()
+    except FileNotFoundError:
+        if is_dry_run():
+            return fakecontent
+        raise

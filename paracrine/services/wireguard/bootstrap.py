@@ -2,6 +2,9 @@ import json
 import os
 import sys
 from distutils.version import LooseVersion
+from pathlib import Path
+
+from paracrine import dry_run_safe_read
 
 from ...helpers.config import (
     get_config,
@@ -88,7 +91,7 @@ def run():
         run_command("cat %s | wg pubkey > %s" % (private_key_file, public_key_file))
 
     return {
-        "wg_publickey": open(public_key_file).read().strip(),
+        "wg_publickey": dry_run_safe_read(Path(public_key_file), "dummy wg publickey"),
         "host": host()["name"],
     }
 
