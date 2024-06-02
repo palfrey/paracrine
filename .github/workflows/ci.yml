@@ -40,4 +40,4 @@ jobs:
                   chmod 600 docker/configs/test_key
                   docker-compose up --build -d
                   python -m paracrine.commands.setup ./docker/inventory.yaml
-                  python main.py ./docker/inventory.yaml
+                  python main.py -i ./docker/inventory.yaml
