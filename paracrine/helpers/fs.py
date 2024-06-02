@@ -414,13 +414,12 @@ def run_command(
                 logging.info("Would have run: %s" % display)
 
         if run_for_real:
-            if input is not None:
-                input = input.encode("utf-8")
-            (stdout, stderr) = process.communicate(input=input)
+            input_bytes = input.encode("utf-8") if input is not None else None
+            (stdout, stderr) = process.communicate(input=input_bytes)
             assert process.returncode in allowed_exit_codes, (
                 process.returncode,
-                stdout,
-                stderr,
+                stdout.decode("utf-8"),
+                stderr.decode("utf-8"),
             )
             return stdout.decode("utf-8")
         else:

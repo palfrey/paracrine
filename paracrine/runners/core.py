@@ -4,6 +4,8 @@ import socket
 from pathlib import Path
 from typing import Dict, List
 
+from paracrine import is_dry_run
+
 from ..helpers.config import (
     add_return_data,
     config,
@@ -55,11 +57,19 @@ def run():
 
     data = {
         "hostname": socket.gethostname(),
-        "network_devices": run_command("ip -j address", dry_run_safe=True),
         "users": users(force_load=True),
         "groups": run_command("getent group", dry_run_safe=True),
         "server_name": host()["name"],
     }
+    try:
+        data["network_devices"] = run_command("ip -j address", dry_run_safe=True)
+    except AssertionError as ae:
+        if not is_dry_run() or len(ae.args[0]) != 3:
+            raise
+        if "ip: not found" in ae.args[0][2]:
+            data["network_devices"] = "{}"
+        else:
+            raise
     ip_file = Path("/opt/ip_address")
     if ip_file.exists():
         data["external_ip"] = json.load(ip_file.open())
@@ -95,9 +105,16 @@ def parse_return(infos: List[Dict]) -> None:
     set_file_contents(network_config_file(name), json.dumps(networks, indent=2))
 
     other = {
-        "external_ip": json.loads(info["external_ip"])["ip"],
         "users": info["users"],
         "groups": info["groups"],
         "hostname": info["hostname"],
     }
+    try:
+        other["external_ip"] = json.loads(info["external_ip"])["ip"]
+    except json.JSONDecodeError:
+        if is_dry_run():
+            other["external_ip"] = "<unknown>"
+        else:
+            raise
+
     set_file_contents(other_config_file(name), json.dumps(other, indent=2))
