@@ -15,8 +15,6 @@ from pathlib import Path
 from sys import argv, exit
 from typing import List
 
-from paracrine.helpers.fs import set_file_contents
-
 systemd_roots = [Path("/etc/systemd/system"), Path("/lib/systemd/system/")]
 
 
@@ -43,7 +41,8 @@ def get_running_services() -> List[str]:
 def add_running_service(service: str) -> None:
     existing = get_running_services()
     existing.append(service)
-    set_file_contents(_running_service_path, json.dumps(existing))
+    with _running_service_path.open("w") as rs:
+        json.dump(existing, rs)
 
 
 if __name__ == "__main__":

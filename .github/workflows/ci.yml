@@ -41,6 +41,6 @@ jobs:
                   docker-compose up --build -d
                   wget https://raw.githubusercontent.com/vishnubob/wait-for-it/81b1373f17855a4dc21156cfe1694c31d7d1792e/wait-for-it.sh
                   chmod +x wait-for-it.sh
-                  ./wait-for-it.sh -h localhost -p 2000 -t 0
+                  ./wait-for-it.sh -h localhost -p 2000 -t 120
                   python -m paracrine.commands.setup ./docker/inventory.yaml
                   python main.py -i ./docker/inventory.yaml
