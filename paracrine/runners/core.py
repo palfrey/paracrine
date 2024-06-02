@@ -17,7 +17,12 @@ from ..helpers.config import (
     other_config_file,
 )
 from ..helpers.debian import apt_install
-from ..helpers.fs import make_directory, run_command, set_file_contents
+from ..helpers.fs import (
+    MissingCommandException,
+    make_directory,
+    run_command,
+    set_file_contents,
+)
 from ..helpers.users import in_vagrant, users
 
 
@@ -63,10 +68,8 @@ def run():
     }
     try:
         data["network_devices"] = run_command("ip -j address", dry_run_safe=True)
-    except AssertionError as ae:
-        if not is_dry_run() or len(ae.args[0]) != 3:
-            raise
-        if "ip: not found" in ae.args[0][2]:
+    except MissingCommandException:
+        if is_dry_run():
             data["network_devices"] = "{}"
         else:
             raise

@@ -375,6 +375,10 @@ def run_with_marker(
     return changed
 
 
+class MissingCommandException(Exception):
+    pass
+
+
 def run_command(
     cmd: str,
     directory: Optional[str] = None,
@@ -397,6 +401,7 @@ def run_command(
                         stderr=subprocess.PIPE,
                         shell=True,
                         stdin=subprocess.PIPE,
+                        encoding="utf-8",
                     )
             else:
                 logging.info("Would have run in %s: %s" % (directory, display))
@@ -409,19 +414,23 @@ def run_command(
                     stderr=subprocess.PIPE,
                     shell=True,
                     stdin=subprocess.PIPE,
+                    encoding="utf-8",
                 )
             else:
                 logging.info("Would have run: %s" % display)
 
         if run_for_real:
-            input_bytes = input.encode("utf-8") if input is not None else None
-            (stdout, stderr) = process.communicate(input=input_bytes)
-            assert process.returncode in allowed_exit_codes, (
-                process.returncode,
-                stdout.decode("utf-8"),
-                stderr.decode("utf-8"),
-            )
-            return stdout.decode("utf-8")
+            (stdout, stderr) = process.communicate(input=input)
+            if process.returncode not in allowed_exit_codes:
+                if ": not found" in stderr:
+                    # missing command
+                    raise MissingCommandException
+                assert process.returncode in allowed_exit_codes, (
+                    process.returncode,
+                    stdout,
+                    stderr,
+                )
+            return stdout
         else:
             return ""
     except subprocess.CalledProcessError as e:
