@@ -24,7 +24,7 @@ def hash_data(data: bytes) -> str:
 
 
 def set_file_contents(
-    fname: str,
+    fname: Union[str, os.PathLike],
     contents: Union[str, bytes],
     ignore_changes: bool = False,
     owner: Optional[str] = None,
@@ -98,10 +98,20 @@ def set_mode(path, mode):
         raw_mode = int(mode, 8)
     else:
         raw_mode = mode
-    existing = stat.S_IMODE(os.stat(path).st_mode)
+
+    dry_run = is_dry_run()
+
+    try:
+        existing = stat.S_IMODE(os.stat(path).st_mode)
+    except FileNotFoundError:
+        if dry_run:
+            logging.info(f"Missing {path}, but would have set mode to {mode}")
+            return True
+        else:
+            raise
     if existing != raw_mode:
         logging.info("chmod %s %s" % (path, mode))
-        if not is_dry_run():
+        if not dry_run:
             os.chmod(path, raw_mode)
         return True
     else:
@@ -273,7 +283,7 @@ def download_and_unpack(url, hash, name=None, dir_name=None, compressed_root="/o
         else:
             raise Exception(compressed_path)
 
-        set_file_contents(marker_name.as_posix(), "")
+        set_file_contents(marker_name, "")
 
         changed = True
 
@@ -378,8 +388,8 @@ def run_command(
         display = display.replace("  ", " ")
     try:
         if directory is not None:
-            logging.info("Run in %s: %s" % (directory, display))
             if run_for_real:
+                logging.info("Run in %s: %s" % (directory, display))
                 with cd(directory):
                     process = subprocess.Popen(
                         cmd,
@@ -388,9 +398,11 @@ def run_command(
                         shell=True,
                         stdin=subprocess.PIPE,
                     )
+            else:
+                logging.info("Would have run in %s: %s" % (directory, display))
         else:
-            logging.info("Run: %s %s" % (run_for_real, display))
             if run_for_real:
+                logging.info("Run: %s" % display)
                 process = subprocess.Popen(
                     cmd,
                     stdout=subprocess.PIPE,
@@ -398,6 +410,8 @@ def run_command(
                     shell=True,
                     stdin=subprocess.PIPE,
                 )
+            else:
+                logging.info("Would have run: %s" % display)
 
         if run_for_real:
             if input is not None:

@@ -15,7 +15,7 @@ from ..helpers.config import (
     other_config_file,
 )
 from ..helpers.debian import apt_install
-from ..helpers.fs import make_directory, run_command
+from ..helpers.fs import make_directory, run_command, set_file_contents
 from ..helpers.users import in_vagrant, users
 
 
@@ -82,7 +82,7 @@ def run():
             data["external_ip"] = run_command(
                 "curl https://api.ipify.org?format=json", dry_run_safe=True
             )
-        json.dump(data["external_ip"], ip_file.open("w"))
+        set_file_contents(ip_file, json.dumps(data["external_ip"]))
 
     return data
 
@@ -92,7 +92,7 @@ def parse_return(infos: List[Dict]) -> None:
     networks = json.loads(info["network_devices"])
     name = info["server_name"]
     make_directory(config_path())
-    json.dump(networks, open(network_config_file(name), "w"), indent=2)
+    set_file_contents(network_config_file(name), json.dumps(networks, indent=2))
 
     other = {
         "external_ip": json.loads(info["external_ip"])["ip"],
@@ -100,4 +100,4 @@ def parse_return(infos: List[Dict]) -> None:
         "groups": info["groups"],
         "hostname": info["hostname"],
     }
-    json.dump(other, open(other_config_file(name), "w"), indent=2)
+    set_file_contents(other_config_file(name), json.dumps(other, indent=2))

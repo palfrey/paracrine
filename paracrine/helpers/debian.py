@@ -6,6 +6,8 @@ from typing import Dict, List, Optional, Union
 
 from debian.debian_support import version_compare
 
+from paracrine import dry_run_safe_read
+
 from .fs import (
     build_with_command,
     download,
@@ -82,7 +84,7 @@ def apt_install(
         build_with_command(
             host_arch_path, f"dpkg-architecture -q DEB_HOST_ARCH > {host_arch_path}"
         )
-        host_arch = host_arch_path.open().read().strip()
+        host_arch = dry_run_safe_read(host_arch_path, "amd64")
     if isinstance(packages, List):
         packages = dict([(p, None) for p in packages])
     if always_install:

@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from paracrine import dry_run_safe_read, is_dry_run
+from paracrine import dry_run_safe_read
 
 from ...helpers.config import config_path
 from ...helpers.fs import (
@@ -72,11 +72,10 @@ def parse_return(infos: List[Optional[Dict]]):
         return
     certs_dir = Path(config_path()).joinpath("cockroach-certs")
     make_directory(certs_dir)
-    if not is_dry_run():
-        set_file_contents(certs_dir.joinpath("ca.crt"), info["ca_crt"])
-        set_file_contents(certs_dir.joinpath("client.root.key"), info["root_key"])
-        set_file_contents(certs_dir.joinpath("client.root.crt"), info["root_crt"])
+    set_file_contents(certs_dir.joinpath("ca.crt"), info["ca_crt"])
+    set_file_contents(certs_dir.joinpath("client.root.key"), info["root_key"])
+    set_file_contents(certs_dir.joinpath("client.root.crt"), info["root_crt"])
 
-        for ip, values in info["node_keys"].items():
-            set_file_contents(certs_dir.joinpath(f"{ip}.key"), values["key"])
-            set_file_contents(certs_dir.joinpath(f"{ip}.crt"), values["crt"])
+    for ip, values in info["node_keys"].items():
+        set_file_contents(certs_dir.joinpath(f"{ip}.key"), values["key"])
+        set_file_contents(certs_dir.joinpath(f"{ip}.crt"), values["crt"])

@@ -2,23 +2,25 @@ import json
 import pathlib
 
 from ..helpers.config import config_path, get_config_file
-from ..helpers.fs import run_command
+from ..helpers.fs import run_command, set_file_contents
 
 
 def local():
     aws_path = pathlib.Path(config_path()).joinpath("other-aws")
     if not aws_path.exists():
-        json.dump(
-            {
-                "access_key": run_command(
-                    "aws configure get aws_access_key_id"
-                ).strip(),
-                "secret_key": run_command(
-                    "aws configure get aws_secret_access_key"
-                ).strip(),
-            },
-            aws_path.open("w"),
-            indent=2,
+        set_file_contents(
+            aws_path,
+            json.dumps(
+                {
+                    "access_key": run_command(
+                        "aws configure get aws_access_key_id"
+                    ).strip(),
+                    "secret_key": run_command(
+                        "aws configure get aws_secret_access_key"
+                    ).strip(),
+                },
+                indent=2,
+            ),
         )
 
 

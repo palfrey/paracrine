@@ -75,8 +75,8 @@ def certbot_for_host(hostname: Union[str, List[str]], email: str) -> Dict:
 
         if not config_path.exists():
             if dummy_certs:
-                set_file_contents(fullchain_path.as_posix(), "")
-                set_file_contents(live_path.joinpath("privkey.pem").as_posix(), "")
+                set_file_contents(fullchain_path, "")
+                set_file_contents(live_path.joinpath("privkey.pem"), "")
             else:
                 run_command(
                     f"{envs} {certbot_bin} certonly \
