@@ -3,7 +3,9 @@ import os
 import sys
 from distutils.version import LooseVersion
 from pathlib import Path
-from typing import Dict, List, TypedDict
+from typing import Dict, List
+
+from typing_extensions import TypedDict
 
 from paracrine import dry_run_safe_read, is_dry_run
 
