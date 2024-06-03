@@ -47,7 +47,7 @@ def clear_ssh_cache():
     ssh_cache = {}
 
 
-def main(router: Router, func: Callable[..., None], *args: Any, **kwargs: Any) -> Dict:
+def main(router: Router, func: Callable[..., Any], *args: Any, **kwargs: Any) -> Dict:
     config = get_config()
     calls = []
     wg = core.is_wireguard()
@@ -120,7 +120,7 @@ def do(data, transmitmodules: TransmitModules, name: str, dry_run: bool):
     os.environ[DRY_RUN_ENV] = str(dry_run)
     set_data(data)
     modules = makereal(transmitmodules)
-    runfunc(modules, name)
+    return runfunc(modules, name)
 
 
 def internal_runner(
