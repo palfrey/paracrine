@@ -10,7 +10,9 @@ import subprocess
 from datetime import datetime, timedelta
 from difflib import unified_diff
 from pathlib import Path
-from typing import List, Optional, Sequence, TypedDict, Union
+from typing import List, Optional, Sequence, Union
+
+from typing_extensions import TypedDict
 
 from paracrine import is_dry_run
 

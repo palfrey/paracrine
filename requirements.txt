@@ -158,8 +158,10 @@ tomli==2.0.1
     #   pytest
 twine==4.0.2
     # via -r requirements.in
-typing-extensions==4.12.1
-    # via paracrine
+typing-extensions==4.7.1
+    # via
+    #   -r requirements.in
+    #   paracrine
 urllib3==1.26.14
     # via
     #   requests

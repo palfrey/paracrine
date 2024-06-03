@@ -1,12 +1,12 @@
 import json
 import os
 import pathlib
-from typing import Any, Dict, List, Optional, TypedDict, cast
+from typing import Any, Dict, List, Optional, cast
 
 import jinja2
 import yaml
 from mergedeep import merge
-from typing_extensions import NotRequired
+from typing_extensions import NotRequired, TypedDict
 
 from paracrine import is_dry_run
 
