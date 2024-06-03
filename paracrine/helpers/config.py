@@ -67,7 +67,8 @@ def get_config_file(fname: str) -> str:
     if fname not in get_config_keys():
         raise KeyError(f"Can't find {fname}. We have: {sorted(get_config_keys())}")
 
-    return config()[fname]
+    assert data is not None
+    return data["configs"][fname]
 
 
 def core_config():
