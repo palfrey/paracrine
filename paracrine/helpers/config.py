@@ -1,7 +1,7 @@
 import json
 import os
 import pathlib
-from typing import Any, Dict, Optional, TypedDict, cast
+from typing import Any, Dict, List, Optional, TypedDict, cast
 
 import jinja2
 import yaml
@@ -24,7 +24,7 @@ class ServerDict(TypedDict):
 class InventoryDict(TypedDict):
     environment: str
     data_path: str
-    servers: list[ServerDict]
+    servers: List[ServerDict]
 
 
 class ConfigDict(TypedDict):
@@ -180,7 +180,7 @@ def environment():
     return inventory["environment"]
 
 
-def servers() -> list[ServerDict]:
+def servers() -> List[ServerDict]:
     try:
         return get_config()["servers"]
     except NotADirectoryError:

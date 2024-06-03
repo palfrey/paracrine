@@ -339,7 +339,7 @@ def delete(fname: Pathy, quiet: bool = False) -> bool:
 def build_with_command(
     fname: Pathy,
     command: str,
-    deps: list[Pathy] = [],
+    deps: List[Pathy] = [],
     force_build: bool = False,
     directory: Optional[Pathy] = None,
 ) -> bool:

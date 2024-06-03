@@ -19,7 +19,7 @@ def external_ip(h: ServerDict) -> str:
     return other_config(h["name"])["external_ip"]
 
 
-def external_ips() -> dict[str, object]:
+def external_ips() -> Dict[str, object]:
     return dict([(h["name"], external_ip(h)) for h in servers()])
 
 
