@@ -12,7 +12,7 @@ classifiers = [
     "License :: OSI Approved :: GNU Affero General Public License v3",
     "Operating System :: OS Independent",
 ]
-dependencies=["mitogen", "jinja2", "pyyaml", "python-debian", "mergedeep", "retry", "requests"]
+dependencies=["mitogen", "jinja2", "pyyaml", "python-debian", "mergedeep", "retry", "requests", "typing_extensions"]
 
 [project.urls]
 "Homepage" = "https://github.com/palfrey/paracrine"
@@ -24,3 +24,6 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 include = ["paracrine*"]
+
+[tool.pyright]
+#typeCheckingMode = "strict"

@@ -60,9 +60,11 @@ def get_master_ip():
         return wireguard_ip_for_machine_for("redis-master")
     if "role:master" in output and ",port=6379,state=online" in output:
         master_ip = local_ip
-    elif "master_host:" in output:
-        master_ip = re.search("master_host:(.+)", output).groups()[0].strip()
     else:
-        master_ip = wireguard_ip_for_machine_for("redis-master")
+        master_host_match = re.search("master_host:(.+)", output)
+        if master_host_match is not None:
+            master_ip = master_host_match.groups()[0].strip()
+        else:
+            master_ip = wireguard_ip_for_machine_for("redis-master")
 
     return master_ip

@@ -34,7 +34,7 @@ from .runners import core
 
 def decode(info):
     for k in list(info.keys()):
-        if type(k) == bytes:
+        if isinstance(k, bytes):
             info[k.decode()] = info[k].decode()
             del info[k]
 
@@ -47,14 +47,18 @@ def clear_ssh_cache():
     ssh_cache = {}
 
 
-def main(router: Router, func: Callable[..., None], *args: Any, **kwargs: Any) -> Dict:
+def main(router: Router, func: Callable[..., Any], *args: Any, **kwargs: Any) -> Dict:
     config = get_config()
     calls = []
     wg = core.is_wireguard()
     data = None
     for server in config["servers"]:
         assert isinstance(server, Dict)
-        hostname = server["wireguard_ip"] if wg else server["ssh_hostname"]
+        hostname = (
+            server["wireguard_ip"]
+            if wg and "wireguard_ip" in server
+            else server["ssh_hostname"]
+        )
         port = 22 if wg else server.get("ssh_port", 22)
         cache_key = f"{hostname}-{port}"
         if cache_key not in ssh_cache:

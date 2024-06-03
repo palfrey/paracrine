@@ -8,6 +8,7 @@ pytest-watch
 pdoc3
 twine
 build
+pyright
 
 # Requests 2.32 is weird with SSL stuff. If you install ca-certificates, most of this goes away
 # but it's relevant for the dry-run cases.

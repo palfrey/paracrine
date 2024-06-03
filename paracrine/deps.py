@@ -1,25 +1,28 @@
 import importlib
 from types import ModuleType
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Optional, Sequence, Tuple, Union
 
 from mergedeep import merge
 
 from .helpers.config import clear_return_data, get_return_data, set_data
 
-Module = Union[ModuleType, Tuple[ModuleType, Dict]]
-Modules = List[Module]
+Module = Union[ModuleType, Tuple[ModuleType, Dict[object, object]]]
+Modules = Sequence[Module]
 """Type of modules handed to `paracrine.runner.run`"""
 
-TransmitModule = Union[str, Tuple[str, Dict]]
-TransmitModules = List[TransmitModule]
+TransmitModule = Union[str, Tuple[str, Dict[object, object]]]
+TransmitModules = Sequence[TransmitModule]
 
 
 def runfunc(
-    modules: Modules, name: str, arguments: Dict[str, Any] = {}, data: Dict = {}
+    modules: Modules,
+    name: str,
+    arguments: Dict[str, Any] = {},
+    data: Dict[str, object] = {},
 ) -> Dict[str, Any]:
     ret = {}
 
-    def run(module: ModuleType, options: Dict):
+    def run(module: ModuleType, options: Dict[object, object]):
         func: Optional[Callable] = getattr(module, name, None)
         if func is not None:
             setattr(module, "options", options)

@@ -2,16 +2,23 @@ import logging
 import subprocess
 from glob import glob
 from pathlib import Path
+from typing import Optional
 
 from .fs import link, run_command, run_with_marker
 
 
-def journal(name):
+def journal(name: str) -> None:
     res = run_command("journalctl -u %s" % name)
     print(res)
 
 
-def systemd_set(name, enabled=None, running=None, restart=None, reloaded=None):
+def systemd_set(
+    name: str,
+    enabled: Optional[bool] = None,
+    running: Optional[bool] = None,
+    restart: Optional[bool] = None,
+    reloaded: Optional[bool] = None,
+) -> None:
     systemctl_daemon_reload()
     raw = run_command("systemctl show %s --no-page" % name, dry_run_safe=True)
     status = dict([line.split("=", 1) for line in raw.splitlines()])

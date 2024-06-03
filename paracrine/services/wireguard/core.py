@@ -14,7 +14,7 @@ def dependencies():
     return [bootstrap]
 
 
-def setup(name="wg0", ip="192.168.2.1", netmask=24, peers=[]):
+def setup(name: str = "wg0", ip: str = "192.168.2.1", netmask: int = 24):
     peers = {}
     for h in config()["servers"]:
         if h["name"] == host()["name"]:
@@ -23,7 +23,7 @@ def setup(name="wg0", ip="192.168.2.1", netmask=24, peers=[]):
         peers[h["name"]] = {
             "public_key": public_key,
             "endpoint": "%s:51820" % external_ip(h),
-            "peer_addr": h["wireguard_ip"],
+            "peer_addr": h.get("wireguard_ip", "<unknown>"),
         }
 
     conf_change = set_file_contents_from_template(

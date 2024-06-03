@@ -1,7 +1,7 @@
 import sys
 from datetime import timedelta
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import Dict, List, Union, cast
 
 from paracrine import dry_run_safe_read
 
@@ -24,16 +24,16 @@ options = {}
 
 
 # Are we in a test config where we should just not get the cert
-def get_dummy_certs():
+def get_dummy_certs() -> bool:
     try:
         config = local_config()
     except FileNotFoundError:
         config = core_config()
-    return config.get("dummy_certs", False)
+    return cast(bool, config.get("dummy_certs", False))
 
 
-def certbot_for_host(hostname: Union[str, List[str]], email: str) -> Dict:
-    if type(hostname) == str:
+def certbot_for_host(hostname: Union[str, List[str]], email: str) -> Dict[str, object]:
+    if isinstance(hostname, str):
         hostnames = [hostname]
     else:
         hostnames = hostname

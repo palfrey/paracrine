@@ -11,7 +11,7 @@ def do(data):
 
 
 def core(router: Router) -> None:
-    for _ in main(router, False, do):
+    for _ in main(router, do):
         pass
 
 
