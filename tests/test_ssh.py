@@ -1,5 +1,5 @@
 import tempfile
-from typing import BinaryIO
+from typing import BinaryIO, cast
 
 import pytest
 import yaml
@@ -14,14 +14,14 @@ def set_config_data(config_file: BinaryIO, data: object) -> None:
 
 def test_empty_servers():
     with tempfile.NamedTemporaryFile() as config_file:
-        set_config_data(config_file, {"servers": []})
+        set_config_data(cast(BinaryIO, config_file), {"servers": []})
         run(["-i", config_file.name], [])
 
 
 def test_bad_ssh_path():
     with tempfile.NamedTemporaryFile() as config_file:
         set_config_data(
-            config_file,
+            cast(BinaryIO, config_file),
             {
                 "data_path": ".",
                 "servers": [{"ssh_hostname": "", "ssh_key": "TBD", "ssh_user": ""}],

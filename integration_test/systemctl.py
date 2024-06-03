@@ -19,7 +19,7 @@ systemd_roots = [Path("/etc/systemd/system"), Path("/lib/systemd/system/")]
 
 
 def get_enabled_services():
-    services = []
+    services: List[str] = []
     for systemd_root in systemd_roots:
         for path in systemd_root.iterdir():
             if path.suffix != ".service":

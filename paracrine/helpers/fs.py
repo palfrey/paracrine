@@ -7,14 +7,16 @@ import pwd
 import re
 import stat
 import subprocess
-from datetime import datetime
+from datetime import datetime, timedelta
 from difflib import unified_diff
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Optional, Sequence, TypedDict, Union
 
 from paracrine import is_dry_run
 
 from .config import data_files, jinja_env
+
+Pathy = Union[str, Path]
 
 
 def hash_data(data: bytes) -> str:
@@ -24,7 +26,7 @@ def hash_data(data: bytes) -> str:
 
 
 def set_file_contents(
-    fname: Union[str, os.PathLike],
+    fname: Pathy,
     contents: Union[str, bytes],
     ignore_changes: bool = False,
     owner: Optional[str] = None,
@@ -42,7 +44,7 @@ def set_file_contents(
         needs_update = True
         logging.info("File %s was missing" % fname)
     elif not ignore_changes:
-        if type(contents) == str:
+        if isinstance(contents, str):
             data = open(fname, "rb").read().decode("utf-8").splitlines(True)
             diff = list(unified_diff(data, contents.splitlines(True)))
             if len(diff) > 0:
@@ -56,7 +58,7 @@ def set_file_contents(
                 needs_update = True
 
     if needs_update and not is_dry_run():
-        if type(contents) == str:
+        if isinstance(contents, str):
             open(fname, "w").write(contents)
         else:
             open(fname, "wb").write(contents)
@@ -66,11 +68,13 @@ def set_file_contents(
     return needs_update
 
 
-def render_template(template, **kwargs):
+def render_template(template: str, **kwargs: object) -> str:
     return jinja_env().get_template(template).render(**kwargs)
 
 
-def set_file_contents_from_template(fname, template, ignore_changes=False, **kwargs):
+def set_file_contents_from_template(
+    fname: str, template: str, ignore_changes: bool = False, **kwargs: object
+) -> bool:
     return set_file_contents(
         fname,
         render_template(template, **kwargs),
@@ -83,7 +87,7 @@ def set_file_contents_from_data(fname: str, data_path: str):
 
 
 @contextlib.contextmanager
-def cd(path: os.PathLike):
+def cd(path: Pathy):
     CWD = os.getcwd()
 
     os.chdir(path)
@@ -93,8 +97,8 @@ def cd(path: os.PathLike):
         os.chdir(CWD)
 
 
-def set_mode(path, mode):
-    if type(mode) == str:
+def set_mode(path: Pathy, mode: Union[str, int]) -> bool:
+    if isinstance(mode, str):
         raw_mode = int(mode, 8)
     else:
         raw_mode = mode
@@ -118,7 +122,9 @@ def set_mode(path, mode):
         return False
 
 
-def set_owner(path, owner: Optional[str] = None, group: Optional[str] = None) -> bool:
+def set_owner(
+    path: Pathy, owner: Optional[str] = None, group: Optional[str] = None
+) -> bool:
     if owner is None and group is None:
         return False
     try:
@@ -148,7 +154,12 @@ def set_owner(path, owner: Optional[str] = None, group: Optional[str] = None) ->
         return False
 
 
-def make_directory(path, mode=None, owner=None, group=None):
+def make_directory(
+    path: Pathy,
+    mode: Union[str, int, None] = None,
+    owner: Optional[str] = None,
+    group: Optional[str] = None,
+) -> bool:
     ret = False
     if not os.path.exists(path):
         logging.info("Make directory %s" % path)
@@ -162,13 +173,15 @@ def make_directory(path, mode=None, owner=None, group=None):
     return ret
 
 
-def replace_line(fname, search, replace):
+def replace_line(fname: Pathy, search: str, replace: str) -> bool:
     existing = open(fname).read()
     if search in existing:
-        set_file_contents(fname, existing.replace(search, replace))
+        return set_file_contents(fname, existing.replace(search, replace))
+    else:
+        return False
 
 
-def insert_line(fname, line):
+def insert_line(fname: Pathy, line: str) -> bool:
     existing = open(fname).read()
     if line not in existing:
         return set_file_contents(fname, existing + "\n" + line)
@@ -189,7 +202,7 @@ def insert_or_replace(fname: str, matcher: Union[re.Pattern, str], line: str) ->
     return set_file_contents(fname, existing + "\n" + line)
 
 
-def sha_file(fname):
+def sha_file(fname: Pathy) -> str:
     from .debian import apt_install
 
     apt_install(["coreutils"])
@@ -197,7 +210,7 @@ def sha_file(fname):
     return existing_sha.split(" ")[0]
 
 
-def has_sha(fname, sha):
+def has_sha(fname: Pathy, sha: str) -> bool:
     if os.path.exists(fname):
         existing_sha = sha_file(fname)
         if existing_sha == sha:
@@ -206,7 +219,9 @@ def has_sha(fname, sha):
     return False
 
 
-def download(url, fname, sha, mode=None):
+def download(
+    url: str, fname: Pathy, sha: str, mode: Union[int, str, None] = None
+) -> bool:
     exists = has_sha(fname, sha)
     if not exists:
         from .debian import apt_install
@@ -223,7 +238,7 @@ def download(url, fname, sha, mode=None):
     return not exists
 
 
-def link(target, source):
+def link(target: Pathy, source: Pathy) -> bool:
     if os.path.lexists(target) and (
         not os.path.exists(target) or not os.path.samefile(source, target)
     ):
@@ -239,12 +254,14 @@ def link(target, source):
         return False
 
 
-def download_executable(url, hash, name=None, path=None):
+def download_executable(
+    url: str, hash: str, name: Optional[str] = None, path: Optional[Pathy] = None
+) -> bool:
     if name is None:
         name = url.split("/")[-1]
     if path is None:
         path = "/usr/local/bin/%s" % name
-    download(
+    return download(
         url,
         path,
         hash,
@@ -252,7 +269,18 @@ def download_executable(url, hash, name=None, path=None):
     )
 
 
-def download_and_unpack(url, hash, name=None, dir_name=None, compressed_root="/opt"):
+class Unpacked(TypedDict):
+    changed: bool
+    dir_name: Pathy
+
+
+def download_and_unpack(
+    url: str,
+    hash: str,
+    name: Optional[str] = None,
+    dir_name: Optional[Pathy] = None,
+    compressed_root: str = "/opt",
+) -> Unpacked:
     if name is None:
         name = url.split("/")[-1]
     compressed_path: str = "%s/%s" % (compressed_root, name)
@@ -290,14 +318,14 @@ def download_and_unpack(url, hash, name=None, dir_name=None, compressed_root="/o
     return {"changed": changed, "dir_name": dir_name}
 
 
-def last_modified(fname):
+def last_modified(fname: Pathy) -> float:
     try:
         return os.stat(fname).st_mtime
     except FileNotFoundError:
         return float(0)
 
 
-def delete(fname: str, quiet: bool = False) -> bool:
+def delete(fname: Pathy, quiet: bool = False) -> bool:
     if os.path.exists(fname):
         if not quiet:
             logging.info("Deleting %s", fname)
@@ -308,7 +336,13 @@ def delete(fname: str, quiet: bool = False) -> bool:
         return False
 
 
-def build_with_command(fname, command, deps=[], force_build=False, directory=None):
+def build_with_command(
+    fname: Pathy,
+    command: str,
+    deps: list[Pathy] = [],
+    force_build: bool = False,
+    directory: Optional[Pathy] = None,
+) -> bool:
     display = command.strip()
     while display.find("  ") != -1:
         display = display.replace("  ", " ")
@@ -338,16 +372,16 @@ def build_with_command(fname, command, deps=[], force_build=False, directory=Non
 
 
 def run_with_marker(
-    fname,
-    command,
-    deps=[],
-    max_age=None,
-    force_build=False,
-    directory=None,
-    run_if_command_changed=True,
+    fname: Pathy,
+    command: str,
+    deps: Sequence[Pathy] = [],
+    max_age: Optional[timedelta] = None,
+    force_build: bool = False,
+    directory: Optional[Pathy] = None,
+    run_if_command_changed: bool = True,
     input: Optional[str] = None,
     dry_run_safe: bool = False,
-):
+) -> bool:
     changed = not os.path.exists(fname) or force_build
     target_modified = last_modified(fname)
     if max_age is not None:
@@ -381,7 +415,7 @@ class MissingCommandException(Exception):
 
 def run_command(
     cmd: str,
-    directory: Optional[str] = None,
+    directory: Optional[Pathy] = None,
     input: Optional[str] = None,
     allowed_exit_codes: List[int] = [0],
     dry_run_safe: bool = False,
@@ -391,6 +425,7 @@ def run_command(
     while display.find("  ") != -1:
         display = display.replace("  ", " ")
     try:
+        process = None
         if directory is not None:
             if run_for_real:
                 logging.info("Run in %s: %s" % (directory, display))
@@ -420,6 +455,7 @@ def run_command(
                 logging.info("Would have run: %s" % display)
 
         if run_for_real:
+            assert process is not None
             (stdout, stderr) = process.communicate(input=input)
             if process.returncode not in allowed_exit_codes:
                 if ": not found" in stderr:

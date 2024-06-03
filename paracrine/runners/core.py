@@ -7,6 +7,7 @@ from typing import Dict, List
 from paracrine import is_dry_run
 
 from ..helpers.config import (
+    ServerDict,
     add_return_data,
     config,
     config_path,
@@ -34,7 +35,7 @@ def hash_fn(key: str, count: int) -> int:
     return sum(bytearray(key.encode("utf-8"))) % count
 
 
-def _index_fn(name: str) -> Dict:
+def _index_fn(name: str) -> ServerDict:
     hosts = config()["servers"]
     try:
         existing_selectors = other_config("selectors.json")
@@ -54,7 +55,7 @@ def use_this_host(name: str) -> bool:
 
 def wireguard_ip_for_machine_for(name: str) -> str:
     use_host = _index_fn(name)
-    return use_host["wireguard_ip"]
+    return use_host.get("wireguard_ip", "<unknown>")
 
 
 def run():

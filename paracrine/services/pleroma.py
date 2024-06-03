@@ -55,10 +55,10 @@ def run():
     set_file_contents_from_template("/var/lib/pleroma/static/robots.txt", "robots.txt")
     make_directory("/etc/pleroma", owner="pleroma")
     config_changes = set_file_contents_from_template(
-        "/etc/pleroma/config.exs", "config.exs.j2", **LOCAL
+        "/etc/pleroma/config.exs", "config.exs.j2", ignore_changes=False, **LOCAL
     )
     db_changes = set_file_contents_from_template(
-        "/opt/pleroma/setup_db.psql", "setup_db.psql.j2", **LOCAL
+        "/opt/pleroma/setup_db.psql", "setup_db.psql.j2", ignore_changes=False, **LOCAL
     )
 
     run_with_marker(

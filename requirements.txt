@@ -84,7 +84,9 @@ mitogen==0.3.7
 more-itertools==9.0.0
     # via jaraco-classes
 nodeenv==1.7.0
-    # via pre-commit
+    # via
+    #   pre-commit
+    #   pyright
 packaging==23.0
     # via
     #   build
@@ -111,6 +113,8 @@ pygments==2.14.0
     #   rich
 pyproject-hooks==1.0.0
     # via build
+pyright==1.1.365
+    # via -r requirements.in
 pytest==7.2.1
     # via
     #   -r requirements.in
@@ -154,6 +158,8 @@ tomli==2.0.1
     #   pytest
 twine==4.0.2
     # via -r requirements.in
+typing-extensions==4.12.1
+    # via paracrine
 urllib3==1.26.14
     # via
     #   requests

@@ -27,6 +27,8 @@ jobs:
                   pip install -r requirements.txt
             - name: Lint with pre-commit
               run: pre-commit run -a
+            - name: Pyright check
+              run: make type-check
             - name: Test with pytest
               run: |
                   pytest -vvv --cov=paracrine --cov-report=term-missing

@@ -1,13 +1,36 @@
 import json
 import os
 import pathlib
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, TypedDict, cast
 
 import jinja2
 import yaml
 from mergedeep import merge
+from typing_extensions import NotRequired
 
 from paracrine import is_dry_run
+
+
+class ServerDict(TypedDict):
+    name: str
+    count: int
+    ssh_hostname: str
+    ssh_port: int
+    ssh_key: str
+    ssh_user: str
+    wireguard_ip: NotRequired[str]
+
+
+class InventoryDict(TypedDict):
+    environment: str
+    data_path: str
+    servers: list[ServerDict]
+
+
+class ConfigDict(TypedDict):
+    environments: Dict[str, object]
+    common: NotRequired[Dict[str, object]]
+
 
 _jinja_env = None
 data = None
@@ -21,25 +44,30 @@ def jinja_env():
 
 
 def host():
+    assert data is not None
     return data["host"]
 
 
-def config():
+def config() -> InventoryDict:
+    assert data is not None
     return data["config"]
 
 
 def data_files():
+    assert data is not None
     return data["data"]
 
 
 def get_config_keys():
+    assert data is not None
     return data["configs"].keys()
 
 
-def get_config_file(fname):
+def get_config_file(fname: str) -> str:
     if fname not in get_config_keys():
         raise KeyError(f"Can't find {fname}. We have: {sorted(get_config_keys())}")
-    return data["configs"][fname]
+
+    return config()[fname]
 
 
 def core_config():
@@ -55,7 +83,7 @@ def set_data(new_data: Dict[str, Any]) -> None:
     data = new_data
 
 
-return_data = {}
+return_data: Dict[object, object] = {}
 
 
 def clear_return_data() -> None:
@@ -68,7 +96,7 @@ def add_return_data(new_data: Dict[str, Any]) -> None:
     merge(return_data, new_data)
 
 
-def get_return_data() -> Dict:
+def get_return_data() -> Dict[object, object]:
     global return_data
     return return_data
 
@@ -106,31 +134,33 @@ def add_folder_to_config(configs, folder, shortname=None, filter=None, prefix=""
             )
 
 
-inventory = None
-inventory_directory = None
+inventory: Optional[InventoryDict] = None
+inventory_directory: Optional[str] = None
 
 
-def set_config(inventory_path):
+def set_config(inventory_path: str) -> None:
     global inventory, inventory_directory
     inventory_directory = os.path.dirname(inventory_path)
     inventory = yaml.safe_load(open(inventory_path))
 
 
-def get_config():
+def get_config() -> InventoryDict:
     if inventory is None:
         assert data is not None
         return data["inventory"]
     return inventory
 
 
-def config_path(shortname=False):
+def config_path(shortname: bool = False) -> str:
     if inventory is None or shortname:
         return "configs"
     else:
-        return os.path.join(data_path(), "configs")
+        dp = data_path()
+        assert dp is not None
+        return os.path.join(dp, "configs")
 
 
-def path_to_config_file(name: str) -> str:
+def path_to_config_file(name: str) -> pathlib.Path:
     if name.find("~") != -1:
         return pathlib.Path(name).expanduser()
     return pathlib.Path(config_path()).joinpath(name)
@@ -139,16 +169,18 @@ def path_to_config_file(name: str) -> str:
 def data_path():
     if inventory is None:
         return None
+    assert inventory_directory is not None
     return os.path.join(inventory_directory, inventory["data_path"])
 
 
 def environment():
     if inventory is None:
+        assert data is not None
         return data["environment"]
     return inventory["environment"]
 
 
-def servers():
+def servers() -> list[ServerDict]:
     try:
         return get_config()["servers"]
     except NotADirectoryError:
@@ -163,7 +195,7 @@ def walk(path):
         yield p.resolve()
 
 
-def create_data(server: Optional[Dict] = None):
+def create_data(server: Optional[ServerDict] = None):
     config = get_config()
     templates = {}
     template_paths = [
@@ -239,16 +271,16 @@ def other_self_config():
     return other_config(host()["name"])
 
 
-def build_config(config: Dict) -> Dict:
+def build_config(config: ConfigDict) -> Dict[str, object]:
     env = environment()
-    LOCAL = config["environments"][env]
-    common = config.get("common", {})
-    ret = dict(**common)
+    LOCAL = cast(Dict[str, object], config["environments"][env])
+    common = cast(Dict[str, object], config.get("common", {}))
+    ret = cast(Dict[str, object], dict(**common))
     ret.update(LOCAL)
     return ret
 
 
-def local_config() -> Dict:
+def local_config() -> ConfigDict:
     return yaml.safe_load(open(CONFIG_NAME).read())
 
 

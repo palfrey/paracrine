@@ -3,6 +3,7 @@ import os
 import sys
 from distutils.version import LooseVersion
 from pathlib import Path
+from typing import Dict, List, TypedDict
 
 from paracrine import dry_run_safe_read, is_dry_run
 
@@ -23,18 +24,11 @@ from ...helpers.fs import (
 from .common import private_key_file, public_key_file, public_key_path, wg_config
 
 
-def get_output(host, command):
-    status, stdout, stderr = host.run_shell_command(command=command)
-    stdout = "".join(stdout)
-    assert status is True, (stdout, stderr)
-    return stdout
-
-
 def get_all_kernel_versions():
     raw = run_command(
         r"dpkg-query --showformat=$\{Package\},$\{Status\},$\{Version\}\\t --show linux-image-*",
     )
-    versions = {}
+    versions: Dict[str, str] = {}
     for line in raw.split("\t"):
         if line.strip() == "":
             continue
@@ -47,7 +41,12 @@ def get_all_kernel_versions():
     return versions
 
 
-def run():
+class ReturnDict(TypedDict):
+    wg_publickey: str
+    host: str
+
+
+def run() -> ReturnDict:
     apt_install(["kmod", "wireguard"])
     try:
         modules = sorted(
@@ -121,7 +120,7 @@ def run():
     }
 
 
-def parse_return(infos):
+def parse_return(infos: List[ReturnDict]) -> None:
     assert len(infos) == 1, infos
     info = infos[0]
     set_file_contents(public_key_path(info["host"]), info["wg_publickey"])

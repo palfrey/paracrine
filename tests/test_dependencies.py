@@ -1,10 +1,10 @@
-from paracrine.deps import maketransmit
+from paracrine.deps import Modules, maketransmit
 from paracrine.runner import generate_dependencies
 from paracrine.services import cockroachdb, wireguard
 
 
 def test_deps_ordering():
-    modules = [wireguard, cockroachdb]
+    modules: Modules = [wireguard, cockroachdb]
     modules = generate_dependencies(modules)
 
     assert maketransmit(modules) == [
