@@ -75,7 +75,7 @@ def render_template(template: str, **kwargs: object) -> str:
 
 
 def set_file_contents_from_template(
-    fname: str, template: str, ignore_changes: bool = False, **kwargs: object
+    fname: Pathy, template: str, ignore_changes: bool = False, **kwargs: object
 ) -> bool:
     return set_file_contents(
         fname,
