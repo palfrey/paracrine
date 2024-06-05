@@ -63,10 +63,12 @@ def apt_is_installed(package: str, wanted_version: Optional[str] = None) -> bool
             continue
         if wanted_version is None:  # existance is enough
             return True
-        status = run_command(f"dpkg-query --status {package}")
+        status = run_command(f"dpkg-query --status {package}", dry_run_safe=True)
         version_pattern_match = _version_pattern.search(status)
         if version_pattern_match is None:
-            raise Exception(f"Failure to match version pattern in '{status}'")
+            raise Exception(
+                f"Failure to match version pattern in '{status}' for {package}"
+            )
         version = version_pattern_match.group(1)
         if version_compare(version, wanted_version) >= 0:
             return True
