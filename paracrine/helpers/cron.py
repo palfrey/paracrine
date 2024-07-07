@@ -1,5 +1,6 @@
 import json
 import pathlib
+import re
 from typing import Optional
 
 from paracrine import is_dry_run
@@ -34,7 +35,9 @@ def set_mailfrom(email: str) -> None:
 
 
 def cron_path(name: str):
-    return f"/etc/cron.d/{name}"
+    # run-parts doesn't like some names
+    run_parts_safe_name = re.sub(r"[^a-zA-Z0-9_-]", "_", name)
+    return f"/etc/cron.d/{run_parts_safe_name}"
 
 
 def create_cron(name: str, schedule: str, user: str, command: str):
