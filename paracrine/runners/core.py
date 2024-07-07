@@ -2,7 +2,7 @@ import json
 import os
 import socket
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, cast
 
 from paracrine import is_dry_run
 
@@ -68,7 +68,17 @@ def run():
         "server_name": host()["name"],
     }
     try:
-        data["network_devices"] = run_command("ip -j address", dry_run_safe=True)
+        raw_network_devices = json.loads(
+            run_command("ip -j address", dry_run_safe=True)
+        )
+        for device in cast(List[Dict], raw_network_devices):
+            for addr in device["addr_info"]:
+                if "valid_life_time" in addr:
+                    del addr["valid_life_time"]
+                if "preferred_life_time" in addr:
+                    del addr["preferred_life_time"]
+        data["network_devices"] = json.dumps(raw_network_devices)
+
     except MissingCommandException:
         if is_dry_run():
             data["network_devices"] = "{}"
@@ -121,4 +131,6 @@ def parse_return(infos: List[Dict]) -> None:
         else:
             raise
 
-    set_file_contents(other_config_file(name), json.dumps(other, indent=2))
+    set_file_contents(
+        other_config_file(name), json.dumps(other, indent=2, sort_keys=True)
+    )
