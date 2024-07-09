@@ -84,7 +84,7 @@ def set_file_contents_from_template(
     )
 
 
-def set_file_contents_from_data(fname: str, data_path: str):
+def set_file_contents_from_data(fname: Pathy, data_path: str):
     return set_file_contents(fname, data_files()[data_path])
 
 
