@@ -7,7 +7,7 @@ from paracrine import dry_run_safe_read
 
 from ..deps import Modules
 from ..helpers import cron
-from ..helpers.config import core_config, local_config, other_config_file
+from ..helpers.config import build_config, core_config, local_config, other_config_file
 from ..helpers.debian import apt_install
 from ..helpers.fs import (
     make_directory,
@@ -29,7 +29,12 @@ def get_dummy_certs() -> bool:
         config = local_config()
     except FileNotFoundError:
         config = core_config()
-    return cast(bool, config.get("dummy_certs", False))
+    dummy_certs = config.get("dummy_certs")
+    if dummy_certs is not None:
+        return dummy_certs
+
+    env = build_config(config)
+    return cast(bool, env.get("DUMMY_CERTS", False))
 
 
 def certbot_for_host(hostname: Union[str, List[str]], email: str) -> Dict[str, object]:
