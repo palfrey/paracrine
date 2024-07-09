@@ -33,12 +33,12 @@ def apt_update():
 
 def add_trusted_key(url: str, name: str, hash: str, armored: bool = True):
     if armored:
+        apt_install(["gpg"])
         download(
             url,
             f"/etc/apt/trusted.gpg.d/{name}.gpg.asc",
             hash,
         )
-        apt_install(["gpg"])
         build_with_command(
             f"/etc/apt/trusted.gpg.d/{name}.gpg",
             f"cat /etc/apt/trusted.gpg.d/{name}.gpg.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/{name}.gpg",
