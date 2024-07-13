@@ -404,7 +404,6 @@ def run_with_marker(
     directory: Optional[Pathy] = None,
     run_if_command_changed: bool = True,
     input: Optional[str] = None,
-    dry_run_safe: bool = False,
 ) -> bool:
     changed = not os.path.exists(fname) or force_build
     target_modified = last_modified(fname)
@@ -424,10 +423,8 @@ def run_with_marker(
         changed = old_command != command
 
     if changed:
-        run_command(
-            command, directory=directory, input=input, dry_run_safe=dry_run_safe
-        )
-        if dry_run_safe or not is_dry_run():
+        run_command(command, directory=directory, input=input)
+        if not is_dry_run():
             open(fname, "w").write(command)
 
     return changed
