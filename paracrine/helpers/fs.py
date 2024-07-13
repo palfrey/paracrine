@@ -495,7 +495,7 @@ def run_command_raw(
             stderr = b""
             DUMP_COMMAND = os.environ.get(
                 "DUMP_COMMAND", "false"
-            ).lower() == "true" and not (cmd.startswith("cat"))
+            ).lower() == "true" and not (cmd.startswith("cat") or cmd.startswith("su"))
             if input is not None:
                 assert process.stdin is not None
                 process.stdin.write(input)
