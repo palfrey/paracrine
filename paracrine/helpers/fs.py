@@ -440,7 +440,7 @@ class MissingCommandException(Exception):
 def non_breaking_communicate(proc: subprocess.Popen) -> Tuple[bytes, bytes]:
     assert proc.stdout is not None
     assert proc.stderr is not None
-    working = select.select([proc.stdout, proc.stderr], [], [])[0]
+    working = select.select([proc.stdout, proc.stderr], [], [], 10)[0]
     if len(working) > 0:
         if working[0] == proc.stdout:
             return (proc.stdout.read(), b"")
