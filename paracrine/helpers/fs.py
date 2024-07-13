@@ -477,6 +477,10 @@ def run_command(
             stdout = ""
             stderr = ""
             DUMP_COMMAND = os.environ.get("DUMP_COMMAND", "false").lower() == "true"
+            if input is not None:
+                assert process.stdin is not None
+                process.stdin.write(input)
+                process.stdin.close()
             while True:
 
                 def get_output() -> bool:
