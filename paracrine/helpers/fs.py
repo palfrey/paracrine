@@ -443,9 +443,9 @@ def non_breaking_communicate(proc: subprocess.Popen) -> Tuple[bytes, bytes]:
     working = select.select([proc.stdout, proc.stderr], [], [])[0]
     if len(working) > 0:
         if working[0] == proc.stdout:
-            return (proc.stdout.readline(), b"")
+            return (proc.stdout.read(), b"")
         else:
-            return (b"", proc.stderr.readline())
+            return (b"", proc.stderr.read())
     else:
         return (b"", b"")
 
