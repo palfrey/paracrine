@@ -478,16 +478,24 @@ def run_command(
             stderr = ""
             DUMP_COMMAND = os.environ.get("DUMP_COMMAND", "false").lower() == "true"
             while True:
-                (new_stdout, new_stderr) = non_breaking_communicate(process)
-                stdout += new_stdout
-                if DUMP_COMMAND and new_stdout != "":
-                    print(new_stdout, end=None)
-                stderr += new_stderr
-                if DUMP_COMMAND and new_stderr != "":
-                    print(new_stderr, end=None)
+
+                def get_output() -> bool:
+                    nonlocal stdout, stderr
+                    (new_stdout, new_stderr) = non_breaking_communicate(process)
+                    stdout += new_stdout
+                    if DUMP_COMMAND and new_stdout != "":
+                        print(new_stdout, end=None)
+                    stderr += new_stderr
+                    if DUMP_COMMAND and new_stderr != "":
+                        print(new_stderr, end=None)
+                    return new_stderr != "" or new_stderr != ""
+
+                get_output()
                 maybe_returncode = process.poll()
                 if maybe_returncode is None:
                     continue
+                while get_output():
+                    pass
                 if maybe_returncode not in allowed_exit_codes:
                     if ": not found" in stderr:
                         # missing command
