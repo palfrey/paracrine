@@ -488,6 +488,10 @@ def run_command_raw(
 
         if run_for_real:
             assert process is not None
+            assert process.stdout is not None
+            os.set_blocking(process.stdout.fileno(), False)
+            assert process.stderr is not None
+            os.set_blocking(process.stderr.fileno(), False)
             stdout = b""
             stderr = b""
             DUMP_COMMAND = os.environ.get(
