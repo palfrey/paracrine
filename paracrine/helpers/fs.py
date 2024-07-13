@@ -5,12 +5,13 @@ import logging
 import os
 import pwd
 import re
+import select
 import stat
 import subprocess
 from datetime import datetime, timedelta
 from difflib import unified_diff
 from pathlib import Path
-from typing import List, Optional, Sequence, Union
+from typing import List, Optional, Sequence, Tuple, Union
 
 from typing_extensions import TypedDict
 
@@ -415,6 +416,21 @@ class MissingCommandException(Exception):
     pass
 
 
+def non_breaking_communicate(
+    proc: subprocess.Popen[str], timeout: int = 10
+) -> Tuple[str, str]:
+    assert proc.stdout is not None
+    assert proc.stderr is not None
+    working = select.select([proc.stdout, proc.stderr], [], [], timeout)[0]
+    if len(working) > 0:
+        if working[0] == proc.stdout:
+            return (proc.stdout.readline(), "")
+        else:
+            return ("", proc.stderr.readline())
+    else:
+        return ("", "")
+
+
 def run_command(
     cmd: str,
     directory: Optional[Pathy] = None,
@@ -458,16 +474,30 @@ def run_command(
 
         if run_for_real:
             assert process is not None
-            (stdout, stderr) = process.communicate(input=input)
-            if process.returncode not in allowed_exit_codes:
-                if ": not found" in stderr:
-                    # missing command
-                    raise MissingCommandException
-                assert process.returncode in allowed_exit_codes, (
-                    process.returncode,
-                    stdout,
-                    stderr,
-                )
+            stdout = ""
+            stderr = ""
+            DUMP_COMMAND = os.environ.get("DUMP_COMMAND", "false").lower() == "true"
+            while True:
+                (new_stdout, new_stderr) = non_breaking_communicate(process)
+                stdout += new_stdout
+                if DUMP_COMMAND and new_stdout != "":
+                    print(new_stdout, end=None)
+                stderr += new_stderr
+                if DUMP_COMMAND and new_stderr != "":
+                    print(new_stderr, end=None)
+                maybe_returncode = process.poll()
+                if maybe_returncode is None:
+                    continue
+                if maybe_returncode not in allowed_exit_codes:
+                    if ": not found" in stderr:
+                        # missing command
+                        raise MissingCommandException
+                    assert process.returncode in allowed_exit_codes, (
+                        process.returncode,
+                        stdout,
+                        stderr,
+                    )
+                break
             return stdout
         else:
             return ""
