@@ -310,7 +310,7 @@ def download_and_unpack(
             run_command("tar --directory=%s -Jxvf %s" % (dir_name, compressed_path))
         elif compressed_path.endswith("zip"):
             apt_install(["unzip"])
-            run_command("unzip %s -d %s -q" % (compressed_path, dir_name))
+            run_command("unzip -q %s -d %s" % (compressed_path, dir_name))
         else:
             raise Exception(compressed_path)
 
