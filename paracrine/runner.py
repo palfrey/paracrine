@@ -79,6 +79,7 @@ def main(router: Router, func: Callable[..., Any], *args: Any, **kwargs: Any) ->
                         "identity_file": key_path,
                         "check_host_keys": "accept",
                         "python_path": "python3",
+                        "ssh_args": ["-o", "SendEnv DUMP_COMMAND"],
                     },
                 )
             except StreamError:
