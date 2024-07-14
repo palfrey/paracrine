@@ -33,6 +33,8 @@ jobs:
               run: |
                   pytest -vvv --cov=paracrine --cov-report=term-missing
             - name: Integration tests
+              env:
+                  DUMP_COMMAND: true
               run: |
                   set -eux -o pipefail
                   # Need -e install for pytest, but real install for mitogen to work

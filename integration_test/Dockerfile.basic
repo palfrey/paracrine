@@ -4,3 +4,4 @@ RUN apt-get update && apt-get install -y --no-install-recommends openssh-server 
 COPY systemctl.py /app
 RUN ln -s /app/systemctl.py /bin/systemctl
 COPY ./docker/configs/test_key.pub /root/.ssh/authorized_keys
+RUN sed -i 's/AcceptEnv LANG LC_\*/AcceptEnv LANG LC_* DUMP_COMMAND/' /etc/ssh/sshd_config

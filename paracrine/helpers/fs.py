@@ -5,12 +5,13 @@ import logging
 import os
 import pwd
 import re
+import select
 import stat
 import subprocess
 from datetime import datetime, timedelta
 from difflib import unified_diff
 from pathlib import Path
-from typing import List, Optional, Sequence, Union
+from typing import List, Optional, Sequence, Tuple, Union, cast
 
 from typing_extensions import TypedDict
 
@@ -309,7 +310,7 @@ def download_and_unpack(
             run_command("tar --directory=%s -Jxvf %s" % (dir_name, compressed_path))
         elif compressed_path.endswith("zip"):
             apt_install(["unzip"])
-            run_command("unzip %s -d %s" % (compressed_path, dir_name))
+            run_command("unzip -q %s -d %s" % (compressed_path, dir_name))
         else:
             raise Exception(compressed_path)
 
@@ -344,6 +345,7 @@ def build_with_command(
     deps: List[Pathy] = [],
     force_build: bool = False,
     directory: Optional[Pathy] = None,
+    binary: bool = False,
 ) -> bool:
     display = command.strip()
     while display.find("  ") != -1:
@@ -355,19 +357,39 @@ def build_with_command(
             logging.info("%s is younger than %s" % (dep, fname))
             changed = True
             break
-    if not os.path.exists(fname) or changed:
+    existing_target = os.path.exists(fname)
+    if not existing_target or changed:
         logging.info("Building %s" % fname)
         if command.find("|") != -1:
-            out = ""
+            out = b"" if binary else ""
             commands = command.split("|")
             for command in commands:
+                print(f"running with {len(out)} bytes of input")
                 try:
-                    out = run_command(command, input=out, directory=directory)
+                    if binary:
+                        out = run_command_raw(
+                            command, input=cast(bytes, out), directory=directory
+                        )
+                    else:
+                        out = run_command(
+                            command, input=cast(str, out), directory=directory
+                        )
                 except subprocess.CalledProcessError:
                     print("Ran '%s' with input '%s'" % (command, out))
+                    if not existing_target:
+                        delete(fname)
+                    raise
+                except Exception:
+                    if not existing_target:
+                        delete(fname)
                     raise
         else:
-            run_command(command, directory=directory)
+            try:
+                run_command(command, directory=directory)
+            except Exception:
+                if not existing_target:
+                    delete(fname)
+                raise
         return True
     else:
         return False
@@ -382,7 +404,6 @@ def run_with_marker(
     directory: Optional[Pathy] = None,
     run_if_command_changed: bool = True,
     input: Optional[str] = None,
-    dry_run_safe: bool = False,
 ) -> bool:
     changed = not os.path.exists(fname) or force_build
     target_modified = last_modified(fname)
@@ -402,10 +423,8 @@ def run_with_marker(
         changed = old_command != command
 
     if changed:
-        run_command(
-            command, directory=directory, input=input, dry_run_safe=dry_run_safe
-        )
-        if dry_run_safe or not is_dry_run():
+        run_command(command, directory=directory, input=input)
+        if not is_dry_run():
             open(fname, "w").write(command)
 
     return changed
@@ -415,13 +434,26 @@ class MissingCommandException(Exception):
     pass
 
 
-def run_command(
+def non_breaking_communicate(proc: subprocess.Popen) -> Tuple[bytes, bytes]:
+    assert proc.stdout is not None
+    assert proc.stderr is not None
+    working = select.select([proc.stdout, proc.stderr], [], [], 10)[0]
+    if len(working) > 0:
+        if working[0] == proc.stdout:
+            return (proc.stdout.read(), b"")
+        else:
+            return (b"", proc.stderr.read())
+    else:
+        return (b"", b"")
+
+
+def run_command_raw(
     cmd: str,
     directory: Optional[Pathy] = None,
-    input: Optional[str] = None,
+    input: Optional[bytes] = None,
     allowed_exit_codes: List[int] = [0],
     dry_run_safe: bool = False,
-) -> str:
+) -> bytes:
     run_for_real = dry_run_safe or not is_dry_run()
     display = cmd.strip()
     while display.find("  ") != -1:
@@ -438,7 +470,6 @@ def run_command(
                         stderr=subprocess.PIPE,
                         shell=True,
                         stdin=subprocess.PIPE,
-                        encoding="utf-8",
                     )
             else:
                 logging.info("Would have run in %s: %s" % (directory, display))
@@ -451,26 +482,71 @@ def run_command(
                     stderr=subprocess.PIPE,
                     shell=True,
                     stdin=subprocess.PIPE,
-                    encoding="utf-8",
                 )
             else:
                 logging.info("Would have run: %s" % display)
 
         if run_for_real:
             assert process is not None
-            (stdout, stderr) = process.communicate(input=input)
-            if process.returncode not in allowed_exit_codes:
-                if ": not found" in stderr:
-                    # missing command
-                    raise MissingCommandException
-                assert process.returncode in allowed_exit_codes, (
-                    process.returncode,
-                    stdout,
-                    stderr,
-                )
+            assert process.stdout is not None
+            os.set_blocking(process.stdout.fileno(), False)
+            assert process.stderr is not None
+            os.set_blocking(process.stderr.fileno(), False)
+            stdout = b""
+            stderr = b""
+            DUMP_COMMAND = os.environ.get("DUMP_COMMAND", "false").lower() == "true"
+            assert process.stdin is not None
+            if input is not None:
+                process.stdin.write(input)
+            process.stdin.close()
+            while True:
+
+                def get_output() -> bool:
+                    nonlocal stdout, stderr
+                    (new_stdout, new_stderr) = non_breaking_communicate(process)
+                    stdout += new_stdout
+                    if DUMP_COMMAND and new_stdout != b"":
+                        print(new_stdout.decode("utf-8"), end=None)
+                    stderr += new_stderr
+                    if DUMP_COMMAND and new_stderr != b"":
+                        print(new_stderr.decode("utf-8"), end=None)
+                    return new_stdout != b"" or new_stderr != b""
+
+                get_output()
+                maybe_returncode = process.poll()
+                if maybe_returncode is None:
+                    continue
+                while get_output():
+                    pass
+                if maybe_returncode not in allowed_exit_codes:
+                    if b": not found" in stderr:
+                        # missing command
+                        raise MissingCommandException
+                    assert process.returncode in allowed_exit_codes, (
+                        process.returncode,
+                        stdout,
+                        stderr,
+                    )
+                break
             return stdout
         else:
-            return ""
+            return b""
     except subprocess.CalledProcessError as e:
         print(e.output)
         raise
+
+
+def run_command(
+    cmd: str,
+    directory: Optional[Pathy] = None,
+    input: Union[str, bytes, None] = None,
+    allowed_exit_codes: List[int] = [0],
+    dry_run_safe: bool = False,
+) -> str:
+    if input is None or isinstance(input, bytes):
+        real_input = input
+    else:
+        real_input = cast(str, input).encode("utf-8")
+    return run_command_raw(
+        cmd, directory, real_input, allowed_exit_codes, dry_run_safe
+    ).decode("utf-8")
