@@ -83,8 +83,9 @@ def apt_install(
     target_release: Optional[str] = None,
 ) -> bool:
     global host_arch
-    if host_arch is None and packages != ["dpkg-dev"]:
-        apt_install(["dpkg-dev"])
+    dpkg_dev_req: Dict[str, Optional[str]] = {"dpkg-dev": "1.19"}
+    if host_arch is None and packages != dpkg_dev_req:
+        apt_install(dpkg_dev_req)
         host_arch_path = Path("/opt/host-arch")
         build_with_command(
             host_arch_path, f"dpkg-architecture -q DEB_HOST_ARCH > {host_arch_path}"
@@ -108,10 +109,10 @@ def apt_install(
     # Confdef is to fix https://unix.stackexchange.com/a/416816/73838
     os.environ["DEBIAN_FRONTEND"] = "noninteractive"
     cmd = (
-        "apt-get install %s --no-install-recommends --yes -o DPkg::Options::=--force-confdef"
-        % " ".join(
+        'apt-get satisfy "%s" --no-install-recommends --yes -o DPkg::Options::=--force-confdef'
+        % ", ".join(
             [
-                name if version is None else f"{name}>={version}"
+                name if version is None else f"{name} (>= {version})"
                 for (name, version) in to_install.items()
             ]
         )
