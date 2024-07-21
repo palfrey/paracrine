@@ -1,23 +1,20 @@
 Vagrant.configure(2) do |config|
-  config.vm.box = "bento/debian-11.3"
+  config.vm.box = "debian/bullseye64"
   config.vm.box_check_update = false
 
-  if Vagrant.has_plugin?("vagrant-vbguest")
-    config.vbguest.auto_update = false
+  config.vm.synced_folder ".", "/vagrant", type: "rsync"
+
+  config.vm.provider :libvirt do |p|
+    p.cpus = 2
+    p.memory = 2048
   end
 
-  config.vm.provider :virtualbox do |p|
-    p.customize ["modifyvm", :id, "--cableconnected1", "on"]
-    p.customize ["modifyvm", :id, "--memory", 2048]
-    p.customize ["modifyvm", :id, "--cpus", 2]
-  end
-
-  servers = {0 => {"ip" => "10.0.0.10"}, 1 =>{"ip"=> "10.0.0.11"}, 2=>{"ip"=> "10.0.0.12"}}
+  servers = {0 => {"ip" => "192.168.56.2"}, 1 =>{"ip"=> "192.168.56.3"}, 2=>{"ip"=> "192.168.56.4"}, 3 => {"ip" => "192.168.56.5"}}
   servers.each do |key, value|
     config.vm.define "server#{key}" do |server|
       server.vm.network :private_network, ip: value["ip"]
       if key == 0
-        server.vm.network "forwarded_port", guest: 8080, host: 8080
+        server.vm.network "forwarded_port", guest: 9080, host: 9080
       end
     end
   end
