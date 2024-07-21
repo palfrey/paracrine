@@ -1,4 +1,3 @@
-import json
 import os
 import sys
 from distutils.version import LooseVersion
@@ -9,13 +8,7 @@ from typing_extensions import TypedDict
 
 from paracrine import dry_run_safe_read, is_dry_run
 
-from ...helpers.config import (
-    get_config,
-    host,
-    in_docker,
-    network_config,
-    other_config_file,
-)
+from ...helpers.config import host, in_docker
 from ...helpers.debian import apt_install
 from ...helpers.fs import (
     MissingCommandException,
@@ -126,14 +119,3 @@ def parse_return(infos: List[ReturnDict]) -> None:
     assert len(infos) == 1, infos
     info = infos[0]
     set_file_contents(public_key_path(info["host"]), info["wg_publickey"])
-
-    wg_ips = []
-
-    for server in get_config()["servers"]:
-        networks = network_config(server["name"])
-        wireguard_networks = [
-            network for network in networks if network["ifname"] == "wg0"
-        ]
-        if len(wireguard_networks) == 1:
-            wg_ips.append(wireguard_networks[0]["addr_info"][0]["local"])
-    set_file_contents(other_config_file("wireguard-ips"), json.dumps(wg_ips, indent=2))
