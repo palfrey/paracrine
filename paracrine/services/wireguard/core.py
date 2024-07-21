@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from paracrine import dry_run_safe_read
+from paracrine import dry_run_safe_read, is_dry_run
 
 from ...helpers.config import config, get_config_file, host, in_docker
 from ...helpers.fs import set_file_contents_from_template
@@ -19,7 +19,14 @@ def setup(name: str = "wg0", ip: str = "192.168.2.1", netmask: int = 24):
     for h in config()["servers"]:
         if h["name"] == host()["name"]:
             continue
-        public_key = get_config_file(public_key_path(h["name"]))
+        try:
+            public_key = get_config_file(public_key_path(h["name"]))
+        except KeyError:
+            if is_dry_run():
+                # Would expect missing keys on dry run
+                continue
+            else:
+                raise
         peers[h["name"]] = {
             "public_key": public_key,
             "endpoint": "%s:51820" % external_ip(h),
