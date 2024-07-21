@@ -6,11 +6,14 @@ options = {}
 
 def dependencies():
     from . import init
+    from .common import calculate_version
+
+    options["versions"] = calculate_version(options.get("versions"))
 
     return [(init, options)]
 
 
-def make_user(username: str, password: str):
+def make_user(version: str, username: str, password: str):
     from .common import CERTS_DIR, HOME_DIR, cockroach_binary
 
     user_dir = HOME_DIR.joinpath("users")
@@ -18,12 +21,12 @@ def make_user(username: str, password: str):
     SQL_PORT = options.get("SQL_PORT", 26258)
     run_with_marker(
         user_dir.joinpath(username),
-        f"{cockroach_binary} sql --certs-dir={CERTS_DIR} --host={wireguard_ip()}:{SQL_PORT} --execute \"CREATE USER {username} WITH PASSWORD '{password}';\"",
+        f"{cockroach_binary(version)} sql --certs-dir={CERTS_DIR} --host={wireguard_ip()}:{SQL_PORT} --execute \"CREATE USER {username} WITH PASSWORD '{password}';\"",
         run_if_command_changed=False,
     )
 
 
-def make_db(name: str, owner: str):
+def make_db(version: str, name: str, owner: str):
     from .common import CERTS_DIR, HOME_DIR, cockroach_binary
 
     data_dir = HOME_DIR.joinpath("databases")
@@ -31,6 +34,6 @@ def make_db(name: str, owner: str):
     SQL_PORT = options.get("SQL_PORT", 26258)
     run_with_marker(
         data_dir.joinpath(name),
-        f'{cockroach_binary} sql --certs-dir={CERTS_DIR} --host={wireguard_ip()}:{SQL_PORT} --execute="CREATE DATABASE {name} OWNER {owner};"',
+        f'{cockroach_binary(version)} sql --certs-dir={CERTS_DIR} --host={wireguard_ip()}:{SQL_PORT} --execute="CREATE DATABASE {name} OWNER {owner};"',
         run_if_command_changed=False,
     )

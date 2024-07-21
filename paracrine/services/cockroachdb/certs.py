@@ -12,19 +12,26 @@ from ...helpers.fs import (
 )
 from ...helpers.network import wireguard_ips
 from ...runners.core import use_this_host
-from .common import binary_path, cockroach_hash, cockroach_url, local_node_ip
+from .common import (
+    binary_path,
+    cockroach_url,
+    cockroach_versions,
+    local_node_ip,
+    version_for_host,
+)
 
 options = {}
 
 
 def run():
+    version = version_for_host(options["versions"])
     if not use_this_host("cockroach-certs"):
         return None
     unpacked = download_and_unpack(
-        cockroach_url,
-        cockroach_hash,
+        cockroach_url(version),
+        cockroach_versions[version]["hash"],
     )
-    cockroach = Path(unpacked["dir_name"]).joinpath(binary_path)
+    cockroach = Path(unpacked["dir_name"]).joinpath(binary_path(version))
     certs_dir = Path("/opt/cockroach/certs")
     make_directory(certs_dir)
     ca_key_path = certs_dir.joinpath("ca.key")

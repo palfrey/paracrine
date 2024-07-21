@@ -22,9 +22,10 @@ from .common import (
     HOME_DIR,
     USER,
     binary_path,
-    cockroach_hash,
     cockroach_url,
+    cockroach_versions,
     local_node_ip,
+    version_for_host,
 )
 
 options = {}
@@ -33,15 +34,16 @@ urllib3.disable_warnings()
 
 
 def dependencies():
-    return [certs, wireguard]
+    return [(certs, {"versions": options["versions"]}), wireguard]
 
 
 def run():
+    version = version_for_host(options["versions"])
     unpacked = download_and_unpack(
-        cockroach_url,
-        cockroach_hash,
+        cockroach_url(version),
+        cockroach_versions[version]["hash"],
     )
-    cockroach_path = Path(unpacked["dir_name"]).joinpath(binary_path)
+    cockroach_path = Path(unpacked["dir_name"]).joinpath(binary_path(version))
     adduser(USER, HOME_DIR)
     make_directory(CERTS_DIR)
     file_changes = False
