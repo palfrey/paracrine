@@ -1,4 +1,3 @@
-from ...helpers.config import in_docker
 from ...helpers.fs import run_with_marker
 from ...runners.core import use_this_host
 from . import certs, node
@@ -12,8 +11,7 @@ def dependencies():
 
 
 def run():
-    # FIXME: Can't make node start work in docker
-    if in_docker() or not use_this_host("cockroach-init"):
+    if not use_this_host("cockroach-init"):
         return
     COCKROACH_PORT = options.get("COCKROACH_PORT", 26257)
     run_with_marker(

@@ -4,7 +4,7 @@ from pathlib import Path
 import requests
 import urllib3
 
-from ...helpers.config import get_config_file, get_config_keys, in_docker
+from ...helpers.config import get_config_file, get_config_keys
 from ...helpers.fs import (
     download_and_unpack,
     make_directory,
@@ -97,11 +97,9 @@ def run():
             logging.warning("Can't connect to Cockroach health endpoint, so restarting")
             needs_restart = True
 
-    # FIXME: Can't make this work in Docker
-    if not in_docker():
-        systemd_set(
-            "cockroach",
-            enabled=True,
-            running=True,
-            restart=needs_restart,
-        )
+    systemd_set(
+        "cockroach",
+        enabled=True,
+        running=True,
+        restart=needs_restart,
+    )
