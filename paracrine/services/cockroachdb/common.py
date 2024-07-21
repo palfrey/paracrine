@@ -21,7 +21,13 @@ def cockroach_binary(cockroach_version: str) -> str:
 cockroach_versions = {
     "23.1.1": {
         "hash": "8197562ce59d1ac4f53f67c9d277827d382db13c5e650980942bcb5e5104bb4e"
-    }
+    },
+    "23.2.8": {
+        "hash": "4f92e2076a995e2b00181594722bd807415c1b2754154274083a7aa0f5da83a3"
+    },
+    "24.1.2": {
+        "hash": "eff2aa8c79f3668aa81e4c123e64870343690ff1772ea1be4c06d18a161dae70"
+    },
 }
 
 HOME_DIR = Path("/var/lib/cockroach")
