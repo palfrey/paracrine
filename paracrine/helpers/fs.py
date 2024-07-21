@@ -346,11 +346,17 @@ def build_with_command(
     force_build: bool = False,
     directory: Optional[Pathy] = None,
     binary: bool = False,
+    run_if_command_changed: bool = True,
 ) -> bool:
     display = command.strip()
     while display.find("  ") != -1:
         display = display.replace("  ", " ")
-    changed = set_file_contents("%s.command" % fname, display) or force_build
+    changed = (
+        set_file_contents(
+            "%s.command" % fname, display, ignore_changes=not run_if_command_changed
+        )
+        or force_build
+    )
     target_modified = last_modified(fname)
     for dep in deps:
         if last_modified(dep) > target_modified:

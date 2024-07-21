@@ -38,12 +38,14 @@ def run():
     build_with_command(
         ca_key_path,
         f"{cockroach} cert create-ca --certs-dir={certs_dir} --ca-key={ca_key_path} --overwrite --allow-ca-key-reuse",
+        run_if_command_changed=False,
     )
     root_key_path = certs_dir.joinpath("client.root.key")
     build_with_command(
         root_key_path,
         f"{cockroach} cert create-client root --certs-dir={certs_dir} --ca-key={ca_key_path} --overwrite",
         deps=[ca_key_path],
+        run_if_command_changed=False,
     )
 
     node_keys = {}
@@ -56,6 +58,7 @@ def run():
             crt_path,
             f"{cockroach} cert create-node localhost {ip} --certs-dir={certs_dir} --ca-key={ca_key_path} --overwrite && mv {certs_dir.joinpath('node.crt')} {crt_path} && mv {certs_dir.joinpath('node.key')} {key_path}",
             deps=[ca_key_path],
+            run_if_command_changed=False,
         )
         node_keys[ip] = {
             "crt": dry_run_safe_read(crt_path, "fake crt"),
