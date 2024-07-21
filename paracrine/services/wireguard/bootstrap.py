@@ -75,15 +75,18 @@ def run() -> ReturnDict:
             key=LooseVersion,
             reverse=True,
         )
-        highest = ordered[0]
-        current = run_command("uname -r").strip()
-        if current != highest:
-            print(ordered)
-            print("'%s' != '%s'" % (current, highest))
-            apt_install(["systemd-sysv"])
-            if not in_docker():
-                run_command("reboot")
-                sys.exit(0)
+        if len(ordered) > 0:
+            highest = ordered[0]
+            current = run_command("uname -r").strip()
+            if current != highest:
+                print(ordered)
+                print("'%s' != '%s'" % (current, highest))
+                apt_install(["systemd-sysv"])
+                if not in_docker():
+                    run_command("reboot")
+                    sys.exit(0)
+        elif not is_dry_run():
+            raise Exception("No kernel package versions found!")
 
         if not in_docker():
             apt_install(["linux-headers-amd64"])
