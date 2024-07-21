@@ -519,7 +519,7 @@ def run_command_raw(
                 while get_output():
                     pass
                 if maybe_returncode not in allowed_exit_codes:
-                    if b": not found" in stderr:
+                    if b": not found" in stderr or process.returncode == 127:
                         # missing command
                         raise MissingCommandException
                     assert process.returncode in allowed_exit_codes, (
