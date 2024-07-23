@@ -227,9 +227,9 @@ def download(
     if not exists:
         from .debian import apt_install
 
+        apt_install(["curl", "ca-certificates"])
+        run_command("curl -Lo %s %s" % (fname, url))
         if not is_dry_run():
-            apt_install(["curl", "ca-certificates"])
-            run_command("curl -Lo %s %s" % (fname, url))
             existing_sha = sha_file(fname)
             assert existing_sha == sha, (existing_sha, sha)
 
