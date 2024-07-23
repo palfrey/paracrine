@@ -15,11 +15,9 @@ from typing import List, Optional, Sequence, Tuple, Union, cast
 
 from typing_extensions import TypedDict
 
-from paracrine import is_dry_run
+from paracrine import Pathy, is_dry_run
 
 from .config import data_files, jinja_env
-
-Pathy = Union[str, Path]
 
 
 def hash_data(data: bytes) -> str:
