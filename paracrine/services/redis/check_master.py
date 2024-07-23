@@ -20,7 +20,7 @@ def run():
 
 
 def parse_return(infos: List[Dict]) -> None:
-    existing_masters = get_existing_masters(True)
-    existing_masters.append(infos[0]["master_ip"])
+    existing_masters = set(get_existing_masters(True))
+    existing_masters.add(infos[0]["master_ip"])
     master_path = other_config_file(MASTER_FILE)
-    set_file_contents(master_path, json.dumps(existing_masters, indent=2))
+    set_file_contents(master_path, json.dumps(list(existing_masters), indent=2))
