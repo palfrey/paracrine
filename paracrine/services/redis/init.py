@@ -1,5 +1,7 @@
+from paracrine import is_dry_run
+
 from ...helpers.config import build_config, core_config
-from ...helpers.fs import run_command
+from ...helpers.fs import MissingCommandException, run_command
 from ...helpers.network import wireguard_ip, wireguard_ips
 from . import check_master, node
 from .common import get_master_ip
@@ -17,9 +19,16 @@ def run():
 
     LOCAL = build_config(core_config())
 
-    output = run_command(
-        f"redis-cli -a {LOCAL['REDIS_PASSWORD']} -h {local_ip} info replication"
-    )
+    try:
+        output = run_command(
+            f"redis-cli -a {LOCAL['REDIS_PASSWORD']} -h {local_ip} info replication",
+            dry_run_safe=True,
+        )
+    except MissingCommandException:
+        if is_dry_run():
+            return
+        else:
+            raise
     if "role:slave" in output:
         assert f"master_host:{master_ip}" in output, output
         assert "master_link_status:up" in output, output
@@ -31,10 +40,9 @@ def run():
             assert f"ip={ip},port=6379,state=online" in output, output
 
     output = run_command(
-        f"redis-cli -a {LOCAL['REDIS_PASSWORD']} -h {local_ip} -p 26379 info sentinel"
+        f"redis-cli -a {LOCAL['REDIS_PASSWORD']} -h {local_ip} -p 26379 info sentinel",
+        dry_run_safe=True,
     )
     count = len(wireguard_ips())
-    assert (
-        f"master0:name=mymaster,status=ok,address={master_ip}:6379,slaves={count-1},sentinels={count}"
-        in output
-    ), output
+    expected = f"master0:name=mymaster,status=ok,address={master_ip}:6379,slaves={count-1},sentinels={count}"
+    assert expected in output, (expected, output)
