@@ -23,7 +23,7 @@ def dependencies():
 
 
 def run():
-    apt_install(["redis-sentinel", "redis-server"])
+    apt_install(["redis-sentinel", "redis-server", "redis-tools"])
     LOCAL = build_config(core_config())
     local_ip = wireguard_ip()
     master_ip = get_master_ip()
