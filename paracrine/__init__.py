@@ -9,7 +9,7 @@ It's named after [Paracrine signaling](https://en.wikipedia.org/wiki/Paracrine_s
 Usage
 -----
 
-1. Setup Python. Tested against 3.8+
+1. Setup Python. Tested against 3.9+
 2. `pip install paracrine`
 3. Write a main file describing what you want to setup. [integration_test/main.py](https://github.com/palfrey/paracrine/blob/main/integration_test/main.py) is a reasonable example. It must call the `run` function, which takes arguments for the inventory file, and list of modules to run.
 4. Write an inventory file for the machines this is managing. Current setup assumes they're all the same. [integration_test/docker/inventory.yaml](https://github.com/palfrey/paracrine/blob/main/integration_test/docker/inventory.yaml) is a reasonable example file, but I suggest generating it from whatever you're using to create the servers (e.g. Terraform).

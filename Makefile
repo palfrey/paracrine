@@ -15,7 +15,7 @@ docs:
 .PHONY: docs
 
 type-check:
-	python -m pyright --pythonversion 3.8 paracrine integration_test tests
+	python -m pyright --pythonversion 3.9 paracrine integration_test tests
 
 watch-type-check:
-	python -m pyright --pythonversion 3.8 --watch paracrine integration_test tests
+	python -m pyright --pythonversion 3.9 --watch paracrine integration_test tests
