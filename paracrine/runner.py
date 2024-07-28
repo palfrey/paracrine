@@ -62,7 +62,7 @@ def main(router: Router, func: Callable[..., Any], *args: Any, **kwargs: Any) ->
         port = 22 if wg else server.get("ssh_port", 22)
         cache_key = f"{hostname}-{port}"
         if cache_key not in ssh_cache:
-            key_path = path_to_config_file(server["ssh_key"])
+            key_path = path_to_config_file(server["ssh_key"]).resolve()
             if not os.path.exists(key_path):
                 raise Exception(f"Can't find ssh key {key_path}")
             username = server["ssh_user"]

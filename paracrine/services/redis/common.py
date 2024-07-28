@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import re
 
@@ -47,17 +48,18 @@ def get_master_ip():
         return best_masters[0]
 
     if not apt_is_installed("redis-tools"):
-        return wireguard_ip_for_machine_for("redis-master")
+        return None
 
-    LOCAL = build_config(core_config())
     local_ip = wireguard_ip()
+    LOCAL = build_config(core_config())
     try:
         output = run_command(
-            f"redis-cli -a {LOCAL['REDIS_PASSWORD']} -h {local_ip} info replication"
+            f"redis-cli -a {LOCAL['REDIS_PASSWORD']} -h {local_ip} info replication",
+            dry_run_safe=True,
         )
     except AssertionError:
         # redis isn't up
-        return wireguard_ip_for_machine_for("redis-master")
+        return None
     if "role:master" in output and ",port=6379,state=online" in output:
         master_ip = local_ip
     else:
@@ -67,4 +69,5 @@ def get_master_ip():
         else:
             master_ip = wireguard_ip_for_machine_for("redis-master")
 
+    logging.info(f"Redis master for {local_ip} is {master_ip}")
     return master_ip

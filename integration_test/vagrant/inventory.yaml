@@ -3,23 +3,26 @@ environment: vagrant
 data_path: .
 servers:
     - name: server0
-      count: 0
-      ssh_hostname: localhost
-      ssh_port: 2222
-      ssh_key: ../../.vagrant/machines/server0/virtualbox/private_key
+      ssh_hostname: 192.168.121.254
+      ssh_port: 22
+      ssh_key: ../../.vagrant/machines/server0/libvirt/private_key
       ssh_user: vagrant
       wireguard_ip: 192.168.1.1
     - name: server1
-      count: 1
-      ssh_hostname: localhost
-      ssh_port: 2200
-      ssh_key: ../../.vagrant/machines/server1/virtualbox/private_key
+      ssh_hostname: 192.168.121.167
+      ssh_port: 22
+      ssh_key: ../../.vagrant/machines/server1/libvirt/private_key
       ssh_user: vagrant
       wireguard_ip: 192.168.1.2
     - name: server2
-      count: 2
-      ssh_hostname: localhost
-      ssh_port: 2201
-      ssh_key: ../../.vagrant/machines/server2/virtualbox/private_key
+      ssh_hostname: 192.168.121.91
+      ssh_port: 22
+      ssh_key: ../../.vagrant/machines/server2/libvirt/private_key
       ssh_user: vagrant
       wireguard_ip: 192.168.1.3
+    - name: server3
+      ssh_hostname: 192.168.121.241
+      ssh_port: 22
+      ssh_key: ../../.vagrant/machines/server3/libvirt/private_key
+      ssh_user: vagrant
+      wireguard_ip: 192.168.1.4

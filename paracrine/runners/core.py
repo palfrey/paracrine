@@ -71,12 +71,16 @@ def run():
         raw_network_devices = json.loads(
             run_command("ip -j address", dry_run_safe=True)
         )
+        remove_attrs = ["ifindex"]
+        remove_addr_attrs = ["valid_life_time", "preferred_life_time"]
         for device in cast(List[Dict], raw_network_devices):
+            for remove_attr in remove_attrs:
+                if remove_attr in device:
+                    del device[remove_attr]
             for addr in device["addr_info"]:
-                if "valid_life_time" in addr:
-                    del addr["valid_life_time"]
-                if "preferred_life_time" in addr:
-                    del addr["preferred_life_time"]
+                for remove_attr in remove_addr_attrs:
+                    if remove_attr in addr:
+                        del addr[remove_attr]
         data["network_devices"] = json.dumps(raw_network_devices)
 
     except MissingCommandException:

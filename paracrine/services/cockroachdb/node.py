@@ -4,7 +4,7 @@ from pathlib import Path
 import requests
 import urllib3
 
-from ...helpers.config import get_config_file, get_config_keys, in_docker
+from ...helpers.config import get_config_file, get_config_keys
 from ...helpers.fs import (
     download_and_unpack,
     make_directory,
@@ -22,9 +22,10 @@ from .common import (
     HOME_DIR,
     USER,
     binary_path,
-    cockroach_hash,
     cockroach_url,
+    cockroach_versions,
     local_node_ip,
+    version_for_host,
 )
 
 options = {}
@@ -33,15 +34,16 @@ urllib3.disable_warnings()
 
 
 def dependencies():
-    return [certs, wireguard]
+    return [(certs, {"versions": options["versions"]}), wireguard]
 
 
 def run():
+    version = version_for_host(options["versions"])
     unpacked = download_and_unpack(
-        cockroach_url,
-        cockroach_hash,
+        cockroach_url(version),
+        cockroach_versions[version]["hash"],
     )
-    cockroach_path = Path(unpacked["dir_name"]).joinpath(binary_path)
+    cockroach_path = Path(unpacked["dir_name"]).joinpath(binary_path(version))
     adduser(USER, HOME_DIR)
     make_directory(CERTS_DIR)
     file_changes = False
@@ -97,11 +99,9 @@ def run():
             logging.warning("Can't connect to Cockroach health endpoint, so restarting")
             needs_restart = True
 
-    # FIXME: Can't make this work in Docker
-    if not in_docker():
-        systemd_set(
-            "cockroach",
-            enabled=True,
-            running=True,
-            restart=needs_restart,
-        )
+    systemd_set(
+        "cockroach",
+        enabled=True,
+        running=True,
+        restart=needs_restart,
+    )

@@ -1,5 +1,6 @@
 import re
 
+from ... import dry_run_safe_read
 from ...helpers.config import build_config, core_config
 from ...helpers.debian import apt_install
 from ...helpers.fs import (
@@ -22,7 +23,7 @@ def dependencies():
 
 
 def run():
-    apt_install(["redis-sentinel", "redis-server"])
+    apt_install(["redis-sentinel", "redis-server", "redis-tools"])
     LOCAL = build_config(core_config())
     local_ip = wireguard_ip()
     master_ip = get_master_ip()
@@ -43,7 +44,7 @@ def run():
         QUORUM_REQUIRED=options.get("quorum", "2"),
         REDIS_PASSWORD=LOCAL["REDIS_PASSWORD"],
     )
-    current = open("/etc/redis/sentinel.conf").read()
+    current = dry_run_safe_read("/etc/redis/sentinel.conf", "Example sentinel.conf")
     if "Example sentinel.conf" in current:
         # original Debian one, replace
         sentinel_changes = set_file_contents("/etc/redis/sentinel.conf", rendered)

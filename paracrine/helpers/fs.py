@@ -15,11 +15,9 @@ from typing import List, Optional, Sequence, Tuple, Union, cast
 
 from typing_extensions import TypedDict
 
-from paracrine import is_dry_run
+from paracrine import Pathy, is_dry_run
 
 from .config import data_files, jinja_env
-
-Pathy = Union[str, Path]
 
 
 def hash_data(data: bytes) -> str:
@@ -229,9 +227,9 @@ def download(
     if not exists:
         from .debian import apt_install
 
+        apt_install(["curl", "ca-certificates"])
+        run_command("curl -Lo %s %s" % (fname, url))
         if not is_dry_run():
-            apt_install(["curl", "ca-certificates"])
-            run_command("curl -Lo %s %s" % (fname, url))
             existing_sha = sha_file(fname)
             assert existing_sha == sha, (existing_sha, sha)
 
@@ -346,11 +344,17 @@ def build_with_command(
     force_build: bool = False,
     directory: Optional[Pathy] = None,
     binary: bool = False,
+    run_if_command_changed: bool = True,
 ) -> bool:
     display = command.strip()
     while display.find("  ") != -1:
         display = display.replace("  ", " ")
-    changed = set_file_contents("%s.command" % fname, display) or force_build
+    changed = (
+        set_file_contents(
+            "%s.command" % fname, display, ignore_changes=not run_if_command_changed
+        )
+        or force_build
+    )
     target_modified = last_modified(fname)
     for dep in deps:
         if last_modified(dep) > target_modified:
