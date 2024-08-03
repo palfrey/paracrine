@@ -1,16 +1,16 @@
 import importlib
 from types import ModuleType
-from typing import Any, Callable, Dict, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple, Union
 
 from mergedeep import merge
 
 from .helpers.config import clear_return_data, get_return_data, set_data
 
-Module = Union[ModuleType, Tuple[ModuleType, Dict[object, object]]]
+Module = Union[ModuleType, Tuple[ModuleType, Mapping[str, object]]]
 Modules = Sequence[Module]
 """Type of modules handed to `paracrine.runner.run`"""
 
-TransmitModule = Union[str, Tuple[str, Dict[object, object]]]
+TransmitModule = Union[str, Tuple[str, Mapping[str, object]]]
 TransmitModules = Sequence[TransmitModule]
 
 
@@ -18,12 +18,16 @@ def runfunc(
     modules: Modules,
     name: str,
     arguments: Dict[str, Any] = {},
-    data: Dict[str, object] = {},
+    data: Mapping[str, object] = {},
 ) -> Dict[str, Any]:
-    ret = {}
+    ret: Dict[str, List[Mapping[str, object]]] = {}
 
-    def run(module: ModuleType, options: Dict[object, object]):
-        func: Optional[Callable] = getattr(module, name, None)
+    def run(module: ModuleType, options: Mapping[str, object]):
+        func: Union[
+            Callable[[], Optional[Dict[str, object]]],
+            Callable[[str], Optional[Dict[str, object]]],
+            None,
+        ] = getattr(module, name, None)
         if func is not None:
             setattr(module, "options", options)
             clear_return_data()
@@ -33,9 +37,11 @@ def runfunc(
                 if module.__name__ not in ret:
                     ret[module.__name__] = []
                 if module.__name__ in arguments:
-                    info = func(arguments[module.__name__])
+                    info = func(
+                        arguments[module.__name__]
+                    )  # pyright: ignore[reportCallIssue]
                 else:
-                    info = func()
+                    info = func()  # pyright: ignore[reportCallIssue]
                 if isinstance(info, Dict):
                     info = merge({}, info, get_return_data())
                 elif info is None:
@@ -65,7 +71,7 @@ def maketransmit(modules: Modules) -> TransmitModules:
 
 
 def makereal(modules: TransmitModules) -> Modules:
-    ret = []
+    ret: Modules = []
     for module in modules:
         if isinstance(module, str):
             ret.append(importlib.import_module(module))

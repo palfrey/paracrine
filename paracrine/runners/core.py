@@ -2,7 +2,7 @@ import json
 import os
 import socket
 from pathlib import Path
-from typing import Dict, List, cast
+from typing import Dict, List, TypedDict, cast
 
 from paracrine import is_dry_run
 
@@ -58,7 +58,16 @@ def wireguard_ip_for_machine_for(name: str) -> str:
     return use_host.get("wireguard_ip", "<unknown>")
 
 
-def run():
+class CoreReturn(TypedDict):
+    hostname: str
+    users: List[str]
+    groups: List[str]
+    server_name: str
+    network_devices: str
+    external_ip: str
+
+
+def run() -> CoreReturn:
     apt_install(["iproute2"])
 
     data = {
@@ -73,11 +82,11 @@ def run():
         )
         remove_attrs = ["ifindex"]
         remove_addr_attrs = ["valid_life_time", "preferred_life_time"]
-        for device in cast(List[Dict], raw_network_devices):
+        for device in cast(List[Dict[str, object]], raw_network_devices):
             for remove_attr in remove_attrs:
                 if remove_attr in device:
                     del device[remove_attr]
-            for addr in device["addr_info"]:
+            for addr in cast(List[Dict[str, object]], device["addr_info"]):
                 for remove_attr in remove_addr_attrs:
                     if remove_attr in addr:
                         del addr[remove_attr]
@@ -112,10 +121,10 @@ def run():
             )
         set_file_contents(ip_file, json.dumps(data["external_ip"]))
 
-    return data
+    return cast(CoreReturn, data)
 
 
-def parse_return(infos: List[Dict]) -> None:
+def parse_return(infos: List[CoreReturn]) -> None:
     info = infos[0]
     networks = json.loads(info["network_devices"])
     name = info["server_name"]

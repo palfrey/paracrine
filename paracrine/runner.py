@@ -2,10 +2,10 @@ import argparse
 import json
 import logging
 import os
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Mapping, TypedDict, Union, cast
 
 from mergedeep import merge
-from mitogen.core import Error, StreamError
+from mitogen.core import Error, Receiver, StreamError
 from mitogen.parent import Context, EofError, Router
 from mitogen.utils import run_with_router
 from retry.api import retry_call
@@ -13,6 +13,7 @@ from retry.api import retry_call
 from paracrine import DRY_RUN_ENV
 
 from .deps import (
+    Module,
     Modules,
     TransmitModules,
     makereal,
@@ -32,10 +33,12 @@ from .helpers.fs import set_file_contents
 from .runners import core
 
 
-def decode(info):
+def decode(info: Dict[Union[bytes, str], Union[bytes, str]]):
     for k in list(info.keys()):
         if isinstance(k, bytes):
-            info[k.decode()] = info[k].decode()
+            value = info[k]
+            assert isinstance(value, bytes)
+            info[k.decode()] = value.decode()
             del info[k]
 
 
@@ -47,11 +50,18 @@ def clear_ssh_cache():
     ssh_cache = {}
 
 
-def main(router: Router, func: Callable[..., Any], *args: Any, **kwargs: Any) -> Dict:
+class MainReturn(TypedDict):
+    infos: List[Any]
+    data: Mapping[str, object]
+
+
+def main(
+    router: Router, func: Callable[..., Any], *args: Any, **kwargs: Any
+) -> MainReturn:
     config = get_config()
-    calls = []
+    calls: List[Receiver] = []
     wg = core.is_wireguard()
-    data = None
+    data = {}
     for server in config["servers"]:
         assert isinstance(server, Dict)
         hostname = (
@@ -99,13 +109,14 @@ def main(router: Router, func: Callable[..., Any], *args: Any, **kwargs: Any) ->
         data = create_data(server=server)
         calls.append(ssh_cache[cache_key].call_async(func, data, *args, **kwargs))
 
-    infos = []
-    errors = []
+    infos: List[Any] = []
+    errors: List[Exception] = []
     for call in calls:
         try:
             info = call.get().unpickle()
             if info is not None:
-                decode(info)
+                assert isinstance(info, Dict)
+                decode(cast(Dict[Union[str, bytes], Union[str, bytes]], info))
             infos.append(info)
         except Error as e:
             print("Got error", e)
@@ -117,7 +128,9 @@ def main(router: Router, func: Callable[..., Any], *args: Any, **kwargs: Any) ->
     return {"infos": infos, "data": data}
 
 
-def do(data, transmitmodules: TransmitModules, name: str, dry_run: bool):
+def do(
+    data: Dict[str, Any], transmitmodules: TransmitModules, name: str, dry_run: bool
+):
     os.environ[DRY_RUN_ENV] = str(dry_run)
     set_data(data)
     modules = makereal(transmitmodules)
@@ -146,10 +159,14 @@ def internal_runner(
                         continue
                     config_path = other_config_file("selectors.json")
                     if os.path.exists(config_path):
-                        selector_config = json.load(open(config_path))
+                        selector_config: Dict[str, object] = json.load(
+                            open(config_path)
+                        )
                     else:
                         selector_config = {}
-                    merge(selector_config, per_node["selector"])
+                    merge(
+                        selector_config, cast(Dict[str, object], per_node["selector"])
+                    )
                     selector_config = dict(sorted(selector_config.items()))
                     set_file_contents(
                         config_path, json.dumps(selector_config, indent=2)
@@ -157,9 +174,9 @@ def internal_runner(
 
 
 def generate_dependencies(modules: Modules):
-    tree = {}
-    mapping = {}
-    checked = []
+    tree: Dict[str, List[Module]] = {}
+    mapping: Dict[str, Module] = {}
+    checked: List[Module] = []
     needs_dependencies = list(modules) + [core]
     modules = []
     while len(needs_dependencies) > 0:
@@ -168,7 +185,9 @@ def generate_dependencies(modules: Modules):
         key = str(maketransmit_single(check))
         tree[key] = []
         mapping[key] = check
-        new_dependencies = runfunc([check], "dependencies")
+        new_dependencies = cast(
+            Dict[str, List[Modules]], runfunc([check], "dependencies")
+        )
         for item in new_dependencies.values():
             for new_dependency in item[0]:
                 tree[key].append(new_dependency)

@@ -1,4 +1,7 @@
+from typing import Dict
+
 from paracrine import is_dry_run
+from paracrine.deps import Modules
 
 from ...helpers.config import build_config, core_config
 from ...helpers.fs import MissingCommandException, run_command
@@ -6,10 +9,10 @@ from ...helpers.network import wireguard_ip, wireguard_ips
 from . import check_master, node
 from .common import get_master_ip
 
-options = {}
+options: Dict[str, object] = {}
 
 
-def dependencies():
+def dependencies() -> Modules:
     return [(node, options), check_master]
 
 

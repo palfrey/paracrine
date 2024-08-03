@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Dict, TypedDict
 
 from paracrine import dry_run_safe_read, is_dry_run
 
@@ -15,7 +16,12 @@ def dependencies():
 
 
 def setup(name: str = "wg0", ip: str = "192.168.2.1", netmask: int = 24):
-    peers = {}
+    class Peer(TypedDict):
+        public_key: str
+        endpoint: str
+        peer_addr: str
+
+    peers: Dict[str, Peer] = {}
     for h in config()["servers"]:
         if h["name"] == host()["name"]:
             continue
@@ -49,4 +55,6 @@ def setup(name: str = "wg0", ip: str = "192.168.2.1", netmask: int = 24):
 
 
 def run():
-    setup(ip=wireguard_ip())
+    wip = wireguard_ip()
+    assert wip is not None
+    setup(ip=wip)

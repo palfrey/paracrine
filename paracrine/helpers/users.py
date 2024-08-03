@@ -1,8 +1,12 @@
+from typing import Dict, List, Optional
+
+from paracrine import Pathy
+
 from .config import other_self_config
 from .fs import run_command
 
 
-def users(force_load=False):
+def users(force_load: bool = False) -> List[str]:
     if not force_load:
         try:
             return other_self_config()["users"]
@@ -13,7 +17,7 @@ def users(force_load=False):
     return sorted(raw_users.strip().split("\n"))
 
 
-def adduser(name, home_dir=None):
+def adduser(name: str, home_dir: Optional[Pathy] = None) -> bool:
     if name not in users():
         extra = ""
         if home_dir is not None:
@@ -24,10 +28,10 @@ def adduser(name, home_dir=None):
         return False
 
 
-def groups():
-    raw_groups = other_self_config()["groups"]
+def groups() -> Dict[str, List[str]]:
+    raw_groups: str = other_self_config()["groups"]
 
-    ret = {}
+    ret: Dict[str, List[str]] = {}
     for line in raw_groups.split("\n"):
         if line == "":
             continue
@@ -39,7 +43,7 @@ def groups():
     return ret
 
 
-def add_user_to_group(user, group):
+def add_user_to_group(user: str, group: str) -> bool:
     existing_groups = groups()
     existing_group = existing_groups[group]
     if user not in existing_group:

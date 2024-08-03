@@ -1,3 +1,5 @@
+from typing import Dict, cast
+
 from ...helpers.fs import run_with_marker
 from ...runners.core import use_this_host
 from . import certs, node
@@ -9,7 +11,7 @@ from .common import (
     version_for_host,
 )
 
-options = {}
+options: Dict[str, object] = {}
 
 
 def dependencies():
@@ -17,7 +19,7 @@ def dependencies():
 
 
 def run():
-    version = version_for_host(options["versions"])
+    version = version_for_host(cast(Dict[str, str], options["versions"]))
     if not use_this_host("cockroach-init"):
         return
     COCKROACH_PORT = options.get("COCKROACH_PORT", 26257)

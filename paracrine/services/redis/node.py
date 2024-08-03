@@ -1,4 +1,5 @@
 import re
+from typing import Any, Dict
 
 from ... import dry_run_safe_read
 from ...helpers.config import build_config, core_config
@@ -15,7 +16,7 @@ from .. import wireguard
 from . import check_master
 from .common import get_master_ip
 
-options = {}
+options: Dict[str, Any] = {}
 
 
 def dependencies():

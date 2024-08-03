@@ -6,7 +6,7 @@ from paracrine.helpers.fs import run_command
 from paracrine.runner import main
 
 
-def do(data):
+def do(data: object):
     run_command("reboot")
 
 

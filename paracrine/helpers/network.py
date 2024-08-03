@@ -1,13 +1,22 @@
-from typing import Dict
+from typing import Dict, List, TypedDict
 
-from .config import ServerDict, host, network_config, other_config, servers
+from .config import Host, ServerDict, host, network_config, other_config, servers
 
 
-def networks_by_interface(h):
+def networks_by_interface(h: Host):
     return dict([(intf["ifname"], intf) for intf in network_config(h["name"])])
 
 
-def get_ipv4(network):
+class AddrInfo(TypedDict):
+    family: str
+    local: str
+
+
+class Network(TypedDict):
+    addr_info: List[AddrInfo]
+
+
+def get_ipv4(network: Network):
     addrs = network["addr_info"]
     for addr in addrs:
         if addr["family"] == "inet" and addr["local"] != "":
@@ -30,15 +39,15 @@ def wireguard_ips() -> Dict[str, str]:
 
 
 def wireguard_ip():
-    return host()["wireguard_ip"]
+    return host().get("wireguard_ip")
 
 
-def ips_for_network(net):
+def ips_for_network(net: Dict[str, Network]):
     return [
-        x for x in [get_ipv4(intf) for (name, intf) in net.items()] if x is not None
+        x for x in [get_ipv4(intf) for (_name, intf) in net.items()] if x is not None
     ]
 
 
-def ips(h):
+def ips(h: Host):
     network = networks_by_interface(h)
     return ips_for_network(network)

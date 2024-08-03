@@ -1,7 +1,7 @@
 import json
 import os
 import pathlib
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Callable, Dict, Iterator, List, Mapping, Optional, cast
 
 import jinja2
 import yaml
@@ -43,7 +43,12 @@ def jinja_env():
     return _jinja_env
 
 
-def host():
+class Host(TypedDict):
+    name: str
+    wireguard_ip: NotRequired[str]
+
+
+def host() -> Host:
     assert data is not None
     return data["host"]
 
@@ -75,7 +80,7 @@ def core_config():
     return yaml.safe_load(get_config_file(CONFIG_NAME))
 
 
-def set_data(new_data: Dict[str, Any]) -> None:
+def set_data(new_data: Mapping[str, Any]) -> None:
     loader = jinja2.DictLoader(new_data["templates"])
     global _jinja_env, data
     _jinja_env = jinja2.Environment(
@@ -84,7 +89,7 @@ def set_data(new_data: Dict[str, Any]) -> None:
     data = new_data
 
 
-return_data: Dict[object, object] = {}
+return_data: Dict[str, object] = {}
 
 
 def clear_return_data() -> None:
@@ -97,12 +102,18 @@ def add_return_data(new_data: Dict[str, Any]) -> None:
     merge(return_data, new_data)
 
 
-def get_return_data() -> Dict[object, object]:
+def get_return_data() -> Dict[str, object]:
     global return_data
     return return_data
 
 
-def add_folder_to_config(configs, folder, shortname=None, filter=None, prefix=""):
+def add_folder_to_config(
+    configs: Dict[str, str],
+    folder: str,
+    shortname: Optional[str] = None,
+    filter: Optional[Callable[[str], bool]] = None,
+    prefix: str = "",
+):
     if not os.path.exists(folder):
         print("Skipping %s from config as doesn't exist" % folder)
         return
@@ -188,7 +199,7 @@ def servers() -> List[ServerDict]:
         return core_config()["servers"]
 
 
-def walk(path):
+def walk(path: pathlib.Path) -> Iterator[pathlib.Path]:
     for p in pathlib.Path(path).iterdir():
         if p.is_dir():
             yield from walk(p)
@@ -247,11 +258,11 @@ def create_data(server: Optional[ServerDict] = None):
     }
 
 
-def network_config_file(name, shortname=False):
+def network_config_file(name: str, shortname: bool = False) -> str:
     return config_path(shortname) + "/networks-{name}".format(name=name)
 
 
-def network_config(name):
+def network_config(name: str) -> Any:
     try:
         return json.loads(get_config_file(network_config_file(name, shortname=True)))
     except KeyError:
@@ -260,11 +271,11 @@ def network_config(name):
         return {}
 
 
-def other_config_file(name, shortname=False):
+def other_config_file(name: str, shortname: bool = False) -> str:
     return config_path(shortname) + "/other-{name}".format(name=name)
 
 
-def other_config(name):
+def other_config(name: str) -> Any:
     return json.loads(get_config_file(other_config_file(name, shortname=True)))
 
 
@@ -275,7 +286,7 @@ def other_self_config():
 def build_config(config: ConfigDict) -> Dict[str, object]:
     env = environment()
     LOCAL = cast(Dict[str, object], config["environments"][env])
-    common = cast(Dict[str, object], config.get("common", {}))
+    common = config.get("common", {})
     ret = cast(Dict[str, object], dict(**common))
     ret.update(LOCAL)
     return ret

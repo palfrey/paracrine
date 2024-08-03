@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import re
+from typing import Dict, List, Optional
 
 from ...helpers.config import build_config, core_config, other_config, other_config_file
 from ...helpers.debian import apt_is_installed
@@ -12,7 +13,7 @@ from ...runners.core import wireguard_ip_for_machine_for
 MASTER_FILE = "masters.json"
 
 
-def get_existing_masters(local):
+def get_existing_masters(local: bool) -> List[str]:
     if local:
         master_file = other_config_file(MASTER_FILE)
         if os.path.exists(master_file):
@@ -26,13 +27,13 @@ def get_existing_masters(local):
             return []
 
 
-def get_master_ip():
+def get_master_ip() -> Optional[str]:
     existing_masters = get_existing_masters(False)
     if len(existing_masters) > 0:
         if all([master == existing_masters[0] for master in existing_masters]):
             # everyone agrees, awesome
             return existing_masters[0]
-        rated = {}
+        rated: Dict[str, int] = {}
         for master in existing_masters:
             if master not in rated:
                 rated[master] = 1
