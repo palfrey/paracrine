@@ -38,8 +38,8 @@ def runfunc(
                     ret[module.__name__] = []
                 if module.__name__ in arguments:
                     info = func(
-                        arguments[module.__name__]
-                    )  # pyright: ignore[reportCallIssue]
+                        arguments[module.__name__]  # pyright: ignore[reportCallIssue]
+                    )
                 else:
                     info = func()  # pyright: ignore[reportCallIssue]
                 if isinstance(info, Dict):
