@@ -190,7 +190,9 @@ def insert_line(fname: Pathy, line: str) -> bool:
         return False
 
 
-def insert_or_replace(fname: str, matcher: Union[re.Pattern, str], line: str) -> bool:
+def insert_or_replace(
+    fname: str, matcher: Union[re.Pattern[str], str], line: str
+) -> bool:
     existing = open(fname).read()
     if isinstance(matcher, re.Pattern):
         results = matcher.search(existing)
@@ -438,7 +440,7 @@ class MissingCommandException(Exception):
     pass
 
 
-def non_breaking_communicate(proc: subprocess.Popen) -> Tuple[bytes, bytes]:
+def non_breaking_communicate(proc: subprocess.Popen[bytes]) -> Tuple[bytes, bytes]:
     assert proc.stdout is not None
     assert proc.stderr is not None
     working = select.select([proc.stdout, proc.stderr], [], [], 10)[0]
@@ -550,7 +552,7 @@ def run_command(
     if input is None or isinstance(input, bytes):
         real_input = input
     else:
-        real_input = cast(str, input).encode("utf-8")
+        real_input = input.encode("utf-8")
     return run_command_raw(
         cmd, directory, real_input, allowed_exit_codes, dry_run_safe
     ).decode("utf-8")

@@ -1,14 +1,18 @@
+from typing import Dict, Optional, cast
+
 from ...helpers.fs import make_directory, run_with_marker
 from ...helpers.network import wireguard_ip
 
-options = {}
+options: Dict[str, object] = {}
 
 
 def dependencies():
     from . import init
     from .common import calculate_version
 
-    options["versions"] = calculate_version(options.get("versions"))
+    options["versions"] = calculate_version(
+        cast(Optional[str], options.get("versions"))
+    )
 
     return [(init, options)]
 

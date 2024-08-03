@@ -39,7 +39,9 @@ def local_node_ip() -> str:
     if in_docker():
         return "127.0.0.1"
     else:
-        return wireguard_ip()
+        wip = wireguard_ip()
+        assert wip is not None
+        return wip
 
 
 def node_count() -> int:

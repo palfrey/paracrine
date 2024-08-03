@@ -123,7 +123,7 @@ def apt_install(
     return True
 
 
-def debian_repo(name, contents=None):
+def debian_repo(name: str, contents: Optional[str] = None):
     fname = "/etc/apt/sources.list.d/%s.list" % name
     if contents is None:
         contents = "deb http://deb.debian.org/debian %s main" % name

@@ -1,0 +1,3 @@
+from typing import Any, Callable
+
+def run_with_router(func: Callable[..., None], *args: Any) -> None: ...

@@ -1,10 +1,11 @@
 import subprocess
 import sys
+from typing import Optional
 
-from ..helpers.config import get_config, path_to_config_file, set_config
+from ..helpers.config import ServerDict, get_config, path_to_config_file, set_config
 
 
-def ssh_server(server, run="", as_root=False):
+def ssh_server(server: ServerDict, run: str = "", as_root: bool = False):
     if run != "" and as_root and server["ssh_user"] != "root":
         run = f"sudo {run}"
     command = f"ssh {server['ssh_user']}@{server['ssh_hostname']} \
@@ -18,7 +19,7 @@ def ssh_server(server, run="", as_root=False):
     subprocess.check_call(command.split(" "))
 
 
-def ssh(run="", index=None, as_root=False):
+def ssh(run: str = "", index: Optional[int] = None, as_root: bool = False):
     set_config(sys.argv[1])
 
     if index is not None:

@@ -1,7 +1,7 @@
 import sys
 from datetime import timedelta
 from pathlib import Path
-from typing import Dict, List, Union, cast
+from typing import Any, Dict, List, Union, cast
 
 from paracrine import dry_run_safe_read
 
@@ -20,7 +20,7 @@ from ..helpers.python import setup_venv
 from . import aws
 from .core import use_this_host
 
-options = {}
+options: Dict[str, Any] = {}
 
 
 # Are we in a test config where we should just not get the cert
@@ -132,12 +132,12 @@ def dependencies() -> Modules:
     return [aws, cron]
 
 
-def run() -> Dict:
+def run() -> Dict[str, object]:
     return certbot_for_host(options["hostname"], options["email"])
 
 
 def parse_return(
-    infos: List[Dict],
+    infos: List[Dict[str, str]],
 ) -> None:
     for info in infos:
         for key in info:

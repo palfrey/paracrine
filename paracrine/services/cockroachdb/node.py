@@ -1,8 +1,11 @@
 import logging
 from pathlib import Path
+from typing import Dict, cast
 
 import requests
 import urllib3
+
+from paracrine.deps import Modules
 
 from ...helpers.config import get_config_file, get_config_keys
 from ...helpers.fs import (
@@ -28,17 +31,17 @@ from .common import (
     version_for_host,
 )
 
-options = {}
+options: Dict[str, object] = {}
 
 urllib3.disable_warnings()
 
 
-def dependencies():
+def dependencies() -> Modules:
     return [(certs, {"versions": options["versions"]}), wireguard]
 
 
 def run():
-    version = version_for_host(options["versions"])
+    version = version_for_host(cast(Dict[str, str], options["versions"]))
     unpacked = download_and_unpack(
         cockroach_url(version),
         cockroach_versions[version]["hash"],

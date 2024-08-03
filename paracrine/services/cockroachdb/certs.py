@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, TypedDict, cast
 
 from paracrine import dry_run_safe_read
 
@@ -23,8 +23,15 @@ from .common import (
 options = {}
 
 
-def run():
-    version = version_for_host(options["versions"])
+class CertsReturn(TypedDict):
+    ca_crt: str
+    root_key: str
+    root_crt: str
+    node_keys: Dict[str, Dict[str, str]]
+
+
+def run() -> Optional[CertsReturn]:
+    version = version_for_host(cast(Dict[str, str], options["versions"]))
     if not use_this_host("cockroach-certs"):
         return None
     unpacked = download_and_unpack(
@@ -48,7 +55,7 @@ def run():
         run_if_command_changed=False,
     )
 
-    node_keys = {}
+    node_keys: Dict[str, Dict[str, str]] = {}
     ip_keys = set(wireguard_ips().values())
     ip_keys.add(local_node_ip())
     for ip in ip_keys:
@@ -75,7 +82,7 @@ def run():
     }
 
 
-def parse_return(infos: List[Optional[Dict]]):
+def parse_return(infos: List[Optional[CertsReturn]]):
     assert len(infos) == 1, infos
     info = infos[0]
     if info is None or "ca_crt" not in info:
