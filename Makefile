@@ -19,3 +19,6 @@ type-check:
 
 watch-type-check:
 	python -m pyright --pythonversion 3.9 --watch paracrine integration_test tests
+
+unittests-watch:
+	ptw -- -vvv tests/
