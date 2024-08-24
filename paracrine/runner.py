@@ -7,6 +7,7 @@ from typing import Any, Callable, Dict, List, Mapping, TypedDict, Union, cast
 from mergedeep import merge
 from mitogen.core import Error, Receiver, StreamError
 from mitogen.parent import Context, EofError, Router
+from mitogen.ssh import HostKeyError
 from mitogen.utils import run_with_router
 from retry.api import retry_call
 
@@ -92,10 +93,14 @@ def main(
                         "ssh_args": ["-o", "SendEnv DUMP_COMMAND"],
                     },
                 )
+            except HostKeyError:
+                print(
+                    f"HostKeyError while trying to login to to {username}@{hostname}:{port}. Try running the following manually: ssh {username}@{hostname} -p {port} -i {key_path}"
+                )
+                raise
             except StreamError:
                 print(
-                    "Exception while trying to login to %s@%s:%s"
-                    % (username, hostname, port)
+                    f"Exception while trying to login to {username}@{hostname}:{port}"
                 )
                 raise
 
