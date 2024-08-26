@@ -278,6 +278,14 @@ def server_not_name_filter(name: str) -> SERVER_FILTER:
     return lambda server: server["name"] != name
 
 
+def server_role_picker(name: str) -> SERVER_FILTER:
+    def inner(server: ServerDict) -> bool:
+        picked_server = core._index_fn(name)  # pyright: ignore[reportPrivateUsage]
+        return picked_server == server
+
+    return inner
+
+
 def run(
     args: List[str],
     modules: Union[Modules, dict[Callable[[ServerDict], bool], Modules]],

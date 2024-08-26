@@ -7,7 +7,7 @@ from mitogen.parent import Router
 
 from paracrine.deps import Module
 from paracrine.helpers import cron
-from paracrine.runner import run, server_name_filter
+from paracrine.runner import run, server_name_filter, server_role_picker
 from paracrine.runners import aws, certs, core
 from paracrine.services import ntp, postgresql
 
@@ -103,3 +103,23 @@ def test_runner_one_dep_with_config():
         assert get_run_sets(mock_internal_runner) == [
             (["foo"], [core, (ntp, {"foo": "bar"})])
         ]
+
+
+def test_runner_server_role_picker():
+    with patch("paracrine.runner.internal_runner") as mock_internal_runner:
+        with tempfile.NamedTemporaryFile() as config_file:
+            set_config_data(
+                cast(BinaryIO, config_file),
+                {
+                    "data_path": ".",
+                    "servers": [{"name": "foo"}],
+                },
+            )
+            run(
+                ["-i", config_file.name],
+                {
+                    server_role_picker("timeserver"): [ntp],
+                },
+            )
+
+        assert get_run_sets(mock_internal_runner) == [(["foo"], [core, ntp])]
