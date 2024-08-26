@@ -351,36 +351,39 @@ def run(
 
     print("")
 
-    to_run_modules: list[Module] = []
-    to_run_servers = None
+    def do_runs(router: Router) -> None:
+        to_run_modules: list[Module] = []
+        to_run_servers = []
 
-    for module in all_modules:
-        module_description = module_descriptions[module]
-        if module_description not in modules_for_server:
-            continue
+        for module in all_modules:
+            module_description = module_descriptions[module]
+            if module_description not in modules_for_server:
+                continue
 
-        wanted_servers = sorted(set(modules_for_server[module_description]))
-        if to_run_servers is not None and to_run_servers != wanted_servers:
-            run_with_router(
-                internal_runner,
-                to_run_servers,
-                to_run_modules,
-                "local",
-                "run",
-                "parse_return",
-                not parsed_args.apply,
-            )
-            to_run_modules = []
+            wanted_servers = sorted(set(modules_for_server[module_description]))
+            if to_run_servers != [] and to_run_servers != wanted_servers:
+                internal_runner(
+                    router,
+                    to_run_servers,
+                    to_run_modules,
+                    "local",
+                    "run",
+                    "parse_return",
+                    not parsed_args.apply,
+                )
+                to_run_modules = []
 
-        to_run_servers = wanted_servers
-        to_run_modules.append(unfreeze_module(module))
+            to_run_servers = wanted_servers
+            to_run_modules.append(unfreeze_module(module))
 
-    run_with_router(
-        internal_runner,
-        to_run_servers,
-        to_run_modules,
-        "local",
-        "run",
-        "parse_return",
-        not parsed_args.apply,
-    )
+        internal_runner(
+            router,
+            to_run_servers,
+            to_run_modules,
+            "local",
+            "run",
+            "parse_return",
+            not parsed_args.apply,
+        )
+
+    run_with_router(do_runs)
