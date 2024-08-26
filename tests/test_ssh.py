@@ -4,15 +4,12 @@ from typing import BinaryIO, cast
 from unittest.mock import patch
 
 import pytest
-import yaml
 from mitogen.ssh import HostKeyError
 
 from paracrine.runner import run
+from paracrine.services import ntp
 
-
-def set_config_data(config_file: BinaryIO, data: object) -> None:
-    config_file.write(yaml.dump(data).encode("utf-8"))
-    config_file.flush()
+from .conftest import set_config_data
 
 
 def test_empty_servers():
@@ -27,11 +24,18 @@ def test_bad_ssh_path():
             cast(BinaryIO, config_file),
             {
                 "data_path": ".",
-                "servers": [{"ssh_hostname": "", "ssh_key": "TBD", "ssh_user": ""}],
+                "servers": [
+                    {
+                        "ssh_hostname": "",
+                        "ssh_key": "TBD",
+                        "ssh_user": "",
+                        "name": "foo",
+                    }
+                ],
             },
         )
         with pytest.raises(Exception, match="Can't find ssh key /tmp/configs/TBD"):
-            run(["-i", config_file.name], [])
+            run(["-i", config_file.name], [ntp])
 
 
 def test_host_key_error(capsys: pytest.CaptureFixture[str]):
@@ -46,6 +50,7 @@ def test_host_key_error(capsys: pytest.CaptureFixture[str]):
                         "data_path": ".",
                         "servers": [
                             {
+                                "name": "test",
                                 "ssh_hostname": "foo",
                                 "ssh_key": "key_path",
                                 "ssh_user": "test_user",
@@ -58,7 +63,7 @@ def test_host_key_error(capsys: pytest.CaptureFixture[str]):
             key_path = configs_folder.joinpath("key_path")
             key_path.open("w").write("test")
             with pytest.raises(HostKeyError):
-                run(["-i", config_file_path.as_posix()], [])
+                run(["-i", config_file_path.as_posix()], [ntp])
 
             res = capsys.readouterr()
             assert (

@@ -2,15 +2,17 @@ import importlib
 from types import ModuleType
 from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple, Union
 
+from frozendict import frozendict
 from mergedeep import merge
 
 from .helpers.config import clear_return_data, get_return_data, set_data
 
-Module = Union[ModuleType, Tuple[ModuleType, Mapping[str, object]]]
+ModuleConfig = Union[frozendict[str, object], Mapping[str, object]]
+Module = Union[ModuleType, Tuple[ModuleType, ModuleConfig]]
 Modules = Sequence[Module]
 """Type of modules handed to `paracrine.runner.run`"""
 
-TransmitModule = Union[str, Tuple[str, Mapping[str, object]]]
+TransmitModule = Union[str, Tuple[str, ModuleConfig]]
 TransmitModules = Sequence[TransmitModule]
 
 
@@ -22,14 +24,14 @@ def runfunc(
 ) -> Dict[str, Any]:
     ret: Dict[str, List[Mapping[str, object]]] = {}
 
-    def run(module: ModuleType, options: Mapping[str, object]):
+    def run(module: ModuleType, options: ModuleConfig):
         func: Union[
             Callable[[], Optional[Dict[str, object]]],
             Callable[[str], Optional[Dict[str, object]]],
             None,
         ] = getattr(module, name, None)
         if func is not None:
-            setattr(module, "options", options)
+            setattr(module, "options", dict(options))
             clear_return_data()
             if data != {}:
                 set_data(data)

@@ -2,8 +2,9 @@ import argparse
 import json
 import logging
 import os
-from typing import Any, Callable, Dict, List, Mapping, TypedDict, Union, cast
+from typing import Any, Callable, Dict, List, Mapping, TypedDict, TypeVar, Union, cast
 
+from frozendict import deepfreeze, frozendict
 from mergedeep import merge
 from mitogen.core import Error, Receiver, StreamError
 from mitogen.parent import Context, EofError, Router
@@ -16,6 +17,7 @@ from paracrine import DRY_RUN_ENV
 from .deps import (
     Module,
     Modules,
+    TransmitModule,
     TransmitModules,
     makereal,
     maketransmit,
@@ -23,6 +25,7 @@ from .deps import (
     runfunc,
 )
 from .helpers.config import (
+    ServerDict,
     create_data,
     get_config,
     other_config_file,
@@ -57,14 +60,19 @@ class MainReturn(TypedDict):
 
 
 def main(
-    router: Router, func: Callable[..., Any], *args: Any, **kwargs: Any
+    router: Router,
+    servers: list[str],
+    func: Callable[..., Any],
+    *args: Any,
+    **kwargs: Any,
 ) -> MainReturn:
     config = get_config()
     calls: List[Receiver] = []
     wg = core.is_wireguard()
     data = {}
     for server in config["servers"]:
-        assert isinstance(server, Dict)
+        if server["name"] not in servers:
+            continue
         hostname = (
             server["wireguard_ip"]
             if wg and "wireguard_ip" in server
@@ -144,6 +152,7 @@ def do(
 
 def internal_runner(
     router: Router,
+    servers: list[str],
     modules: Modules,
     local_func: str,
     run_func: str,
@@ -152,7 +161,7 @@ def internal_runner(
 ) -> None:
     for module in modules:
         runfunc([module], local_func)
-        infos = main(router, do, maketransmit([module]), run_func, dry_run)
+        infos = main(router, servers, do, maketransmit([module]), run_func, dry_run)
         for info in infos["infos"]:
             os.environ[DRY_RUN_ENV] = str(dry_run)
             runfunc([module], parse_func, info, infos["data"])
@@ -178,6 +187,42 @@ def internal_runner(
                     )
 
 
+def freeze_module(module: Module) -> Module:
+    if isinstance(module, tuple):
+        (module_type, config) = module
+        if isinstance(config, frozendict):
+            return module
+        return (module_type, deepfreeze(config))
+    else:
+        return module
+
+
+def undeepfreeze(fd: frozendict[str, object]) -> dict[str, object]:
+    ret: dict[str, object] = {}
+    for key, value in fd.items():
+        if isinstance(value, frozendict):
+            ret[key] = undeepfreeze(cast(frozendict[str, object], value))
+        else:
+            ret[key] = value
+
+    return ret
+
+
+T = TypeVar("T", bound=Union[Module, TransmitModule])
+
+
+def unfreeze_module(module: T) -> T:
+    if isinstance(module, tuple):
+        (module_type, config) = module
+        if isinstance(config, frozendict):
+            return (
+                module_type,
+                undeepfreeze(config),
+            )  # pyright: ignore[reportReturnType]
+
+    return module
+
+
 def generate_dependencies(modules: Modules):
     tree: Dict[str, List[Module]] = {}
     mapping: Dict[str, Module] = {}
@@ -185,7 +230,7 @@ def generate_dependencies(modules: Modules):
     needs_dependencies = list(modules) + [core]
     modules = []
     while len(needs_dependencies) > 0:
-        check = needs_dependencies.pop()
+        check = freeze_module(needs_dependencies.pop())
         checked.append(check)
         key = str(maketransmit_single(check))
         tree[key] = []
@@ -195,6 +240,7 @@ def generate_dependencies(modules: Modules):
         )
         for item in new_dependencies.values():
             for new_dependency in item[0]:
+                new_dependency = freeze_module(new_dependency)
                 tree[key].append(new_dependency)
                 if new_dependency in needs_dependencies or new_dependency in checked:
                     continue
@@ -219,7 +265,23 @@ def generate_dependencies(modules: Modules):
     return modules
 
 
-def run(args: List[str], modules: Modules):
+SERVER_FILTER = Callable[[ServerDict], bool]
+
+ALL_SERVERS: SERVER_FILTER = lambda _: True
+
+
+def server_name_filter(name: str) -> SERVER_FILTER:
+    return lambda server: server["name"] == name
+
+
+def server_not_name_filter(name: str) -> SERVER_FILTER:
+    return lambda server: server["name"] != name
+
+
+def run(
+    args: List[str],
+    modules: Union[Modules, dict[Callable[[ServerDict], bool], Modules]],
+):
     logging.basicConfig()
     logging.root.setLevel(logging.INFO)
 
@@ -229,13 +291,88 @@ def run(args: List[str], modules: Modules):
     parsed_args = parser.parse_args(args)
     set_config(parsed_args.inventory_path)
 
-    modules = generate_dependencies(modules)
+    all_servers = get_config()["servers"]
+
+    if isinstance(modules, dict):
+        module_mapping = dict(
+            [(k, generate_dependencies(v)) for (k, v) in modules.items()]
+        )
+        all_modules: Modules = []
+        for modules in module_mapping.values():
+            for module in modules:
+                if module not in all_modules:
+                    all_modules.append(module)
+    else:
+        all_modules = generate_dependencies(modules)
+        module_mapping = {ALL_SERVERS: all_modules}
+
+    module_descriptions = dict(
+        [(module, maketransmit_single(module)) for module in all_modules]
+    )
+
+    all_server_names = set([server["name"] for server in all_servers])
+    server_modules: dict[str, list[TransmitModule]] = dict(
+        [(name, []) for name in all_server_names]
+    )
+
+    for server_filter, specific_modules in module_mapping.items():
+        for server in all_servers:
+            if not server_filter(server):
+                continue
+            server_modules[server["name"]].extend(
+                [module_descriptions[module] for module in specific_modules]
+            )
+
+    modules_for_server: dict[TransmitModule, list[str]] = {}
+
+    for server_name, specific_modules in server_modules.items():
+        for module in specific_modules:
+            if module not in modules_for_server:
+                modules_for_server[module] = [server_name]
+            else:
+                modules_for_server[module].append(server_name)
 
     print("Running:")
-    for module in maketransmit(modules):
-        print(f"* {module}")
+    for module, module_name in module_descriptions.items():
+        print(f"* {unfreeze_module(module_name)}", end="")
+        servers = set(modules_for_server.get(module_name, []))
+        if servers == all_server_names:
+            print("")
+        else:
+            print(f" {list(servers)}")
+
     print("")
 
+    to_run_modules: list[Module] = []
+    to_run_servers = None
+
+    for module in all_modules:
+        module_description = module_descriptions[module]
+        if module_description not in modules_for_server:
+            continue
+
+        wanted_servers = sorted(set(modules_for_server[module_description]))
+        if to_run_servers is not None and to_run_servers != wanted_servers:
+            run_with_router(
+                internal_runner,
+                to_run_servers,
+                to_run_modules,
+                "local",
+                "run",
+                "parse_return",
+                not parsed_args.apply,
+            )
+            to_run_modules = []
+
+        to_run_servers = wanted_servers
+        to_run_modules.append(unfreeze_module(module))
+
     run_with_router(
-        internal_runner, modules, "local", "run", "parse_return", not parsed_args.apply
+        internal_runner,
+        to_run_servers,
+        to_run_modules,
+        "local",
+        "run",
+        "parse_return",
+        not parsed_args.apply,
     )
