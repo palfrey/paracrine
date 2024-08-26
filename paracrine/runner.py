@@ -2,9 +2,8 @@ import argparse
 import json
 import logging
 import os
-from typing import Any, Callable, Dict, List, Mapping, TypedDict, TypeVar, Union, cast
+from typing import Any, Callable, Dict, List, Mapping, TypedDict, Union, cast
 
-from frozendict import deepfreeze, frozendict
 from mergedeep import merge
 from mitogen.core import Error, Receiver, StreamError
 from mitogen.parent import Context, EofError, Router
@@ -19,10 +18,12 @@ from .deps import (
     Modules,
     TransmitModule,
     TransmitModules,
+    freeze_module,
     makereal,
     maketransmit,
     maketransmit_single,
     runfunc,
+    unfreeze_module,
 )
 from .helpers.config import (
     ServerDict,
@@ -185,42 +186,6 @@ def internal_runner(
                     set_file_contents(
                         config_path, json.dumps(selector_config, indent=2)
                     )
-
-
-def freeze_module(module: Module) -> Module:
-    if isinstance(module, tuple):
-        (module_type, config) = module
-        if isinstance(config, frozendict):
-            return module
-        return (module_type, deepfreeze(config))
-    else:
-        return module
-
-
-def undeepfreeze(fd: frozendict[str, object]) -> dict[str, object]:
-    ret: dict[str, object] = {}
-    for key, value in fd.items():
-        if isinstance(value, frozendict):
-            ret[key] = undeepfreeze(cast(frozendict[str, object], value))
-        else:
-            ret[key] = value
-
-    return ret
-
-
-T = TypeVar("T", bound=Union[Module, TransmitModule])
-
-
-def unfreeze_module(module: T) -> T:
-    if isinstance(module, tuple):
-        (module_type, config) = module
-        if isinstance(config, frozendict):
-            return (
-                module_type,
-                undeepfreeze(config),
-            )  # pyright: ignore[reportReturnType]
-
-    return module
 
 
 def generate_dependencies(modules: Modules):

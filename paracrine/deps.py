@@ -1,8 +1,20 @@
 import importlib
 from types import ModuleType
-from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+    TypeVar,
+    Union,
+    cast,
+)
 
-from frozendict import frozendict
+from frozendict import deepfreeze, frozendict
 from mergedeep import merge
 
 from .helpers.config import clear_return_data, get_return_data, set_data
@@ -14,6 +26,42 @@ Modules = Sequence[Module]
 
 TransmitModule = Union[str, Tuple[str, ModuleConfig]]
 TransmitModules = Sequence[TransmitModule]
+
+
+def freeze_module(module: Module) -> Module:
+    if isinstance(module, tuple):
+        (module_type, config) = module
+        if isinstance(config, frozendict):
+            return module
+        return (module_type, deepfreeze(config))
+    else:
+        return module
+
+
+def undeepfreeze(fd: frozendict[str, object]) -> dict[str, object]:
+    ret: dict[str, object] = {}
+    for key, value in fd.items():
+        if isinstance(value, frozendict):
+            ret[key] = undeepfreeze(cast(frozendict[str, object], value))
+        else:
+            ret[key] = value
+
+    return ret
+
+
+T = TypeVar("T", bound=Union[Module, TransmitModule])
+
+
+def unfreeze_module(module: T) -> T:
+    if isinstance(module, tuple):
+        (module_type, config) = module
+        if isinstance(config, frozendict):
+            return (
+                module_type,
+                undeepfreeze(config),
+            )  # pyright: ignore[reportReturnType]
+
+    return module
 
 
 def runfunc(
@@ -31,7 +79,9 @@ def runfunc(
             None,
         ] = getattr(module, name, None)
         if func is not None:
-            setattr(module, "options", dict(options))
+            if isinstance(options, frozendict):
+                options = undeepfreeze(options)
+            setattr(module, "options", options)
             clear_return_data()
             if data != {}:
                 set_data(data)
