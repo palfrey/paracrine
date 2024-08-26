@@ -157,7 +157,7 @@ def set_config(inventory_path: str) -> None:
 
 
 # Only for tests
-def _clear_config() -> None:
+def _clear_config() -> None:  # pyright: ignore[reportUnusedFunction]
     global inventory, inventory_directory
     inventory = None
     inventory_directory = None

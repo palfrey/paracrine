@@ -61,7 +61,7 @@ class MainReturn(TypedDict):
 
 def main(
     router: Router,
-    servers: list[str],
+    servers: Union[list[str], None],
     func: Callable[..., Any],
     *args: Any,
     **kwargs: Any,
@@ -71,7 +71,7 @@ def main(
     wg = core.is_wireguard()
     data = {}
     for server in config["servers"]:
-        if server["name"] not in servers:
+        if servers is not None and server["name"] not in servers:
             continue
         hostname = (
             server["wireguard_ip"]
