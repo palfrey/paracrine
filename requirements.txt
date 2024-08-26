@@ -14,6 +14,8 @@ build==0.10.0
     # via
     #   -r requirements.in
     #   pip-tools
+callee==0.3.1
+    # via -r requirements.in
 certifi==2024.6.2
     # via requests
 cffi==1.15.1
@@ -44,6 +46,8 @@ exceptiongroup==1.1.0
     # via pytest
 filelock==3.9.0
     # via virtualenv
+frozendict==2.4.4
+    # via paracrine
 identify==2.5.13
     # via pre-commit
 idna==3.4
@@ -159,9 +163,7 @@ tomli==2.0.1
 twine==4.0.2
     # via -r requirements.in
 typing-extensions==4.7.1
-    # via
-    #   -r requirements.in
-    #   paracrine
+    # via paracrine
 urllib3==1.26.14
     # via
     #   requests

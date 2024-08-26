@@ -156,6 +156,13 @@ def set_config(inventory_path: str) -> None:
     inventory = yaml.safe_load(open(inventory_path))
 
 
+# Only for tests
+def _clear_config() -> None:  # pyright: ignore[reportUnusedFunction]
+    global inventory, inventory_directory
+    inventory = None
+    inventory_directory = None
+
+
 def get_config() -> InventoryDict:
     if inventory is None:
         assert data is not None
@@ -306,5 +313,9 @@ def local_server():
     raise Exception(f"Cannot find {local_hostname}")
 
 
-def in_docker():
+def in_docker() -> bool:
     return os.path.exists("/.dockerenv")
+
+
+def in_local() -> bool:
+    return os.path.exists(CONFIG_NAME)

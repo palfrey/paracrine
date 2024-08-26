@@ -9,10 +9,11 @@ from paracrine import is_dry_run
 from ..helpers.config import (
     ServerDict,
     add_return_data,
-    config,
     config_path,
+    get_config,
     host,
     in_docker,
+    in_local,
     network_config_file,
     other_config,
     other_config_file,
@@ -36,13 +37,34 @@ def hash_fn(key: str, count: int) -> int:
 
 
 def _index_fn(name: str) -> ServerDict:
-    hosts = config()["servers"]
+    hosts = get_config()["servers"]
+
+    selectors_filename = "selectors.json"
+
     try:
-        existing_selectors = other_config("selectors.json")
+        if in_local():
+            existing_selectors = json.load(open(other_config_file(selectors_filename)))
+        else:
+            existing_selectors = other_config(selectors_filename)
         return [host for host in hosts if host["name"] == existing_selectors[name]][0]
-    except KeyError:
+    except (KeyError, FileNotFoundError) as exception:
         index = hash_fn(name, len(hosts))
-        add_return_data({"selector": {name: hosts[index]["name"]}})
+        if in_local():
+            if isinstance(exception, FileNotFoundError):
+                existing_selectors = {}
+            else:
+                existing_selectors = json.load(
+                    open(other_config_file(selectors_filename))
+                )
+            existing_selectors[name] = hosts[index]["name"]
+            json.dump(
+                existing_selectors,
+                open(other_config_file(selectors_filename), "w"),
+                indent=2,
+                sort_keys=True,
+            )
+        else:
+            add_return_data({"selector": {name: hosts[index]["name"]}})
         return hosts[index]
 
 

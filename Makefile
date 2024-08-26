@@ -22,3 +22,6 @@ watch-type-check:
 
 unittests-watch:
 	ptw -- -vvv tests/
+
+requirements.txt: requirements.in pyproject.toml
+	pip-compile
