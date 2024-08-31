@@ -86,6 +86,8 @@ def run():
     if service_file_changes:
         systemctl_daemon_reload()
 
+    make_directory(HOME_DIR.joinpath("node", "extern"), owner=USER)
+
     needs_restart = file_changes or service_file_changes
     if needs_restart is False:
         # Check it's up and doesn't need a restart anyways
