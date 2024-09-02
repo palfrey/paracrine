@@ -28,11 +28,14 @@ def systemd_set(
         run_command("systemctl unmask %s" % name)
     if enabled is not None:
         if enabled:
-            if unitFileState not in ["enabled", "enabled-runtime"]:
+            if unitFileState not in ["enabled", "enabled-runtime", "generated"]:
                 logging.info("%s is currently %s" % (name, unitFileState))
                 run_command("systemctl enable %s" % name)
         else:
-            if unitFileState is not None and unitFileState != "disabled":
+            if unitFileState is not None and unitFileState not in [
+                "disabled",
+                "generated",
+            ]:
                 logging.info("%s is currently %s" % (name, unitFileState))
                 run_command("systemctl disable %s" % name)
     started = False
