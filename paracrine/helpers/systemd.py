@@ -50,7 +50,7 @@ def systemd_set(
                     raise
                 started = True
         else:
-            if status["SubState"] not in ["dead"]:
+            if status["SubState"] not in ["dead", "failed"]:
                 logging.info("running: %s %s" % (name, status["SubState"]))
                 try:
                     run_command("systemctl stop %s" % name)
