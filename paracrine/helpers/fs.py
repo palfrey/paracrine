@@ -148,8 +148,11 @@ def set_owner(
         group_id = st.st_gid
 
     if st.st_uid != owner_id or st.st_gid != group_id:
-        if not is_dry_run():
+        if is_dry_run():
+            logging.info(f"Would have set owner {owner} and group {group}")
+        else:
             os.chown(path, owner_id, group_id)
+
         return True
     else:
         return False
@@ -170,7 +173,7 @@ def make_directory(
     if mode is not None:
         ret = set_mode(path, mode) or ret
     if owner is not None or group is not None:
-        set_owner(path, owner, group)
+        ret = set_owner(path, owner, group) or ret
     return ret
 
 
