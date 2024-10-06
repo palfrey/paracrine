@@ -99,9 +99,10 @@ def run() -> CoreReturn:
         "server_name": host()["name"],
     }
     try:
-        raw_network_devices = json.loads(
-            run_command("ip -j address", dry_run_safe=True)
-        )
+        ip_json = run_command("ip -j address", dry_run_safe=True)
+        if ip_json == "":  # because dry-run and no "ip" command
+            ip_json = "{}"
+        raw_network_devices = json.loads(ip_json)
         remove_attrs = ["ifindex"]
         remove_addr_attrs = ["valid_life_time", "preferred_life_time"]
         for device in cast(List[Dict[str, object]], raw_network_devices):

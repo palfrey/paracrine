@@ -556,6 +556,12 @@ def run_command(
         real_input = input
     else:
         real_input = input.encode("utf-8")
-    return run_command_raw(
-        cmd, directory, real_input, allowed_exit_codes, dry_run_safe
-    ).decode("utf-8")
+
+    try:
+        return run_command_raw(
+            cmd, directory, real_input, allowed_exit_codes, dry_run_safe
+        ).decode("utf-8")
+    except MissingCommandException:
+        if is_dry_run():
+            return ""
+        raise
