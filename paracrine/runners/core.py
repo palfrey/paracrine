@@ -148,6 +148,8 @@ def run() -> CoreReturn:
 
 
 def parse_return(infos: List[CoreReturn]) -> None:
+    if len(infos) == 0:
+        return
     info = infos[0]
     networks = json.loads(info["network_devices"])
     name = info["server_name"]
