@@ -14,4 +14,4 @@ callee
 # Requests 2.32 is weird with SSL stuff. If you install ca-certificates, most of this goes away
 # but it's relevant for the dry-run cases.
 # See also https://github.com/psf/requests/issues/6730
-requests < 2.32
+requests < 2.33
