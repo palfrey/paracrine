@@ -26,7 +26,7 @@ jobs:
             - name: Install dependencies
               run: make sync
             - name: Lint with pre-commit
-              run: pre-commit run -a
+              run: make pre-commit
             - name: Pyright check
               run: make type-check
             - name: Test with pytest
