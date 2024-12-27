@@ -24,7 +24,10 @@ unittests-watch: sync
 requirements.txt: requirements.in pyproject.toml
 	uv pip compile --no-strip-extras requirements.in -o requirements.txt
 
-sync: requirements.txt
+.venv/bin/python:
+	uv venv
+
+sync: requirements.txt .venv/bin/python
 	uv pip sync requirements.txt
 
 pre-commit: sync
