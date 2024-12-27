@@ -93,6 +93,8 @@ packaging==23.0
     #   pytest
 pdoc3==0.10.0
     # via -r requirements.in
+pip==24.3.1
+    # via pip-tools
 pip-tools==6.12.1
     # via -r requirements.in
 pkginfo==1.9.6
@@ -132,7 +134,7 @@ pyyaml==6.0
     #   pre-commit
 readme-renderer==37.3
     # via twine
-requests==2.32.2
+requests==2.31.0
     # via
     #   -r requirements.in
     #   paracrine
@@ -148,6 +150,10 @@ rich==13.3.1
     # via twine
 secretstorage==3.3.3
     # via keyring
+setuptools==75.6.0
+    # via
+    #   nodeenv
+    #   pip-tools
 six==1.16.0
     # via bleach
 tomli==2.0.1
