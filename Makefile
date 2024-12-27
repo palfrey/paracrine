@@ -1,27 +1,31 @@
-build:
-	python -m build
-
 .PHONY: build
+build: sync
+	.venv/bin/python -m build
 
-testpypi:
-	twine upload -r testpypi dist/*
+testpypi: sync
+	.venv/bin/twine upload -r testpypi dist/*
 
-pypi:
-	twine upload dist/*
-
-docs:
-	pdoc --html paracrine --force --output-dir docs
+pypi: sync
+	.venv/bin/twine upload dist/*
 
 .PHONY: docs
+docs: sync
+	.venv/bin/pdoc --html paracrine --force --output-dir docs
 
-type-check:
-	python -m pyright --pythonversion 3.9 paracrine integration_test tests
+type-check: sync
+	.venv/bin/pyright --pythonversion 3.9 paracrine integration_test tests
 
-watch-type-check:
-	python -m pyright --pythonversion 3.9 --watch paracrine integration_test tests
+watch-type-check: sync
+	.venv/bin/pyright --pythonversion 3.9 --watch paracrine integration_test tests
 
-unittests-watch:
-	ptw -- -vvv tests/
+unittests-watch: sync
+	.venv/bin/ptw -- -vvv tests/
 
 requirements.txt: requirements.in pyproject.toml
-	pip-compile
+	uv pip compile requirements.in -o requirements.txt
+
+sync: requirements.txt
+	uv pip sync requirements.txt
+
+pre-commit: sync
+	./.venv/bin/pre-commit run -a
