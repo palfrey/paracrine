@@ -22,7 +22,7 @@ unittests-watch: sync
 	.venv/bin/ptw -- -vvv tests/
 
 requirements.txt: requirements.in pyproject.toml
-	uv pip compile requirements.in -o requirements.txt
+	uv pip compile --no-strip-extras requirements.in -o requirements.txt
 
 sync: requirements.txt
 	uv pip sync requirements.txt
