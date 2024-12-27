@@ -13,10 +13,10 @@ docs: sync
 	.venv/bin/pdoc --html paracrine --force --output-dir docs
 
 type-check: sync
-	.venv/bin/pyright --pythonversion 3.9 paracrine integration_test tests
+	.venv/bin/pyright --pythonversion 3.9 --pythonpath $(PWD)/.venv/bin/python paracrine integration_test tests
 
 watch-type-check: sync
-	.venv/bin/pyright --pythonversion 3.9 --watch paracrine integration_test tests
+	.venv/bin/pyright --pythonversion 3.9 --pythonpath $(PWD)/.venv/bin/python --watch paracrine integration_test tests
 
 unittests-watch: sync
 	.venv/bin/ptw -- -vvv tests/
