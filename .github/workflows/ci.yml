@@ -38,6 +38,7 @@ jobs:
               run: |
                   set -eux -o pipefail
                   # Need -e install for pytest, but real install for mitogen to work
+                  pip install -r requirements.txt
                   pip install .
 
                   cd integration_test
