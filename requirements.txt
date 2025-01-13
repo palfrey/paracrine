@@ -32,7 +32,7 @@ cryptography==44.0.0
     # via secretstorage
 decorator==5.1.1
     # via retry
-distlib==0.3.6
+distlib==0.3.9
     # via virtualenv
 docopt==0.6.2
     # via pytest-watch
@@ -40,7 +40,7 @@ docutils==0.19
     # via readme-renderer
 exceptiongroup==1.1.0
     # via pytest
-filelock==3.9.0
+filelock==3.16.1
     # via virtualenv
 frozendict==2.4.4
     # via paracrine
@@ -93,13 +93,11 @@ packaging==23.0
     #   pytest
 pdoc3==0.10.0
     # via -r requirements.in
-pip==24.3.1
-    # via pip-tools
 pip-tools==6.12.1
     # via -r requirements.in
 pkginfo==1.9.6
     # via twine
-platformdirs==2.6.2
+platformdirs==4.3.6
     # via virtualenv
 pluggy==1.0.0
     # via pytest
@@ -111,7 +109,6 @@ pycparser==2.21
     # via cffi
 pygments==2.18.0
     # via
-    #   -c constraints.txt
     #   readme-renderer
     #   rich
 pyproject-hooks==1.0.0
@@ -151,10 +148,6 @@ rich==13.3.1
     # via twine
 secretstorage==3.3.3
     # via keyring
-setuptools==75.6.0
-    # via
-    #   nodeenv
-    #   pip-tools
 six==1.16.0
     # via bleach
 tomli==2.0.1
@@ -171,7 +164,7 @@ urllib3==1.26.19
     # via
     #   requests
     #   twine
-virtualenv==20.17.1
+virtualenv==20.26.6
     # via pre-commit
 watchdog==2.2.1
     # via pytest-watch
