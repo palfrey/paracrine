@@ -29,5 +29,5 @@ def test_parse_return(monkeypatch: pytest.MonkeyPatch) -> None:
         )
         files = os.listdir(raw_temp_directory)
         assert files == ["configs"]
-        config_files = os.listdir(os.path.join(raw_temp_directory, "configs"))
-        assert config_files == ["other-foo", "networks-foo"]
+        config_files = sorted(os.listdir(os.path.join(raw_temp_directory, "configs")))
+        assert config_files == ["networks-foo", "other-foo"]

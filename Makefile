@@ -18,6 +18,9 @@ type-check: sync
 watch-type-check: sync
 	.venv/bin/pyright --pythonversion 3.9 --pythonpath $(PWD)/.venv/bin/python --watch paracrine integration_test tests
 
+unittests: sync
+	.venv/bin/pytest -vvv --cov=paracrine --cov-report=term-missing
+
 unittests-watch: sync
 	.venv/bin/ptw -- -vvv tests/
 
