@@ -30,8 +30,7 @@ jobs:
             - name: Pyright check
               run: make type-check
             - name: Test with pytest
-              run: |
-                  .venv/bin/pytest -vvv --cov=paracrine --cov-report=term-missing
+              run: make unittests
             - name: Integration tests
               env:
                   DUMP_COMMAND: true
