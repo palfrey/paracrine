@@ -31,7 +31,7 @@ requirements.txt: requirements.in pyproject.toml constraints.txt
 	uv venv
 
 sync: requirements.txt .venv/bin/python
-	uv pip sync requirements.txt
+	uv pip sync --strict requirements.txt
 
 pre-commit: sync
 	./.venv/bin/pre-commit run -a
