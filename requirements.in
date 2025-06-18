@@ -15,4 +15,4 @@ callee
 # See also https://github.com/psf/requests/issues/6730
 # Waiting for https://github.com/psf/requests/commit/90fee0876aea97c639b3bf698d83a12876d2f160
 # to be in a release
-requests < 2.32
+requests < 2.33
