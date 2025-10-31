@@ -37,7 +37,7 @@ def run():
     LOCAL = build_config(core_config())
     adduser("pleroma", home_dir="/opt/pleroma")
     make_directory("/opt/pleroma", owner="pleroma")
-    # Deps of the Debian elixir package (which is out of date)
+    # Deps of the Debian elixir package (which is out of date) plus Pleroma
     apt_install(
         [
             "erlang-dev",
