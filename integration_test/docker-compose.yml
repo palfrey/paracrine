@@ -1,5 +1,4 @@
 ---
-version: '3'
 services:
     basic:
         build:
@@ -7,6 +6,6 @@ services:
             context: .
         ports:
             - "2000:22"
-        command: systemctl
+        command: systemctl boot
         # volumes:
         #     - .:/app
