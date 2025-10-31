@@ -157,7 +157,7 @@ twine==4.0.2
     # via -r requirements.in
 typing-extensions==4.7.1
     # via paracrine
-urllib3==1.26.19
+urllib3==2.5.0
     # via
     #   requests
     #   twine
