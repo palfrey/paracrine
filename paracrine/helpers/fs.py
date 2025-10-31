@@ -236,7 +236,7 @@ def download(
         run_command("curl -Lo %s %s" % (fname, url))
         if not is_dry_run():
             existing_sha = sha_file(fname)
-            assert existing_sha == sha, (existing_sha, sha)
+            assert existing_sha == sha, f"Expected {sha}, but got {existing_sha}"
 
     if mode is not None:
         set_mode(fname, mode)
@@ -293,7 +293,7 @@ def download_and_unpack(
     if dir_name is None:
         dir_name = "/opt/%s" % name.replace(".tar.gz", "").replace(".tgz", "").replace(
             ".tar.xz", ""
-        )
+        ).replace(".zip", "")
     changed = download(
         url,
         compressed_path,
@@ -413,6 +413,7 @@ def run_with_marker(
     directory: Optional[Pathy] = None,
     run_if_command_changed: bool = True,
     input: Optional[str] = None,
+    env: dict[str, str] = {},
 ) -> bool:
     changed = not os.path.exists(fname) or force_build
     target_modified = last_modified(fname)
@@ -432,7 +433,7 @@ def run_with_marker(
         changed = old_command != command
 
     if changed:
-        run_command(command, directory=directory, input=input)
+        run_command(command, directory=directory, input=input, env=env)
         if not is_dry_run():
             open(fname, "w").write(command)
 
@@ -462,6 +463,7 @@ def run_command_raw(
     input: Optional[bytes] = None,
     allowed_exit_codes: List[int] = [0],
     dry_run_safe: bool = False,
+    env: dict[str, str] = {},
 ) -> bytes:
     run_for_real = dry_run_safe or not is_dry_run()
     display = cmd.strip()
@@ -469,6 +471,9 @@ def run_command_raw(
         display = display.replace("  ", " ")
     try:
         process = None
+        local_env = {**os.environ, **env}
+        if "PATH" in os.environ and "PATH" in env:
+            local_env["PATH"] = "%s:%s" % (env["PATH"], os.environ["PATH"])
         if directory is not None:
             if run_for_real:
                 logging.info("Run in %s: %s" % (directory, display))
@@ -479,6 +484,7 @@ def run_command_raw(
                         stderr=subprocess.PIPE,
                         shell=True,
                         stdin=subprocess.PIPE,
+                        env=local_env,
                     )
             else:
                 logging.info("Would have run in %s: %s" % (directory, display))
@@ -491,6 +497,7 @@ def run_command_raw(
                     stderr=subprocess.PIPE,
                     shell=True,
                     stdin=subprocess.PIPE,
+                    env=local_env,
                 )
             else:
                 logging.info("Would have run: %s" % display)
@@ -530,6 +537,7 @@ def run_command_raw(
                 if maybe_returncode not in allowed_exit_codes:
                     if b": not found" in stderr or process.returncode == 127:
                         # missing command
+                        print(stderr)
                         raise MissingCommandException
                     assert process.returncode in allowed_exit_codes, (
                         process.returncode,
@@ -551,6 +559,7 @@ def run_command(
     input: Union[str, bytes, None] = None,
     allowed_exit_codes: List[int] = [0],
     dry_run_safe: bool = False,
+    env: dict[str, str] = {},
 ) -> str:
     if input is None or isinstance(input, bytes):
         real_input = input
@@ -559,7 +568,7 @@ def run_command(
 
     try:
         return run_command_raw(
-            cmd, directory, real_input, allowed_exit_codes, dry_run_safe
+            cmd, directory, real_input, allowed_exit_codes, dry_run_safe, env
         ).decode("utf-8")
     except MissingCommandException:
         if is_dry_run():

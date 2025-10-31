@@ -37,17 +37,89 @@ def run():
     LOCAL = build_config(core_config())
     adduser("pleroma", home_dir="/opt/pleroma")
     make_directory("/opt/pleroma", owner="pleroma")
-    # Taken from https://git.pleroma.social/pleroma/pleroma/-/pipelines?page=1&scope=branches&ref=stable using amd64:archive
-    res = download_and_unpack(
-        "https://git.pleroma.social/pleroma/pleroma/-/jobs/234433/artifacts/download?file_type=archive",
-        "8ef0bea62671d39e60f9e08d13109a4c332c552a1f855184063353987d46c84a",
-        "pleroma-2.5.2.zip",
-        "/opt/pleroma-2.5.2",
+    # Deps of the Debian elixir package (which is out of date)
+    apt_install(
+        [
+            "erlang-dev",
+            "erlang-base",
+            "erlang-crypto",
+            "erlang-inets",
+            "erlang-parsetools",
+            "erlang-public-key",
+            "erlang-tools",
+            "erlang-syntax-tools",
+            "erlang-eldap",
+            "erlang-os-mon",
+            "erlang-ssh",
+            "erlang-xmerl",
+            "git",
+            "gcc",
+            "g++",
+            "libc6-dev",
+            "linux-libc-dev",
+            "cmake",
+            "libmagic-dev",
+        ]
     )
-    release_changed = res["changed"]
+    res = download_and_unpack(
+        "https://github.com/elixir-lang/elixir/releases/download/v1.14.5/elixir-otp-23.zip",
+        "d45dc33a0c4e007a4f85719d23d2abcac8a33742fb042a1499c411b847462874",
+    )
+    elixir_bin_path = Path(res["dir_name"]).joinpath("bin")
+
+    # Taken from https://git.pleroma.social/pleroma/pleroma/-/releases/v2.5.2
+    res = download_and_unpack(
+        "https://git.pleroma.social/pleroma/pleroma/-/archive/v2.5.2/pleroma-v2.5.2.zip",
+        "eac2ba14bfba1c7e43ac758277fe3a474817b79ab14fb4ab96383f6ee4c32efc",
+    )
+    new_source = res["changed"]
+    pleroma_source_dir = Path(res["dir_name"]).joinpath("pleroma-v2.5.2")
+
+    mix_env = {"MIX_ENV": "prod", "PATH": elixir_bin_path.as_posix()}
+    new_prod_secret = set_file_contents(
+        pleroma_source_dir.joinpath("config", "prod.secret.exs"), "import Config"
+    )
+    run_with_marker(
+        "/opt/pleroma-mix-hex",
+        "mix local.hex --force",
+        directory=pleroma_source_dir,
+        env=mix_env,
+        force_build=new_source,
+    )
+    run_with_marker(
+        "/opt/pleroma-mix-rebar",
+        "mix local.rebar --force",
+        directory=pleroma_source_dir,
+        env=mix_env,
+        force_build=new_source,
+    )
+    run_with_marker(
+        "/opt/pleroma-mix-deps",
+        "mix deps.get --only prod",
+        directory=pleroma_source_dir,
+        env=mix_env,
+        force_build=new_source,
+    )
+    run_with_marker(
+        "/opt/pleroma-mix-compile",
+        "mix compile",
+        directory=pleroma_source_dir,
+        env=mix_env,
+        force_build=new_source,
+        deps=["/opt/pleroma-mix-deps"],
+    )
+    make_directory(pleroma_source_dir.joinpath("release"))
+    release_changed = run_with_marker(
+        "/opt/pleroma-release",
+        "mix release --path release",
+        directory=pleroma_source_dir,
+        env=mix_env,
+        force_build=new_source or new_prod_secret,
+        deps=["/opt/pleroma-mix-compile"],
+    )
 
     if release_changed:
-        run_command("cp -R /opt/pleroma-2.5.2/release/* /opt/pleroma")
+        run_command(f"cp -R {pleroma_source_dir}/release/* /opt/pleroma")
         run_command("chown -R pleroma /opt/pleroma")
 
     make_directory("/var/lib/pleroma/uploads", owner="pleroma")

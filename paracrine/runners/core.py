@@ -107,7 +107,7 @@ def run() -> CoreReturn:
             for network in json.loads(ip_json)
             if network.get("master") != "docker0"
         ]
-        remove_attrs = ["ifindex"]
+        remove_attrs = ["ifindex", "link_index"]
         remove_addr_attrs = ["valid_life_time", "preferred_life_time"]
         for device in cast(List[Dict[str, object]], raw_network_devices):
             for remove_attr in remove_attrs:

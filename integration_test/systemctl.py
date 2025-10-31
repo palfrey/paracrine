@@ -31,22 +31,30 @@ def get_enabled_services():
 _running_service_path = Path("/running_service.json")
 
 
-def get_running_services() -> List[str]:
+def get_running_services() -> set[str]:
     try:
-        return json.load(_running_service_path.open())
+        return set(json.load(_running_service_path.open()))
     except FileNotFoundError:
-        return []
+        return set()
 
 
 def add_running_service(service: str) -> None:
     existing = get_running_services()
-    existing.append(service)
+    existing.add(service)
     with _running_service_path.open("w") as rs:
-        json.dump(existing, rs)
+        json.dump(list(existing), rs)
 
 
 if __name__ == "__main__":
     if len(argv) == 1:
+        print("nothing to list yet")
+        exit(0)
+
+    args = argv[1:]
+    if args[0] == "--quiet":
+        args = args[1:]
+
+    if args[0] == "boot":
         systemd_root = Path("/etc/systemd/system/multi-user.target.wants")
         for path in systemd_root.iterdir():
             name = path.stem
@@ -58,11 +66,7 @@ if __name__ == "__main__":
         while True:
             time.sleep(1)
 
-    args = argv[1:]
-    if args[0] == "--quiet":
-        args = args[1:]
-
-    if args[0] == "show":
+    elif args[0] == "show":
         service = args[1]
         if service in get_enabled_services():
             print("UnitFileState=enabled")
@@ -126,5 +130,7 @@ if __name__ == "__main__":
             raise Exception(service)
     elif args[0] == "restart":
         pass  # FIXME, do stuff
+    elif args[0] == "list-unit-files":
+        pass
     else:
         raise Exception(argv)
