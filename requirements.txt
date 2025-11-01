@@ -2,7 +2,7 @@
 #    uv pip compile --no-strip-extras requirements.in -o requirements.txt -c constraints.txt
 -e .
     # via -r requirements.in
-attrs==22.2.0
+attrs==25.4.0
     # via pytest
 bleach==6.0.0
     # via readme-renderer
