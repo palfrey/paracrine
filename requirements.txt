@@ -70,7 +70,7 @@ mako==1.3.10
     # via pdoc3
 markdown==3.9
     # via pdoc3
-markdown-it-py==3.0.0
+markdown-it-py==4.0.0
     # via rich
 markupsafe==3.0.3
     # via
