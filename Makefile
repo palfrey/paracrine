@@ -25,7 +25,7 @@ unittests-watch: sync
 	.venv/bin/ptw -- -vvv tests/
 
 requirements.txt: requirements.in pyproject.toml constraints.txt
-	uv pip compile --no-strip-extras requirements.in -o requirements.txt -c constraints.txt
+	uv pip compile --no-strip-extras --python 3.9 requirements.in -o requirements.txt -c constraints.txt
 
 .venv/bin/python:
 	uv venv

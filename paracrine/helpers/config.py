@@ -294,7 +294,7 @@ def build_config(config: ConfigDict) -> Dict[str, object]:
     env = environment()
     LOCAL = cast(Dict[str, object], config["environments"][env])
     common = config.get("common", {})
-    ret = cast(Dict[str, object], dict(**common))
+    ret = dict(**common)
     ret.update(LOCAL)
     return ret
 

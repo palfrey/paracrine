@@ -89,16 +89,20 @@ def runfunc(
                 if module.__name__ not in ret:
                     ret[module.__name__] = []
                 if module.__name__ in arguments:
-                    info = func(
+                    info = func(  # pyright: ignore[reportUnknownVariableType]
                         arguments[module.__name__]  # pyright: ignore[reportCallIssue]
                     )
                 else:
-                    info = func()  # pyright: ignore[reportCallIssue]
+                    # fmt: off
+                    info = func()  # pyright: ignore[reportCallIssue,reportUnknownVariableType]
+                    # fmt: on
                 if isinstance(info, Dict):
-                    info = merge({}, info, get_return_data())
+                    info = merge({}, cast(Dict[str, object], info), get_return_data())
                 elif info is None:
                     info = get_return_data()
-                ret[module.__name__].append(info)
+                ret[module.__name__].append(
+                    info  # pyright:ignore[reportUnknownArgumentType]
+                )
             except Exception:
                 print(f"Error while running {name} for {module.__name__}")
                 raise
