@@ -1,4 +1,4 @@
 certbot==2.6.0
 certbot-dns-route53==2.6.0
 certbot-nginx==2.6.0
-acme==2.6.0
+acme==4.2.0 # 5.0 doesn't support 3.9
