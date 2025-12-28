@@ -1,6 +1,10 @@
 FROM debian:bullseye-20230109-slim
 WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends openssh-server python3.9 python3
+RUN apt-get update && \
+    apt-get install -y openssh-server curl sudo && \
+    (curl --proto '=https' --tlsv1.2 -LsSf https://github.com/astral-sh/uv/releases/download/0.9.18/uv-installer.sh | sh) && \
+    ~/.local/bin/uv python install 3.14 && \
+    ln -s ~/.local/bin/python3.14 /usr/bin/python3
 COPY systemctl.py /app
 RUN ln -s /app/systemctl.py /bin/systemctl
 COPY ./docker/configs/test_key.pub /root/.ssh/authorized_keys
