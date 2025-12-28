@@ -108,12 +108,10 @@ def clear_return_data() -> None:
 
 
 def add_return_data(new_data: Dict[str, Any]) -> None:
-    global return_data
     merge(return_data, new_data)
 
 
 def get_return_data() -> Dict[str, object]:
-    global return_data
     return return_data
 
 

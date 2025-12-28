@@ -33,7 +33,7 @@ def set_file_contents(
 ) -> bool:
     needs_update = False
 
-    if type(contents) == bytes:
+    if isinstance(contents, bytes):
         try:
             contents = contents.decode("utf-8")
         except UnicodeDecodeError:
