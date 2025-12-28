@@ -1,7 +1,7 @@
 FROM debian:bullseye-20230109-slim
 WORKDIR /app
 RUN apt-get update && \
-    apt-get install -y openssh-server curl && \
+    apt-get install -y --no-install-recommends openssh-server curl && \
     (curl --proto '=https' --tlsv1.2 -LsSf https://github.com/astral-sh/uv/releases/download/0.9.18/uv-installer.sh | sh) && \
     ~/.local/bin/uv python install 3.14 && \
     ln -s ~/.local/bin/python3.14 /usr/bin/python3
