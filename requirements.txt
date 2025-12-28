@@ -72,7 +72,7 @@ mdurl==0.1.2
     # via markdown-it-py
 mergedeep==1.3.4
     # via paracrine
-mitogen==0.3.30
+mitogen==0.3.36
     # via paracrine
 more-itertools==10.8.0
     # via
