@@ -13,7 +13,6 @@ mailfrom: Optional[str] = None
 
 
 def local():
-    global mailto, mailfrom
     cron_path = pathlib.Path(config_path()).joinpath("cron-info")
     set_file_contents(
         cron_path,

@@ -1,4 +1,4 @@
-#!/usr/bin/python3.9 -u
+#!/usr/bin/python3 -u
 
 # FIXME: This is an immensely hacky script, mostly out of
 # me not being able to either get https://github.com/gdraheim/docker-systemctl-replacement

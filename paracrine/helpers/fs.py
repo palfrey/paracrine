@@ -11,9 +11,7 @@ import subprocess
 from datetime import datetime, timedelta
 from difflib import unified_diff
 from pathlib import Path
-from typing import List, Optional, Sequence, Tuple, Union, cast
-
-from typing_extensions import TypedDict
+from typing import List, Optional, Sequence, Tuple, TypedDict, Union, cast
 
 from paracrine import Pathy, is_dry_run
 
@@ -35,7 +33,7 @@ def set_file_contents(
 ) -> bool:
     needs_update = False
 
-    if type(contents) == bytes:
+    if isinstance(contents, bytes):
         try:
             contents = contents.decode("utf-8")
         except UnicodeDecodeError:

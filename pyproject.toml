@@ -6,13 +6,16 @@ authors = [
 ]
 description = "A system deployment tool"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.14"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: GNU Affero General Public License v3",
     "Operating System :: OS Independent",
 ]
-dependencies=["mitogen", "jinja2", "pyyaml", "python-debian", "mergedeep", "retry", "requests", "typing_extensions", "frozendict"]
+dependencies=[
+  # FIXME: Fix for https://github.com/mitogen-hq/mitogen/issues/1398
+  "mitogen @ https://github.com/mitogen-hq/mitogen/archive/9e5790a2e11040a8fb086a3dee5af6780471ada1.zip",
+  "jinja2", "pyyaml", "python-debian", "mergedeep", "retry", "requests", "frozendict", "looseversion"]
 
 [project.urls]
 "Homepage" = "https://github.com/palfrey/paracrine"

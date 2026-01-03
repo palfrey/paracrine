@@ -47,5 +47,5 @@ def run():
         dry_run_safe=True,
     )
     count = len(wireguard_ips())
-    expected = f"master0:name=mymaster,status=ok,address={master_ip}:6379,slaves={count-1},sentinels={count}"
+    expected = f"master0:name=mymaster,status=ok,address={master_ip}:6379,slaves={count - 1},sentinels={count}"
     assert expected in output, (expected, output)
