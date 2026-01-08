@@ -168,7 +168,7 @@ typing-extensions==4.15.0
     #   paracrine
     #   pyright
     #   virtualenv
-urllib3==2.6.0
+urllib3==2.6.3
     # via
     #   requests
     #   twine
