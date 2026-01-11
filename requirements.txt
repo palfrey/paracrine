@@ -150,7 +150,7 @@ twine==6.2.0
     # via -r requirements.in
 typing-extensions==4.15.0
     # via pyright
-urllib3==2.6.0
+urllib3==2.6.3
     # via
     #   requests
     #   twine
