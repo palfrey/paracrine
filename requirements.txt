@@ -30,7 +30,7 @@ docopt==0.6.2
     # via pytest-watch
 docutils==0.22.2
     # via readme-renderer
-filelock==3.19.1
+filelock==3.20.1
     # via virtualenv
 frozendict==2.4.6
     # via paracrine
