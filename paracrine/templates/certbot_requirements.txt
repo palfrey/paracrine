@@ -1,5 +1,5 @@
-certbot==2.6.0
-certbot-dns-route53==2.6.0
-certbot-nginx==2.6.0
-acme<5 # 5.0 doesn't support 3.9
-josepy<3 # because https://github.com/certbot/certbot/issues/10185
+certbot
+certbot-dns-route53
+certbot-nginx
+acme
+josepy
