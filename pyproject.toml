@@ -13,8 +13,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies=[
-  # FIXME: Fix for https://github.com/mitogen-hq/mitogen/issues/1398
-  "mitogen @ https://github.com/mitogen-hq/mitogen/archive/b7eddf2cdb2377b46ce66d6e9300d9d1b6bc74af.zip",
+  "mitogen",
   "jinja2", "pyyaml", "python-debian", "mergedeep", "retry", "requests", "frozendict", "looseversion"]
 
 [project.urls]
