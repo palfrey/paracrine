@@ -96,7 +96,7 @@ def main(
                         "hostname": hostname,
                         "port": port,
                         "username": username,
-                        "identity_file": key_path,
+                        "identity_file": key_path.as_posix(),
                         "check_host_keys": "accept",
                         "python_path": "python3",
                         "ssh_args": ["-o", "SendEnv DUMP_COMMAND"],
