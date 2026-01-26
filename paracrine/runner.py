@@ -254,9 +254,10 @@ def server_role_picker(name: str) -> SERVER_FILTER:
 def run(
     args: List[str],
     modules: Union[Modules, dict[Callable[[ServerDict], bool], Modules]],
+    log_level: int = logging.INFO,
 ):
     logging.basicConfig()
-    logging.root.setLevel(logging.INFO)
+    logging.root.setLevel(log_level)
 
     parser = argparse.ArgumentParser(prog="paracrine")
     parser.add_argument("-i", "--inventory-path", dest="inventory_path", required=True)
