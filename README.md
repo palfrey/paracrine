@@ -15,7 +15,7 @@ Main documentation is at https://palfrey.github.io/paracrine/
 Usage
 -----
 
-1. Setup Python. Tested against 3.14+
+1. Setup Python. Tested against 3.13+
 2. `pip install paracrine`
 3. Write a main file describing what you want to setup. [integration_test/main.py](https://github.com/palfrey/paracrine/blob/main/integration_test/main.py) is a reasonable example. It must call the `run` function, which takes general arguments, and list of modules to run.
 4. Write an inventory file for the machines this is managing. Current setup assumes they're all the same. [integration_test/docker/inventory.yaml](https://github.com/palfrey/paracrine/blob/main/integration_test/docker/inventory.yaml) is a reasonable example file, but I suggest generating it from whatever you're using to create the servers (e.g. Terraform).

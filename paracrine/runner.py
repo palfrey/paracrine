@@ -96,7 +96,7 @@ def main(
                         "hostname": hostname,
                         "port": port,
                         "username": username,
-                        "identity_file": key_path,
+                        "identity_file": key_path.as_posix(),
                         "check_host_keys": "accept",
                         "python_path": "python3",
                         "ssh_args": ["-o", "SendEnv DUMP_COMMAND"],
@@ -254,9 +254,10 @@ def server_role_picker(name: str) -> SERVER_FILTER:
 def run(
     args: List[str],
     modules: Union[Modules, dict[Callable[[ServerDict], bool], Modules]],
+    log_level: int = logging.INFO,
 ):
     logging.basicConfig()
-    logging.root.setLevel(logging.INFO)
+    logging.root.setLevel(log_level)
 
     parser = argparse.ArgumentParser(prog="paracrine")
     parser.add_argument("-i", "--inventory-path", dest="inventory_path", required=True)
