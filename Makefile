@@ -13,10 +13,10 @@ docs: sync
 	.venv/bin/pdoc --html paracrine --force --output-dir docs
 
 type-check: sync
-	.venv/bin/pyright --pythonversion 3.13 --pythonpath $(PWD)/.venv/bin/python paracrine integration_test tests
+	.venv/bin/pyright --pythonversion 3.14 --pythonpath $(PWD)/.venv/bin/python paracrine integration_test tests
 
 watch-type-check: sync
-	.venv/bin/pyright --pythonversion 3.13 --pythonpath $(PWD)/.venv/bin/python --watch paracrine integration_test tests
+	.venv/bin/pyright --pythonversion 3.14 --pythonpath $(PWD)/.venv/bin/python --watch paracrine integration_test tests
 
 unittests: sync
 	.venv/bin/pytest -vvv --cov=paracrine --cov-report=term-missing
@@ -25,7 +25,7 @@ unittests-watch: sync
 	.venv/bin/ptw -- -vvv tests/
 
 requirements.txt: requirements.in pyproject.toml constraints.txt
-	uv pip compile --no-strip-extras --python 3.13 requirements.in -o requirements.txt -c constraints.txt
+	uv pip compile --no-strip-extras --python 3.14 requirements.in -o requirements.txt -c constraints.txt
 
 .venv/bin/python:
 	uv venv
