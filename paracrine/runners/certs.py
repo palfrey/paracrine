@@ -83,15 +83,13 @@ def certbot_for_host(hostname: Union[str, List[str]], email: str) -> Dict[str, o
                 set_file_contents(fullchain_path, "")
                 set_file_contents(live_path.joinpath("privkey.pem"), "")
             else:
-                run_command(
-                    f"{envs} {certbot_bin} certonly \
+                run_command(f"{envs} {certbot_bin} certonly \
                         --config-dir={certbot.joinpath('config')} \
                         --work-dir={certbot.joinpath('workdir')} \
                         --logs-dir={certbot.joinpath('logs')} \
                         --cert-name={cert_name} \
                         -m {email} --agree-tos --non-interactive \
-                        --no-eff-email --domains {','.join(hostnames)} --dns-route53"
-                )
+                        --no-eff-email --domains {','.join(hostnames)} --dns-route53")
         else:
             if not dummy_certs:
                 run_with_marker(

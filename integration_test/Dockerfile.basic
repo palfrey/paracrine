@@ -1,11 +1,11 @@
 FROM debian:bullseye-20230109-slim
 WORKDIR /app
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends openssh-server curl ca-certificates && \
+    apt-get install -y --no-install-recommends openssh-server curl ca-certificates gettext-base && \
     (curl --proto '=https' --tlsv1.2 -LsSf https://github.com/astral-sh/uv/releases/download/0.9.18/uv-installer.sh | sh) && \
-    ~/.local/bin/uv python install 3.14 && \
-    ln -s ~/.local/bin/python3.14 /usr/bin/python3
-COPY systemctl.py /app
+    ~/.local/bin/uv python install 3.13
+COPY python_wrapper.sh systemctl.py /app/
+RUN cat python_wrapper.sh | FULL_PYTHON_PATH=$(realpath ~/.local/bin/python3.13) envsubst > /usr/bin/python3 && chmod +x /usr/bin/python3
 RUN ln -s /app/systemctl.py /bin/systemctl
 COPY ./docker/configs/test_key.pub /root/.ssh/authorized_keys
 RUN sed -i 's/AcceptEnv LANG LC_\*/AcceptEnv LANG LC_* DUMP_COMMAND/' /etc/ssh/sshd_config
