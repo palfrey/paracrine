@@ -27,7 +27,7 @@ def get_all_kernel_versions():
         if line.strip() == "":
             continue
         try:
-            (name, status, version) = line.split(",")
+            name, status, version = line.split(",")
         except ValueError:
             raise Exception("'%s'" % line)
         if status == "install ok installed":

@@ -517,7 +517,7 @@ def run_command_raw(
 
                 def get_output() -> bool:
                     nonlocal stdout, stderr
-                    (new_stdout, new_stderr) = non_breaking_communicate(process)
+                    new_stdout, new_stderr = non_breaking_communicate(process)
                     stdout += new_stdout
                     if DUMP_COMMAND and new_stdout != b"":
                         print(new_stdout.decode("utf-8"), end=None)

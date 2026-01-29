@@ -1,1 +1,2 @@
+include paracrine/commands/python_wrapper.sh
 include paracrine/templates/*

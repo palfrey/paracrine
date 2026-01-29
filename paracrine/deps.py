@@ -30,7 +30,7 @@ TransmitModules = Sequence[TransmitModule]
 
 def freeze_module(module: Module) -> Module:
     if isinstance(module, tuple):
-        (module_type, config) = module
+        module_type, config = module
         if isinstance(config, frozendict):
             return module
         return (module_type, deepfreeze(config))
@@ -54,7 +54,7 @@ T = TypeVar("T", bound=Union[Module, TransmitModule])
 
 def unfreeze_module(module: T) -> T:
     if isinstance(module, tuple):
-        (module_type, config) = module
+        module_type, config = module
         if isinstance(config, frozendict):
             return (
                 module_type,
