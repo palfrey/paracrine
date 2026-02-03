@@ -107,40 +107,64 @@ def certbot_for_host(hostname: Union[str, List[str]], email: str) -> Dict[str, s
             "root",
             f"chronic {renew_command}",
         )
-        return get_certs(hostnames)
+        python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
+        cert_name = "_".join(hostnames)
+        live_path = certbot.joinpath("config", "live", cert_name)
+        fullchain_path = live_path.joinpath("fullchain.pem")
+
+        def combine_dicts(a: Dict[str, str], b: Dict[str, str]) -> Dict[str, str]:
+            return {**a, **b}
+
+        return reduce(
+            combine_dicts,
+            [
+                {
+                    "ssl-options": dry_run_safe_read(
+                        venv.joinpath(
+                            f"lib/python{python_version}/site-packages/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf"  # noqa: E501
+                        ),
+                        "fake ssl options",
+                    )
+                }
+            ]
+            + [
+                {
+                    f"fullchain-{hostname}": dry_run_safe_read(
+                        fullchain_path, "dummy fullchain"
+                    ),
+                    f"privkey-{hostname}": dry_run_safe_read(
+                        live_path.joinpath("privkey.pem"), "dummy privkey"
+                    ),
+                }
+                for hostname in hostnames
+            ],
+        )
     else:
         return {}
 
 
-def get_certs(hostnames: list[str]) -> Dict[str, str]:
+def get_certs(hostnames: list[str]) -> Dict[str, Path]:
     python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
     cert_name = "_".join(hostnames)
     live_path = certbot.joinpath("config", "live", cert_name)
     fullchain_path = live_path.joinpath("fullchain.pem")
 
-    def combine_dicts(a: Dict[str, str], b: Dict[str, str]) -> Dict[str, str]:
+    def combine_dicts(a: Dict[str, Path], b: Dict[str, Path]) -> Dict[str, Path]:
         return {**a, **b}
 
     return reduce(
         combine_dicts,
         [
             {
-                "ssl-options": dry_run_safe_read(
-                    venv.joinpath(
-                        f"lib/python{python_version}/site-packages/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf"  # noqa: E501
-                    ),
-                    "fake ssl options",
-                )
+                "ssl-options": venv.joinpath(
+                    f"lib/python{python_version}/site-packages/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf"  # noqa: E501
+                ),
             }
         ]
         + [
             {
-                f"fullchain-{hostname}": dry_run_safe_read(
-                    fullchain_path, "dummy fullchain"
-                ),
-                f"privkey-{hostname}": dry_run_safe_read(
-                    live_path.joinpath("privkey.pem"), "dummy privkey"
-                ),
+                f"fullchain-{hostname}": fullchain_path,
+                f"privkey-{hostname}": live_path.joinpath("privkey.pem"),
             }
             for hostname in hostnames
         ],
