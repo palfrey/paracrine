@@ -64,7 +64,8 @@ def certbot_for_host(hostname: Union[str, List[str]], email: str) -> Dict[str, s
                         --work-dir={certbot.joinpath('workdir')} \
                         --logs-dir={certbot.joinpath('logs')} \
                         --dns-route53 \
-                        --no-random-sleep-on-renew"
+                        --no-random-sleep-on-renew \
+                        --deploy-hook 'systemctl reload nginx'"
         while renew_command.find("  ") != -1:
             renew_command = renew_command.replace("  ", " ")
         make_directory(live_path)
