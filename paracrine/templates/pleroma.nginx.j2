@@ -39,10 +39,10 @@ server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
 
-    ssl_certificate /opt/letsencrypt/fullchain.pem;
-    ssl_certificate_key /opt/letsencrypt/privkey.pem;
+    ssl_certificate {{ FULLCHAIN_CERT }};
+    ssl_certificate_key {{ PRIVKEY_CERT }};
 
-    include /opt/letsencrypt/options-ssl-nginx.conf;
+    include {{ SSL_OPTIONS }};
     {% endif %}
 
     ssl_stapling on;
