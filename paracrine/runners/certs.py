@@ -76,7 +76,7 @@ def certbot_for_host(hostname: Union[str, List[str]], email: str) -> Dict[str, s
         run_with_marker(
             "/opt/certbot/deps_installed",
             f"{pip} install -r /opt/certbot/requirements.txt",
-            deps=["/opt/certbot/requirements.txt"],
+            deps=[pip, "/opt/certbot/requirements.txt"],
         )
         config_path = certbot.joinpath(f"config/renewal/{cert_name}.conf")
 
