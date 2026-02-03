@@ -1,9 +1,11 @@
 from pathlib import Path
+from typing import cast
 
 from ..deps import Modules
-from ..helpers.config import build_config, core_config, get_config_file, local_config
+from ..helpers.config import build_config, core_config, local_config
 from ..helpers.debian import apt_install
 from ..helpers.fs import (
+    are_deps_younger,
     download_and_unpack,
     link,
     make_directory,
@@ -152,41 +154,33 @@ def run():
         "pleroma", enabled=True, running=True, restart=release_changed or config_changes
     )
 
-    cert_dir = Path("/opt/letsencrypt")
-    nginx_changes = make_directory(str(cert_dir))
-    nginx_changes = (
-        set_file_contents(
-            cert_dir.joinpath("fullchain.pem"),
-            get_config_file(f"configs/other-fullchain-{LOCAL['PLEROMA_HOST']}"),
-        )
-        or nginx_changes
-    )
-    nginx_changes = (
-        set_file_contents(
-            cert_dir.joinpath("privkey.pem"),
-            get_config_file(f"configs/other-privkey-{LOCAL['PLEROMA_HOST']}"),
-        )
-        or nginx_changes
-    )
-    nginx_changes = (
-        set_file_contents(
-            cert_dir.joinpath("options-ssl-nginx.conf"),
-            get_config_file("configs/other-ssl-options"),
-        )
-        or nginx_changes
-    )
+    hostname = cast(str, LOCAL["PLEROMA_HOST"])
+    certs_data = certs.get_certs([hostname])
 
     apt_install(["nginx"])
 
+    nginx_changes = set_file_contents_from_template(
+        "/etc/nginx/sites-available/pleroma.conf",
+        "pleroma.nginx.j2",
+        PLEROMA_HOST=LOCAL["PLEROMA_HOST"],
+        DUMMY_CERTS=certs.get_dummy_certs(),
+        FULLCHAIN_CERT=certs_data[f"fullchain-{hostname}"],
+        PRIVKEY_CERT=certs_data[f"privkey-{hostname}"],
+        SSL_OPTIONS=certs_data["ssl-options"],
+    )
+
     nginx_changes = (
-        set_file_contents_from_template(
+        are_deps_younger(
             "/etc/nginx/sites-available/pleroma.conf",
-            "pleroma.nginx.j2",
-            PLEROMA_HOST=LOCAL["PLEROMA_HOST"],
-            DUMMY_CERTS=certs.get_dummy_certs(),
+            [
+                certs_data[f"fullchain-{hostname}"],
+                certs_data[f"privkey-{hostname}"],
+                certs_data["ssl-options"],
+            ],
         )
         or nginx_changes
     )
+
     nginx_changes = (
         link(
             "/etc/nginx/sites-enabled/pleroma.conf",

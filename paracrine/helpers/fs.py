@@ -340,6 +340,17 @@ def delete(fname: Pathy, quiet: bool = False) -> bool:
         return False
 
 
+def are_deps_younger(target: Pathy, deps: List[Pathy] = []) -> bool:
+    if not os.path.exists(target):
+        return True
+    target_modified = last_modified(target)
+    for dep in deps:
+        if last_modified(dep) > target_modified:
+            logging.info("%s is younger than %s" % (dep, target))
+            return True
+    return False
+
+
 def build_with_command(
     fname: Pathy,
     command: str,
@@ -358,12 +369,7 @@ def build_with_command(
         )
         or force_build
     )
-    target_modified = last_modified(fname)
-    for dep in deps:
-        if last_modified(dep) > target_modified:
-            logging.info("%s is younger than %s" % (dep, fname))
-            changed = True
-            break
+    changed = are_deps_younger(fname, deps) or changed
     existing_target = os.path.exists(fname)
     if not existing_target or changed:
         logging.info("Building %s" % fname)
