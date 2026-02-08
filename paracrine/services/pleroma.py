@@ -75,7 +75,7 @@ def run():
         "ab1d01f1c4014e99c3a33cfe8f2ce7150c1549cc8913d78a9b8f9a530a3e807f",
     )
     new_source = res["changed"]
-    pleroma_source_dir = Path(res["dir_name"]).joinpath("pleroma-v2.5.2")
+    pleroma_source_dir = Path(res["dir_name"]).joinpath("pleroma")
 
     mix_env = {"MIX_ENV": "prod", "PATH": elixir_bin_path.as_posix()}
     new_prod_secret = set_file_contents(
