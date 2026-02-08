@@ -71,11 +71,11 @@ def run():
 
     # Taken from https://git.pleroma.social/pleroma/pleroma/-/releases/v2.5.2
     res = download_and_unpack(
-        "https://git.pleroma.social/pleroma/pleroma/-/archive/v2.5.2/pleroma-v2.5.2.zip",
-        "eac2ba14bfba1c7e43ac758277fe3a474817b79ab14fb4ab96383f6ee4c32efc",
+        "https://git.pleroma.social/pleroma/pleroma/archive/v2.5.2.zip",
+        "ab1d01f1c4014e99c3a33cfe8f2ce7150c1549cc8913d78a9b8f9a530a3e807f",
     )
     new_source = res["changed"]
-    pleroma_source_dir = Path(res["dir_name"]).joinpath("pleroma-v2.5.2")
+    pleroma_source_dir = Path(res["dir_name"]).joinpath("pleroma")
 
     mix_env = {"MIX_ENV": "prod", "PATH": elixir_bin_path.as_posix()}
     new_prod_secret = set_file_contents(
@@ -94,6 +94,11 @@ def run():
         directory=pleroma_source_dir,
         env=mix_env,
         force_build=new_source,
+    )
+    # FIXME: workaround hack as they moved the upstream repo
+    run_with_marker(
+        "/opt/remote_ip_remote",
+        'git config --global url."https://git.pleroma.social/pleroma-elixir-libraries/remote_ip.git".insteadOf https://git.pleroma.social/pleroma/remote_ip.git',
     )
     run_with_marker(
         "/opt/pleroma-mix-deps",
