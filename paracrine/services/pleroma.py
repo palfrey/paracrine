@@ -71,7 +71,7 @@ def run():
 
     # Taken from https://git.pleroma.social/pleroma/pleroma/-/releases/v2.5.2
     res = download_and_unpack(
-        "https://git.pleroma.social/pleroma/pleroma/-/archive/v2.5.2/pleroma-v2.5.2.zip",
+        "https://git.pleroma.social/pleroma/pleroma/archive/v2.5.2.zip",
         "eac2ba14bfba1c7e43ac758277fe3a474817b79ab14fb4ab96383f6ee4c32efc",
     )
     new_source = res["changed"]
