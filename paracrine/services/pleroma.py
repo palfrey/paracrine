@@ -95,6 +95,11 @@ def run():
         env=mix_env,
         force_build=new_source,
     )
+    # FIXME: workaround hack as they moved the upstream repo
+    run_with_marker(
+        "/opt/remote_ip_remote",
+        'git config --global url."https://git.pleroma.social/pleroma-elixir-libraries/remote_ip.git".insteadOf https://git.pleroma.social/pleroma/remote_ip.git',
+    )
     run_with_marker(
         "/opt/pleroma-mix-deps",
         "mix deps.get --only prod",
