@@ -164,8 +164,10 @@ def make_directory(
 ) -> bool:
     ret = False
     if not os.path.exists(path):
-        logging.info("Make directory %s" % path)
-        if not is_dry_run():
+        if is_dry_run():
+            logging.info("Would have made directory %s" % path)
+        else:
+            logging.info("Make directory %s" % path)
             os.makedirs(path)
         ret = True
     if mode is not None:

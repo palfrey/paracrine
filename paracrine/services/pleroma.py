@@ -69,13 +69,14 @@ def run():
     )
     elixir_bin_path = Path(res["dir_name"]).joinpath("bin")
 
-    # Taken from https://git.pleroma.social/pleroma/pleroma/-/releases/v2.5.2
-    res = download_and_unpack(
-        "https://git.pleroma.social/pleroma/pleroma/archive/v2.5.2.zip",
-        "ab1d01f1c4014e99c3a33cfe8f2ce7150c1549cc8913d78a9b8f9a530a3e807f",
+    pleroma_src = Path("/opt/pleroma-src")
+    make_directory(pleroma_src)
+    pleroma_version = "v2.5.2"
+    pleroma_source_dir = pleroma_src.joinpath(pleroma_version)
+    new_source = run_with_marker(
+        pleroma_source_dir.joinpath("download.marker"),
+        f"git clone --depth 1 --branch {pleroma_version} https://git.pleroma.social/pleroma/pleroma.git {pleroma_source_dir}",
     )
-    new_source = res["changed"]
-    pleroma_source_dir = Path(res["dir_name"]).joinpath("pleroma")
 
     mix_env = {"MIX_ENV": "prod", "PATH": elixir_bin_path.as_posix()}
     new_prod_secret = set_file_contents(
