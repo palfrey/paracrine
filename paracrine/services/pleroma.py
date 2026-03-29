@@ -73,9 +73,10 @@ def run():
     make_directory(pleroma_src)
     pleroma_version = "v2.5.2"
     pleroma_source_dir = pleroma_src.joinpath(pleroma_version)
+    # https://git.pleroma.social/pleroma/pleroma is actual upstream, but it's unstable
     new_source = run_with_marker(
         pleroma_source_dir.joinpath("download.marker"),
-        f"git clone --depth 1 --branch {pleroma_version} https://git.pleroma.social/pleroma/pleroma.git {pleroma_source_dir}",
+        f"git clone --depth 1 --branch {pleroma_version} https://github.com/palfrey/pleroma.git {pleroma_source_dir}",
     )
 
     mix_env = {"MIX_ENV": "prod", "PATH": elixir_bin_path.as_posix()}
