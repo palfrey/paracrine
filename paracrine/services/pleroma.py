@@ -76,7 +76,7 @@ def run():
     # https://git.pleroma.social/pleroma/pleroma is actual upstream, but it's unstable
     new_source = run_with_marker(
         pleroma_source_dir.joinpath("download.marker"),
-        f"git clone --depth 1 --branch {pleroma_version} https://github.com/palfrey/pleroma.git {pleroma_source_dir}",
+        f"rm -Rf {pleroma_source_dir} && git clone --depth 1 --branch {pleroma_version} https://github.com/palfrey/pleroma.git {pleroma_source_dir}",
     )
 
     mix_env = {"MIX_ENV": "prod", "PATH": elixir_bin_path.as_posix()}
@@ -84,42 +84,58 @@ def run():
         pleroma_source_dir.joinpath("config", "prod.secret.exs"), "import Config"
     )
     run_with_marker(
-        "/opt/pleroma-mix-hex",
+        pleroma_source_dir.joinpath("pleroma-mix-hex"),
         "mix local.hex --force",
         directory=pleroma_source_dir,
         env=mix_env,
         force_build=new_source,
     )
     run_with_marker(
-        "/opt/pleroma-mix-rebar",
+        pleroma_source_dir.joinpath("pleroma-mix-rebar"),
         "mix local.rebar --force",
         directory=pleroma_source_dir,
         env=mix_env,
         force_build=new_source,
     )
-    # FIXME: workaround hack as they moved the upstream repo
-    run_with_marker(
-        "/opt/remote_ip_remote",
-        'git config --global url."https://git.pleroma.social/pleroma-elixir-libraries/remote_ip.git".insteadOf https://git.pleroma.social/pleroma/remote_ip.git',
+    # FIXME: workaround hack as the upstream repo got moved, then git.pleroma.social got unreliable
+    rewrite_remote = run_with_marker(
+        pleroma_source_dir.joinpath("remote_ip_remote"),
+        'git config --global url."https://gitlab.com/soapbox-pub/elixir-libraries/remote_ip.git".insteadOf https://git.pleroma.social/pleroma/remote_ip.git',
     )
+    # FIXME: workaround hacks as git.pleroma.social got unreliable
+    rewrite_remote = (
+        run_with_marker(
+            pleroma_source_dir.joinpath("elixir_captcha_remote"),
+            'git config --global url."https://gitlab.com/soapbox-pub/elixir-libraries/elixir-captcha.git".insteadOf https://git.pleroma.social/pleroma/elixir-libraries/elixir-captcha.git',
+        )
+        or rewrite_remote
+    )
+    rewrite_remote = (
+        run_with_marker(
+            pleroma_source_dir.joinpath("prometheus_remote"),
+            'git config --global url."https://gitlab.com/soapbox-pub/elixir-libraries/prometheus-phx.git".insteadOf https://git.pleroma.social/pleroma/elixir-libraries/prometheus-phx.git',
+        )
+        or rewrite_remote
+    )
+
     run_with_marker(
-        "/opt/pleroma-mix-deps",
+        pleroma_source_dir.joinpath("pleroma-mix-deps"),
         "mix deps.get --only prod",
         directory=pleroma_source_dir,
         env=mix_env,
-        force_build=new_source,
+        force_build=new_source or rewrite_remote,
     )
     run_with_marker(
-        "/opt/pleroma-mix-compile",
+        pleroma_source_dir.joinpath("pleroma-mix-compile"),
         "mix compile",
         directory=pleroma_source_dir,
         env=mix_env,
         force_build=new_source,
-        deps=["/opt/pleroma-mix-deps"],
+        deps=[pleroma_source_dir.joinpath("pleroma-mix-deps")],
     )
     make_directory(pleroma_source_dir.joinpath("release"))
     release_changed = run_with_marker(
-        "/opt/pleroma-release",
+        pleroma_source_dir.joinpath("pleroma-release"),
         "mix release --path release",
         directory=pleroma_source_dir,
         env=mix_env,
