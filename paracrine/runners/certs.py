@@ -1,11 +1,8 @@
 import sys
 from datetime import timedelta
 from functools import reduce
-from importlib.metadata import version
 from pathlib import Path
 from typing import Any, Dict, List, Union, cast
-
-from packaging.version import Version
 
 from paracrine import dry_run_safe_read
 
@@ -125,10 +122,7 @@ def certbot_for_host(hostname: Union[str, List[str]], email: str) -> Dict[str, s
                 {
                     "ssl-options": dry_run_safe_read(
                         venv.joinpath(
-                            # Because of https://github.com/certbot/certbot/pull/10522
-                            f"lib/python{python_version}/site-packages/certbot/_internal/plugins/nginx/tls_configs/options-ssl-nginx.conf"
-                            if Version(version("certbot-nginx")) >= Version("5.5.0")
-                            else f"lib/python{python_version}/site-packages/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf"
+                            f"lib/python{python_version}/site-packages/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf"
                         ),
                         "fake ssl options",
                     )
