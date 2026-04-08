@@ -1,5 +1,5 @@
 certbot
 certbot-dns-route53
-certbot-nginx
+certbot-nginx < 5.5.0 # Because of https://github.com/certbot/certbot/pull/10522
 acme
 josepy

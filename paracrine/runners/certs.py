@@ -122,7 +122,7 @@ def certbot_for_host(hostname: Union[str, List[str]], email: str) -> Dict[str, s
                 {
                     "ssl-options": dry_run_safe_read(
                         venv.joinpath(
-                            f"lib/python{python_version}/site-packages/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf"  # noqa: E501
+                            f"lib/python{python_version}/site-packages/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf"
                         ),
                         "fake ssl options",
                     )
