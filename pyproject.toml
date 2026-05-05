@@ -1,37 +1,37 @@
 [project]
 name = "paracrine"
 version = "0.2.1"
-authors = [{ name = "Tom Parker-Shemilt", email = "palfrey@tevp.net" }]
 description = "A system deployment tool"
 readme = "README.md"
 requires-python = ">=3.13"
+authors = [{ name = "Tom Parker-Shemilt", email = "palfrey@tevp.net" }]
 classifiers = [
-  "Programming Language :: Python :: 3",
   "License :: OSI Approved :: GNU Affero General Public License v3",
   "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
 ]
 dependencies = [
-  "mitogen",
-  "jinja2",
-  "pyyaml",
-  "python-debian",
-  "mergedeep",
-  "retry",
-  "requests",
   "frozendict",
+  "jinja2",
   "looseversion",
+  "mergedeep",
+  "mitogen",
+  "python-debian",
+  "pyyaml",
+  "requests",
+  "retry",
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/palfrey/paracrine"
 "Bug Tracker" = "https://github.com/palfrey/paracrine/issues"
+"Homepage" = "https://github.com/palfrey/paracrine"
 
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools.packages.find]
-include = ["paracrine*"]
-
 [tool.pyright]
 typeCheckingMode = "strict"
+
+[tool.setuptools.packages.find]
+include = ["paracrine*"]
