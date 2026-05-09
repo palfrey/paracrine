@@ -65,7 +65,11 @@ def systemd_set(
             raise
 
     if reloaded is True:
-        run_command("systemctl reload %s" % name)
+        try:
+            run_command("systemctl reload %s" % name)
+        except subprocess.CalledProcessError:
+            journal(name)
+            raise
 
 
 def systemctl_daemon_reload():

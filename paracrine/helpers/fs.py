@@ -545,11 +545,10 @@ def run_command_raw(
                         # missing command
                         print(stderr)
                         raise MissingCommandException
-                    assert process.returncode in allowed_exit_codes, (
-                        process.returncode,
-                        stdout,
-                        stderr,
-                    )
+                    if process.returncode not in allowed_exit_codes:
+                        raise subprocess.CalledProcessError(
+                            process.returncode, cmd, stdout, stderr
+                        )
                 break
             return stdout
         else:
