@@ -38,7 +38,7 @@ id==1.5.0
     # via twine
 identify==2.6.15
     # via pre-commit
-idna==3.11
+idna==3.15
     # via requests
 iniconfig==2.1.0
     # via pytest
@@ -150,7 +150,7 @@ twine==6.2.0
     # via -r requirements.in
 typing-extensions==4.15.0
     # via pyright
-urllib3==2.6.3
+urllib3==2.7.0
     # via
     #   requests
     #   twine
