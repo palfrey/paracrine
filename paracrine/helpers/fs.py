@@ -554,7 +554,8 @@ def run_command_raw(
         else:
             return b""
     except subprocess.CalledProcessError as e:
-        print(e.output)
+        print("output", e.output)
+        print("stderr", e.stderr)
         raise
 
 
