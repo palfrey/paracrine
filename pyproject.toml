@@ -15,7 +15,7 @@ dependencies = [
   "jinja2",
   "looseversion",
   "mergedeep",
-  "mitogen",
+  "mitogen >=0.3.48",
   "python-debian",
   "pyyaml",
   "requests",
