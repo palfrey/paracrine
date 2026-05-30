@@ -1,9 +1,9 @@
-from typing import Dict, Optional, cast
+from typing import Optional, cast
 
 from ...helpers.fs import make_directory, run_with_marker
 from ...helpers.network import wireguard_ip
 
-options: Dict[str, object] = {}
+options: dict[str, object] = {}
 
 
 def dependencies():

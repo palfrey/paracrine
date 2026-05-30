@@ -11,6 +11,7 @@ from paracrine import dry_run_safe_read
 from .fs import (
     build_with_command,
     download,
+    make_directory,
     run_command,
     run_with_marker,
     set_file_contents,
@@ -22,7 +23,7 @@ _version_pattern = re.compile(r"Version: (\S+)")
 
 
 def apt_update():
-    run_with_marker(
+    return run_with_marker(
         "/opt/apt-update",
         "apt-get update --allow-releaseinfo-change",
         deps=glob("/etc/apt/sources.list.d/*")
@@ -90,7 +91,7 @@ def apt_install(
         build_with_command(
             host_arch_path, f"dpkg-architecture -q DEB_HOST_ARCH > {host_arch_path}"
         )
-        host_arch = dry_run_safe_read(host_arch_path, "amd64")
+        host_arch = dry_run_safe_read(host_arch_path, "amd64").strip()
     if isinstance(packages, List):
         packages = dict([(p, None) for p in packages])
     if always_install:
@@ -144,3 +145,52 @@ def set_alternative(alt_name: str, option: str):
         return True
     else:
         return False
+
+
+def install_rust(version: str = "1.95.0"):
+    rust_dir = Path("/root/.cargo/bin")
+    changes = make_directory(rust_dir)
+    rustup = rust_dir.joinpath("rustup")
+    changes = (
+        download(
+            "https://static.rust-lang.org/rustup/archive/1.29.0/x86_64-unknown-linux-gnu/rustup-init",
+            rustup,
+            "4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10",
+            mode=0o755,
+        )
+        or changes
+    )
+    changes = (
+        run_with_marker(
+            rust_dir.joinpath(f"rust-install-{version}.marker"),
+            f"{rustup} toolchain install {version} --profile minimal",
+            force_build=changes,
+        )
+        or changes
+    )
+    return {"changes": changes, "version": version, "rustup": rustup}
+
+
+def install_apt_query():
+    changes = apt_update()
+    changes = apt_install(["git", "libapt-pkg-dev"]) or changes
+    rust = install_rust()
+    apt_query = Path("/opt/apt-query")
+    changes = make_directory(apt_query) or rust["changes"] or changes
+    new_code = run_with_marker(
+        apt_query.joinpath("git.marker"),
+        "git clone https://github.com/palfrey/apt-query.git",
+        directory=apt_query,
+    )
+    changes = (
+        run_with_marker(
+            apt_query.joinpath("build.marker"),
+            "{} run {} cargo build --release".format(rust["rustup"], rust["version"]),
+            directory=apt_query.joinpath("apt-query"),
+            force_build=new_code,
+        )
+        or new_code
+        or changes
+    )
+    apt_query_path = apt_query.joinpath("apt-query", "target", "release", "apt-query")
+    return {"path": apt_query_path, "changes": changes}

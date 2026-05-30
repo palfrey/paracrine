@@ -87,22 +87,22 @@ def run() -> ReturnDict:
         elif not is_dry_run():
             raise Exception("No kernel package versions found!")
 
-        if not in_docker():
-            apt_install(["linux-headers-amd64"])
-            try:
-                modules = sorted(
-                    [
-                        line.split(" ")[0]
-                        for line in run_command("lsmod", dry_run_safe=True).splitlines()
-                    ]
-                )
-            except MissingCommandException:
-                if is_dry_run():
-                    modules = []
-                else:
-                    raise
-            if "wireguard" not in modules:
-                print("modules", modules)
+        apt_install(["linux-headers-amd64"])
+        try:
+            modules = sorted(
+                [
+                    line.split(" ")[0]
+                    for line in run_command("lsmod", dry_run_safe=True).splitlines()
+                ]
+            )
+        except MissingCommandException:
+            if is_dry_run():
+                modules = []
+            else:
+                raise
+        if "wireguard" not in modules:
+            print("modules", modules)
+            if not in_docker():
                 run_command("modprobe wireguard")
 
     make_directory(wg_config)
