@@ -146,7 +146,7 @@ rich==15.0.0
     # via twine
 secretstorage==3.3.3
     # via keyring
-twine==6.2.0
+twine==7.0.0
     # via -r requirements.in
 typing-extensions==4.15.0
     # via pyright
