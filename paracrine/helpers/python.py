@@ -5,14 +5,23 @@ from paracrine import is_dry_run
 
 from .fs import run_command
 
+_expected_python: pathlib.Path | None = None
+
+
+def get_expected_python() -> pathlib.Path:
+    global _expected_python
+    if _expected_python is None:
+        _expected_python = pathlib.Path(
+            run_command("which python3", dry_run_safe=True).strip()
+        )
+    return _expected_python
+
 
 def setup_venv(venv: pathlib.Path) -> None:
     venv_bin = venv.joinpath("bin")
     venv_python = venv_bin.joinpath("python3")
-    expected_python = pathlib.Path(
-        run_command("which python3", dry_run_safe=True).strip()
-    )
     if venv_python.exists():
+        expected_python = get_expected_python()
         full_python_path = venv_python.readlink()
         if full_python_path != expected_python:
             if is_dry_run():
