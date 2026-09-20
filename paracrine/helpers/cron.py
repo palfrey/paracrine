@@ -6,6 +6,7 @@ from typing import Dict, Optional
 from paracrine import is_dry_run
 
 from .config import config_path, get_config_file
+from .debian import apt_install
 from .fs import delete, set_file_contents, set_file_contents_from_template
 
 mailto: Optional[str] = None
@@ -40,6 +41,7 @@ def cron_path(name: str):
 
 
 def create_cron(name: str, schedule: str, user: str, command: str):
+    apt_install(["cron"])
     cron_info: Dict[str, str]
     try:
         cron_info = json.loads(get_config_file("configs/cron-info"))

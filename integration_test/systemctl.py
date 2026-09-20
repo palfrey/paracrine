@@ -58,6 +58,8 @@ if __name__ == "__main__":
         systemd_root = Path("/etc/systemd/system/multi-user.target.wants")
         for path in systemd_root.iterdir():
             name = path.stem
+            if name in ["remote-fs"]:  # things that break in this
+                continue
             print(f"Starting {name}")
             subprocess.check_call([f"/etc/init.d/{name}", "start"])
             add_running_service(name)
