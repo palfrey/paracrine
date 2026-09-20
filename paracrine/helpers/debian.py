@@ -22,6 +22,11 @@ host_arch: Optional[str] = None
 _version_pattern = re.compile(r"Version: (\S+)")
 
 
+def debian_version_name():
+    apt_install(["lsb-release"])
+    return run_command("lsb_release --codename --short", dry_run_safe=True).strip()
+
+
 def apt_update():
     return run_with_marker(
         "/opt/apt-update",

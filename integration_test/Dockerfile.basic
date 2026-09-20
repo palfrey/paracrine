@@ -1,4 +1,4 @@
-FROM debian:bullseye-20230109-slim
+FROM debian:trixie-20260918-slim
 WORKDIR /app
 RUN apt-get update && \
     apt-get install -y --no-install-recommends openssh-server curl ca-certificates && \
@@ -7,6 +7,6 @@ RUN apt-get update && \
     rm -f /usr/local/bin/python3 && \
     ln -s ~/.local/bin/python3.13 /usr/local/bin/python3
 COPY systemctl.py /app/
-RUN ln -s /app/systemctl.py /bin/systemctl
+RUN rm -f /bin/systemctl && ln -s /app/systemctl.py /bin/systemctl
 COPY ./docker/configs/test_key.pub /root/.ssh/authorized_keys
 RUN sed -i 's/AcceptEnv LANG LC_\*/AcceptEnv LANG LC_* DUMP_COMMAND/' /etc/ssh/sshd_config
