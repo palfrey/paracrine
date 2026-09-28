@@ -554,6 +554,8 @@ def run_command_raw(
         else:
             return b""
     except subprocess.CalledProcessError as e:
+        if env != {}:
+            print("env", env)
         print("output", e.output)
         print("stderr", e.stderr)
         raise
