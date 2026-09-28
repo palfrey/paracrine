@@ -13,6 +13,7 @@ from ..helpers.fs import (
     run_with_marker,
     set_file_contents,
     set_file_contents_from_template,
+    set_mode,
 )
 from ..helpers.systemd import link_service, systemd_set
 from ..helpers.users import adduser
@@ -38,7 +39,7 @@ def dependencies() -> Modules:
 def run():
     LOCAL = build_config(core_config())
     adduser("pleroma", home_dir="/opt/pleroma")
-    make_directory("/opt/pleroma", owner="pleroma")
+    make_directory("/opt/pleroma", owner="pleroma", mode=0o755)
     # Deps of the Debian elixir package (which is out of date) plus Pleroma
     apt_install(
         [
@@ -63,9 +64,17 @@ def run():
             "libmagic-dev",
         ]
     )
+    otp_version = (
+        run_command(
+            "erl -eval 'erlang:display(erlang:system_info(otp_release)), halt().' -noshell"
+        )
+        .replace('"', "")
+        .strip()
+    )
+
     res = download_and_unpack(
-        "https://github.com/elixir-lang/elixir/releases/download/v1.14.5/elixir-otp-23.zip",
-        "d45dc33a0c4e007a4f85719d23d2abcac8a33742fb042a1499c411b847462874",
+        f"https://github.com/elixir-lang/elixir/releases/download/v1.17.0/elixir-otp-{otp_version}.zip",
+        "dfc74a49a7db43caf138d8ab1597d7a2e000d5f6384cc902871dc6b6c46982e2",
     )
     elixir_bin_path = Path(res["dir_name"]).joinpath("bin")
 
@@ -74,9 +83,12 @@ def run():
     pleroma_version = "v2.5.2"
     pleroma_source_dir = pleroma_src.joinpath(pleroma_version)
     # https://git.pleroma.social/pleroma/pleroma is actual upstream, but it's unstable
-    new_source = run_with_marker(
-        pleroma_source_dir.joinpath("download.marker"),
-        f"rm -Rf {pleroma_source_dir} && git clone --depth 1 --branch {pleroma_version} https://github.com/palfrey/pleroma.git {pleroma_source_dir}",
+    new_source = (
+        run_with_marker(
+            pleroma_source_dir.joinpath("download.marker"),
+            f"rm -Rf {pleroma_source_dir} && git clone --depth 1 --branch {pleroma_version} https://github.com/palfrey/pleroma.git {pleroma_source_dir}",
+        )
+        or res["changed"]
     )
 
     mix_env = {"MIX_ENV": "prod", "PATH": elixir_bin_path.as_posix()}
@@ -154,14 +166,16 @@ def run():
     config_changes = set_file_contents_from_template(
         "/etc/pleroma/config.exs", "config.exs.j2", ignore_changes=False, **LOCAL
     )
+    setup_db_sql = "/opt/pleroma/setup_db.psql"
     db_changes = set_file_contents_from_template(
-        "/opt/pleroma/setup_db.psql", "setup_db.psql.j2", ignore_changes=False, **LOCAL
+        setup_db_sql, "setup_db.psql.j2", ignore_changes=False, **LOCAL
     )
+    db_changes = set_mode(setup_db_sql, 0o644) or db_changes
 
     run_with_marker(
         "/opt/pleroma/setup_db.marker",
-        'su postgres -s $SHELL -lc "psql -f /opt/pleroma/setup_db.psql"',
-        deps=["/opt/pleroma/setup_db.psql"],
+        f'su postgres -s $SHELL -lc "psql -f {setup_db_sql}"',
+        deps=[setup_db_sql],
         force_build=release_changed and db_changes,
         run_if_command_changed=False,
     )
