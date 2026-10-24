@@ -24,14 +24,11 @@ unittests: sync
 unittests-watch: sync
 	.venv/bin/ptw -- -vvv tests/
 
-requirements.txt: requirements.in pyproject.toml constraints.txt
-	uv pip compile --no-strip-extras --python 3.13 requirements.in -o requirements.txt -c constraints.txt
-
 .venv/bin/python:
 	uv venv
 
-sync: requirements.txt .venv/bin/python
-	uv pip sync --strict requirements.txt
+sync: .venv/bin/python
+	uv sync
 
 pre-commit: sync
 	./.venv/bin/pre-commit run -a

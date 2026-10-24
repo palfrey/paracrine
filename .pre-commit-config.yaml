@@ -35,4 +35,5 @@ repos:
       rev: v0.10.4
       hooks:
           - id: tombi-format
+            exclude: uv\.lock
           - id: tombi-lint
