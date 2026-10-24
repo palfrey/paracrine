@@ -33,8 +33,9 @@ jobs:
               run: |
                   set -eux -o pipefail
                   # Need -e install for pytest, but real install for mitogen to work
-                  pip install -r requirements.txt
-                  pip install .
+                  uv sync
+                  uv pip install .
+                  source .venv/bin/activate
 
                   cd integration_test
                   chmod 600 docker/configs/test_key

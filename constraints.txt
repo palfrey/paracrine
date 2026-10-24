@@ -1,2 +1,0 @@
-# https://github.com/advisories/GHSA-mrwq-x4v8-fh7p
-pygments >=2.15.0
