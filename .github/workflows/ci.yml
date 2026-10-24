@@ -35,6 +35,7 @@ jobs:
                   # Need -e install for pytest, but real install for mitogen to work
                   uv sync
                   uv pip install .
+                  source .venv/bin/activate
 
                   cd integration_test
                   chmod 600 docker/configs/test_key
