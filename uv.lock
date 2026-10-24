@@ -779,34 +779,32 @@ dev = [
     { name = "pytest-cov" },
     { name = "pytest-watch" },
     { name = "twine" },
-    { name = "virtualenv" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "frozendict" },
-    { name = "jinja2" },
-    { name = "looseversion" },
-    { name = "mergedeep" },
+    { name = "frozendict", specifier = ">=2" },
+    { name = "jinja2", specifier = ">=3" },
+    { name = "looseversion", specifier = ">=1" },
+    { name = "mergedeep", specifier = ">=1" },
     { name = "mitogen", specifier = ">=0.3.48" },
-    { name = "python-debian" },
-    { name = "pyyaml" },
-    { name = "requests" },
-    { name = "retry" },
+    { name = "python-debian", specifier = ">=1" },
+    { name = "pyyaml", specifier = ">=6" },
+    { name = "requests", specifier = ">=2" },
+    { name = "retry", specifier = ">=0.9" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "build", specifier = "==1.3.0" },
-    { name = "callee", specifier = "==0.3.1" },
-    { name = "pdoc3", specifier = "==0.11.6" },
-    { name = "pre-commit", specifier = "==4.3.0" },
-    { name = "pyright", specifier = "==1.1.407" },
-    { name = "pytest", specifier = "==9.0.3" },
-    { name = "pytest-cov", specifier = "==7.0.0" },
-    { name = "pytest-watch", specifier = "==4.2.0" },
-    { name = "twine", specifier = "==7.0.0" },
-    { name = "virtualenv", specifier = "==21.7.13" },
+    { name = "build", specifier = ">=1.3.0" },
+    { name = "callee", specifier = ">=0.3.1" },
+    { name = "pdoc3", specifier = ">=0.11.6" },
+    { name = "pre-commit", specifier = ">=4.3.0" },
+    { name = "pyright", specifier = ">=1.1.407" },
+    { name = "pytest", specifier = ">=9.0.3" },
+    { name = "pytest-cov", specifier = ">=7.0.0" },
+    { name = "pytest-watch", specifier = ">=4.2.0" },
+    { name = "twine", specifier = ">=7.0.0" },
 ]
 
 [[package]]
