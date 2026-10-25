@@ -1,0 +1,50 @@
+[project]
+name = "paracrine"
+version = "0.2.1"
+description = "A system deployment tool"
+readme = "README.md"
+requires-python = ">=3.13"
+authors = [{ name = "Tom Parker-Shemilt", email = "palfrey@tevp.net" }]
+classifiers = [
+  "License :: OSI Approved :: GNU Affero General Public License v3",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+]
+dependencies = [
+  "frozendict>=2",
+  "jinja2>=3",
+  "looseversion>=1",
+  "mergedeep>=1",
+  "mitogen >=0.3.48",
+  "python-debian>=1",
+  "pyyaml>=6",
+  "requests>=2",
+  "retry>=0.9",
+]
+
+[project.urls]
+"Bug Tracker" = "https://github.com/palfrey/paracrine/issues"
+"Homepage" = "https://github.com/palfrey/paracrine"
+
+[dependency-groups]
+dev = [
+  "build>=1.3.0",
+  "callee>=0.3.1",
+  "pdoc3>=0.11.6",
+  "pre-commit>=4.3.0",
+  "pyright>=1.1.407",
+  "pytest>=9.0.3",
+  "pytest-cov>=7.0.0",
+  "pytest-watch>=4.2.0",
+  "twine>=7.0.0"
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.pyright]
+typeCheckingMode = "strict"
+
+[tool.setuptools.packages.find]
+include = ["paracrine*"]
